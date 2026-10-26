@@ -1,0 +1,57 @@
+name: Bug report
+description: Something in OpenFleet does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please don't paste secrets, `.env*` contents or private code. For security issues, use **Report a vulnerability** on the Security tab instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The commands you ran (for example `npx openfleet new …`), and the request you gave the coordinator if it matters.
+    validations:
+      required: true
+  - type: dropdown
+    id: host
+    attributes:
+      label: Host
+      options:
+        - GitHub Copilot CLI
+        - Claude Code
+        - Both
+        - Not host-specific
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: "Output of `npx openfleet version`, the host's version (`copilot --version` or `claude --version`), and `node --version`."
+      placeholder: "openfleet 1.0.0, Claude Code 2.1.280, Node 22.20.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Platform
+      options:
+        - macOS
+        - Linux
+        - Windows (WSL2)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output or report
+      description: The error message, `npx openfleet status <name>`, or the relevant lines of `projects/<name>/events.jsonl`. Check them for anything private first.
+      render: text

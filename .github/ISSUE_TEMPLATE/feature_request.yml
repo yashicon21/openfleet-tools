@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest a new feature or a change to how OpenFleet works.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to do, and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you'd like
+      description: How it could work. Commands, settings or an example run help.
+    validations:
+      required: true
+  - type: dropdown
+    id: extension
+    attributes:
+      label: Could it be an extension?
+      description: Many additions fit as an instruction-only extension (see docs/extensions.md).
+      options:
+        - "Not sure"
+        - "Yes"
+        - "No, it needs a core change"
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered

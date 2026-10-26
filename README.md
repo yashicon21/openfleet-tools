@@ -309,6 +309,8 @@ See [docs/extensions.md](docs/extensions.md).
 
 ## Development
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to contribute (tests with fake host binaries, changesets, commit style) and [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
+
 ```sh
 pnpm install
 pnpm test        # builds, then runs vitest
