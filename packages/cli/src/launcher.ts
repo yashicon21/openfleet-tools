@@ -3,6 +3,8 @@ import os from "node:os";
 import path from "node:path";
 import { qualifiedAgentName } from "./attribution.js";
 import fs from "node:fs";
+import { MODEL_KEYS, modelFor, readConfig } from "./config.js";
+import { appendEvent, readEvents } from "./events.js";
 import { isDir, realish } from "./fsutil.js";
 import { out, warn } from "./commands/output.js";
 import { deniedChecks, runChecks } from "./preflight.js";
@@ -123,6 +125,21 @@ export function allowedDirs(ws: Workspace, project?: string): string[] {
   return [...dirs];
 }
 
+/**
+ * `--model` for the launched agent from `models.<host>` in openfleet.json (`coordinator` for the
+ * coordinator, `extensions` for an extension command's agent), unless the user passed `--model` after `--`.
+ */
+export function modelArgs(opts: LaunchOptions): string[] {
+  if ((opts.passthrough ?? []).some((a) => a === "--model" || a.startsWith("--model="))) return [];
+  const host = opts.host ?? DEFAULT_HOST;
+  const model = modelFor(
+    readConfig(opts.ws),
+    host,
+    opts.agent === "openfleet-coordinator" ? "coordinator" : "extensions",
+  );
+  return model ? ["--model", model] : [];
+}
+
 export function buildCopilotArgs(opts: LaunchOptions): string[] {
   const args = ["--plugin-dir", opts.ws.core, "--agent", qualifiedAgentName(opts.agent)];
   if (opts.sessionId) args.push("--session-id", opts.sessionId);
@@ -130,6 +147,7 @@ export function buildCopilotArgs(opts: LaunchOptions): string[] {
   // Tools run without prompts; paths stay limited to allowedDirs and URLs still prompt.
   if (!opts.ask) args.push("--allow-all-tools");
   for (const dir of allowedDirs(opts.ws, opts.project)) args.push("--add-dir", dir);
+  args.push(...modelArgs(opts));
   if (opts.prompt) args.push("-i", opts.prompt);
   args.push(...(opts.passthrough ?? []));
   return args;
@@ -148,6 +166,7 @@ export function buildClaudeArgs(opts: LaunchOptions): string[] {
   if (opts.name && fresh) args.push("--name", opts.name);
   if (!opts.ask) args.push("--permission-mode", "acceptEdits", "--allowedTools", "Bash");
   for (const dir of allowedDirs(opts.ws, opts.project)) args.push("--add-dir", dir);
+  args.push(...modelArgs(opts));
   args.push(...(opts.passthrough ?? []));
   return args;
 }
@@ -208,9 +227,34 @@ function prepareClaude(ws: Workspace, bin: string): void {
 }
 
 /** Launch the host CLI interactively in the workspace root. Returns its exit code. */
+/**
+ * Log the model each role will use in this session (`models.configured`) when it differs from the last one logged, so the run report can show
+ * them next to the models the transcripts record. `null` means the host's own default.
+ */
+function recordModels(opts: LaunchOptions, host: Host): void {
+  const config = readConfig(opts.ws);
+  const models: Record<string, string | null> = {};
+  for (const key of MODEL_KEYS) if (key !== "default") models[key] = modelFor(config, host, key) ?? null;
+  const own = opts.passthrough ?? [];
+  const i = own.findIndex((a) => a === "--model" || a.startsWith("--model="));
+  if (i >= 0) models.coordinator = own[i]!.includes("=") ? own[i]!.split("=")[1]! : (own[i + 1] ?? null);
+  const p = projectPaths(opts.ws, opts.project!);
+  const last = readEvents(p)
+    .filter((e) => e.type === "models.configured")
+    .at(-1);
+  if (last && JSON.stringify(last.payload) === JSON.stringify({ host, models })) return;
+  appendEvent(p, {
+    actor: "cli",
+    type: "models.configured",
+    target: null,
+    payload: { host, models },
+  });
+}
+
 export function launch(opts: LaunchOptions): number {
   const host = opts.host ?? DEFAULT_HOST;
   const bin = hostBinary(host);
+  if (opts.project && opts.agent === "openfleet-coordinator") recordModels(opts, host);
   // Create the worktrees dir up front so it can be passed to --add-dir before any worktree exists.
   if (opts.project) fs.mkdirSync(projectPaths(opts.ws, opts.project).worktrees, { recursive: true });
   inheritedSandboxCheck(opts.ws, opts.project, process.env, host);

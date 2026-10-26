@@ -101,6 +101,8 @@ export interface ReportModel {
   halt?: Halt;
   /** Halts, resumes and budget warnings, in order. */
   halts: HaltEntry[];
+  /** Models per role from the last launch (`models.configured`); `null` is the host's default. */
+  models?: { configured: Record<string, string | null>; changed: boolean };
   eventCount: number;
   inProgress: boolean;
 }
@@ -184,6 +186,16 @@ export function buildModel(ws: Workspace, name: string, opts: ReportOptions = {}
     budget: { ...readConfig(ws).budget, ...state.budget },
     opts,
   });
+}
+
+/** The configured models of the last launch, and whether they changed during the run. */
+function modelsOf(events: OpenFleetEvent[]): Pick<ReportModel, "models"> {
+  const configs = events
+    .filter((e) => e.type === "models.configured" && e.payload.models && typeof e.payload.models === "object")
+    .map((e) => e.payload.models as Record<string, string | null>);
+  if (!configs.length) return {};
+  const keys = new Set(configs.map((c) => JSON.stringify(c)));
+  return { models: { configured: configs.at(-1)!, changed: keys.size > 1 } };
 }
 
 export interface HaltEntry {
@@ -344,6 +356,7 @@ export function deriveModel(input: ModelInput): ReportModel {
     completionMode: state.completionMode,
     ...(input.budget && Object.keys(input.budget).length ? { budget: input.budget } : {}),
     ...(state.halt ? { halt: state.halt } : {}),
+    ...modelsOf(events),
     halts: events
       .filter((e) => e.type === "run.halted" || e.type === "run.resumed" || e.type === "budget.warning")
       .map((e) => ({

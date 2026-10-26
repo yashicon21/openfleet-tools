@@ -18,6 +18,7 @@ import {
   type LoadedExtension,
   type PhaseEntry,
 } from "./extensions.js";
+import { modelFor, readConfig, type ModelKey } from "./config.js";
 import type { CoreIndex } from "./coreindex.js";
 import { copyDir, readJson, writeFileAtomic, writeJson } from "./fsutil.js";
 import {
@@ -27,6 +28,7 @@ import {
   pluginDir,
   renderForHost,
   toClaudeAgent,
+  withModel,
   type Host,
 } from "./hosts.js";
 import type { Workspace } from "./workspace.js";
@@ -92,9 +94,11 @@ function renderSkills(src: string, dest: string, host: Host): void {
   }
 }
 
-/** File name and content of an agent for a host, from its Copilot-format source. */
-function hostAgent(host: Host, name: string, copilotAgent: string): [string, string] {
-  return host === "claude" ? [`${name}.md`, toClaudeAgent(copilotAgent)] : [`${name}.agent.md`, copilotAgent];
+/** File name and content of an agent for a host, from its Copilot-format source, with the configured model. */
+function hostAgent(host: Host, name: string, copilotAgent: string, model?: string): [string, string] {
+  return host === "claude"
+    ? [`${name}.md`, withModel(toClaudeAgent(copilotAgent), model)]
+    : [`${name}.agent.md`, withModel(copilotAgent, model)];
 }
 
 function frontmatter(fields: Record<string, unknown>): string {
@@ -174,6 +178,7 @@ function commandAgentBody(m: ExtensionManifest, settings: string): string {
  */
 export function syncExtensions(ws: Workspace, warn: (msg: string) => void = () => {}): CoreIndex {
   const coreVersion = installedCoreVersion(ws) ?? packageVersion();
+  const workspaceConfig = readConfig(ws);
   const exts = loadExtensions(ws, warn);
   const config = readExtensionsConfig(ws);
   const installed = new Set(exts.map((e) => e.manifest.name));
@@ -198,9 +203,15 @@ export function syncExtensions(ws: Workspace, warn: (msg: string) => void = () =
     }
   }
   /** Write one agent (Copilot format) for every host it applies to. */
-  const writeAgent = (name: string, copilotAgent: (host: Host) => string, hosts?: readonly Host[]) => {
+  const writeAgent = (
+    name: string,
+    copilotAgent: (host: Host) => string,
+    hosts?: readonly Host[],
+    modelKey: Exclude<ModelKey, "default"> = "extensions",
+  ) => {
     for (const d of dirs.filter((x) => !hosts || hosts.includes(x.host))) {
-      const [file, content] = hostAgent(d.host, name, copilotAgent(d.host));
+      const model = modelFor(workspaceConfig, d.host, modelKey);
+      const [file, content] = hostAgent(d.host, name, copilotAgent(d.host), model);
       writeFileAtomic(path.join(d.agents, file), content);
     }
   };
@@ -245,7 +256,7 @@ export function syncExtensions(ws: Workspace, warn: (msg: string) => void = () =
         `Agent ${name}.agent.md is ${copilot.length} chars (Copilot limit ${MAX_AGENT_PROMPT}); augment extensions may be truncated.`,
       );
     }
-    writeAgent(name, body);
+    writeAgent(name, body, undefined, role);
   }
 
   for (const ext of exts) {

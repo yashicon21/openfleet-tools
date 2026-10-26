@@ -277,6 +277,9 @@ describe("openfleet CLI", () => {
     const types = readEvents({ events: path.join(projectDir, "events.jsonl") } as never).map((e) => e.type);
     expect(types).toEqual([
       "project.created",
+      // `new … -- --model x` set the coordinator's model; the later resume without it changed it back.
+      "models.configured",
+      "models.configured",
       "session.replaced",
       "phase.changed",
       "worktree.created",

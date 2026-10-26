@@ -147,30 +147,31 @@ Repos can live anywhere: give a `path` (relative to the workspace root) or a `ur
 
 ## Commands
 
-| Command                                                             | What it does                                                                                       |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `npx openfleet init [--host <copilot\|claude>]`                     | Create the workspace here, install core and choose the host (asks; CI: `copilot`)                  |
-| `npx openfleet update`                                              | Replace `core` with the installed CLI version; disable incompatible extensions                     |
-| `npx openfleet config`                                              | Show workspace settings (`openfleet.json`)                                                         |
-| `npx openfleet config set maxParallel <n>`                          | Cap working agents across all projects (default 6)                                                 |
-| `npx openfleet config set host <copilot\|claude>`                   | Agent host for new projects (`copilot` or `claude`; set by `init`)                                 |
-| `npx openfleet config set greenfield.<key> <n>`                     | Greenfield caps: `maxServices` (5), `maxChildren` (12), `maxCriteriaPerChild` (8)                  |
-| `npx openfleet config set budget.<maxTokens\|maxCost> <n>`          | Spending limit per run (tokens, or USD with `pricing`); a run that reaches it halts                |
-| `npx openfleet new <name> ["<request>"] [--ask] [--host <h>]`       | Create a project and launch the coordinator (`--host` overrides the workspace host)                |
-| `npx openfleet resume <name> [--fresh] [--ask]`                     | Continue a project in its host session (`--fresh`, or a missing session: a new one)                |
-| `npx openfleet continue <name> [new-name]`                          | Start the next slice of a finished greenfield project from its Follow-ups                          |
-| `npx openfleet pause <name> [--reason <text>]`                      | Stop spawning agents; running ones finish their step (`resume` continues)                          |
-| `npx openfleet cancel <name> [--reason <text>]`                     | Stop the run for good (`cancelled`); worktrees and branches are kept (`resume --reopen` continues) |
-| `npx openfleet status [name] [--json]`                              | Children grouped by repo, phases, retries and open questions                                       |
-| `npx openfleet list`                                                | All projects                                                                                       |
-| `npx openfleet clean <name> [--branches] [--force]`                 | Remove the project's child and integration worktrees (and branches)                                |
-| `npx openfleet report <name> [--out <file>] [--open] [--gap <min>]` | Write an HTML report of the run (see [Run report](#run-report))                                    |
-| `npx openfleet add <git-url[#ref]\|path>`                           | Install or update an extension and print its permissions                                           |
-| `npx openfleet remove <name>`                                       | Uninstall an extension                                                                             |
-| `npx openfleet extensions`                                          | List installed extensions                                                                          |
-| `npx openfleet ext settings [--unset]`                              | List extension settings (`--unset`: only those without a workspace value)                          |
-| `npx openfleet ext settings set <ext> <key> <val>`                  | Set a workspace-level extension setting in `extensions.config.json`                                |
-| `npx openfleet <ext-command> [--ask]`                               | Run a command declared by an extension                                                             |
+| Command                                                             | What it does                                                                                                                      |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `npx openfleet init [--host <copilot\|claude>]`                     | Create the workspace here, install core and choose the host (asks; CI: `copilot`)                                                 |
+| `npx openfleet update`                                              | Replace `core` with the installed CLI version; disable incompatible extensions                                                    |
+| `npx openfleet config`                                              | Show workspace settings (`openfleet.json`)                                                                                        |
+| `npx openfleet config set maxParallel <n>`                          | Cap working agents across all projects (default 6)                                                                                |
+| `npx openfleet config set host <copilot\|claude>`                   | Agent host for new projects (`copilot` or `claude`; set by `init`)                                                                |
+| `npx openfleet config set greenfield.<key> <n>`                     | Greenfield caps: `maxServices` (5), `maxChildren` (12), `maxCriteriaPerChild` (8)                                                 |
+| `npx openfleet config set budget.<maxTokens\|maxCost> <n>`          | Spending limit per run (tokens, or USD with `pricing`); a run that reaches it halts                                               |
+| `npx openfleet config set models.<host>.<role> <model>`             | Model per agent role (`default`, `coordinator`, `planner`, `implementer`, `tester`, …) for `copilot` or `claude`; `""` removes it |
+| `npx openfleet new <name> ["<request>"] [--ask] [--host <h>]`       | Create a project and launch the coordinator (`--host` overrides the workspace host)                                               |
+| `npx openfleet resume <name> [--fresh] [--ask]`                     | Continue a project in its host session (`--fresh`, or a missing session: a new one)                                               |
+| `npx openfleet continue <name> [new-name]`                          | Start the next slice of a finished greenfield project from its Follow-ups                                                         |
+| `npx openfleet pause <name> [--reason <text>]`                      | Stop spawning agents; running ones finish their step (`resume` continues)                                                         |
+| `npx openfleet cancel <name> [--reason <text>]`                     | Stop the run for good (`cancelled`); worktrees and branches are kept (`resume --reopen` continues)                                |
+| `npx openfleet status [name] [--json]`                              | Children grouped by repo, phases, retries and open questions                                                                      |
+| `npx openfleet list`                                                | All projects                                                                                                                      |
+| `npx openfleet clean <name> [--branches] [--force]`                 | Remove the project's child and integration worktrees (and branches)                                                               |
+| `npx openfleet report <name> [--out <file>] [--open] [--gap <min>]` | Write an HTML report of the run (see [Run report](#run-report))                                                                   |
+| `npx openfleet add <git-url[#ref]\|path>`                           | Install or update an extension and print its permissions                                                                          |
+| `npx openfleet remove <name>`                                       | Uninstall an extension                                                                                                            |
+| `npx openfleet extensions`                                          | List installed extensions                                                                                                         |
+| `npx openfleet ext settings [--unset]`                              | List extension settings (`--unset`: only those without a workspace value)                                                         |
+| `npx openfleet ext settings set <ext> <key> <val>`                  | Set a workspace-level extension setting in `extensions.config.json`                                                               |
+| `npx openfleet <ext-command> [--ask]`                               | Run a command declared by an extension                                                                                            |
 
 Arguments after `--` go to the host CLI (`copilot` or `claude`) unchanged, for example `npx openfleet new x -- --model claude-sonnet-5.5`.
 
@@ -187,6 +188,19 @@ Pass `--ask` to `new`, `resume` or an extension command to get Copilot's normal 
 `new`, `resume` and `status` warn when another active project touches the same repo.
 
 The agents also use the helper commands `state`, `event`, `worktree`, `preflight`, `next`, `gate`, `baseline`, `claim`, `ack`, `scope`, `merge`, `escalate` and `ext plan|result|fail`. See `npx openfleet help`.
+
+## Models
+
+Each agent role can run on its own model, for each host. Set one model for everything, or a different one per role:
+
+```sh
+npx openfleet config set models.claude.default sonnet
+npx openfleet config set models.claude.implementer claude-opus-5-5
+npx openfleet config set models.claude.tester haiku
+npx openfleet config set models.copilot.planner "Claude Sonnet 5.5"
+```
+
+The keys under `models.<copilot|claude>` are `default` and the roles `coordinator`, `repo-coordinator`, `planner`, `baseline`, `implementer`, `tester` and `extensions` (extension agents). A role without a model uses `default`, then the host's own default. Use each host's model names: aliases such as `sonnet` or full ids such as `claude-opus-5-5` on Claude Code, model names as Copilot lists them on Copilot CLI. They are written into the generated agents as `model:`, and the coordinator also gets `--model` at launch (a `--model` you pass after `--` wins). Models are workspace settings, read when a session starts: a change applies from the next `new` or `resume`. `""` removes a model.
 
 ## Hosts
 
@@ -230,6 +244,7 @@ It is built only from the project's files (`events.jsonl`, `state.json`, `spec.m
 - the **Coverage**, **Assumptions**, **Follow-ups** and **Lessons** sections of `summary.md`, when it has them (assumptions fall back to the `assumption` events);
 - tokens by role and model, read from the host's transcripts on this machine (Claude Code: `~/.claude/projects/`; Copilot CLI: `~/.copilot/session-state/`). Each API message is counted once, even when sessions were forked. Without transcripts the section says "not available".
 - the spending limits (`budget`) against usage, and every halt, resume and 80% warning; a halted run is marked in the header.
+- the model configured for each role at launch next to the models the transcripts show it used, so you can check the `models` settings took effect.
 
 Pauses longer than 15 minutes (`--gap <min>`) are collapsed into hatched bands on the timeline. `--out <file>` writes elsewhere and `--open` opens the report in the browser.
 

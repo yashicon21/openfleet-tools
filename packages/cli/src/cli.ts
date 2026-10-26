@@ -29,7 +29,9 @@ Workspace
                                host (copilot | claude, default copilot) picks the agent host for new projects;
                                greenfield.maxServices (default 5), greenfield.maxChildren (12) and
                                greenfield.maxCriteriaPerChild (8) cap a greenfield spec before it can be approved;
-                               budget.maxTokens and budget.maxCost (USD, needs pricing) halt a run that reaches them
+                               budget.maxTokens and budget.maxCost (USD, needs pricing) halt a run that reaches them;
+                               models.<copilot|claude>.<role> picks the model per agent role (default, coordinator,
+                               repo-coordinator, planner, baseline, implementer, tester, extensions); "" removes it
 
 Projects
   new <name> ["<request>"] [--ask] [--host copilot|claude]
