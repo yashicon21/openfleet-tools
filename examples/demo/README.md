@@ -42,7 +42,7 @@ git -C projects/greeting-lang/worktrees/web diff --cached
 
 The spec, plans and contracts are in `projects/greeting-lang/`, and full patches are in its `patches/`.
 
-Requirements: Node.js 20+, git, pnpm and a signed-in [Copilot CLI](https://github.com/github/copilot-cli). Running the project uses Copilot requests. With `--host claude`, you need a signed-in [Claude Code](https://code.claude.com) 2.1.219 or later instead (see [Hosts](../../README.md#hosts)).
+Requirements: Node.js 22+, git, pnpm and a signed-in [Copilot CLI](https://github.com/github/copilot-cli). Running the project uses Copilot requests. With `--host claude`, you need a signed-in [Claude Code](https://code.claude.com) 2.1.219 or later instead (see [Hosts](../../README.md#hosts)).
 
 ## Greenfield: build a system from scratch
 

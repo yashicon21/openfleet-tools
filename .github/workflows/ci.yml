@@ -19,12 +19,14 @@ env:
 
 jobs:
   test:
-    name: Test (Node ${{ matrix.node }})
-    runs-on: ubuntu-latest
+    name: Test (${{ matrix.os }}, Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        node: [20, 22]
+        # Supported platforms: Linux and macOS. Windows is supported through WSL2 (see the README).
+        os: [ubuntu-latest, macos-latest]
+        node: [22, 24]
     steps:
       - name: Check out repo
         uses: actions/checkout@v7
