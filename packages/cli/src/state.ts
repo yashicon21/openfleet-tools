@@ -5,6 +5,7 @@ import { appendEvent } from "./events.js";
 import { parseChildId, syncIntegrationChildren } from "./groups.js";
 import { readJson, writeJson } from "./fsutil.js";
 import { withLock } from "./lock.js";
+import { checkSchema } from "./migrate.js";
 import { greenfieldViolations } from "./greenfield.js";
 import { UserError, workspaceAt, type ProjectPaths } from "./workspace.js";
 import type { Host } from "./hosts.js";
@@ -266,7 +267,9 @@ export function newState(name: string, sessionId?: string, host?: Host): Project
 
 export function readState(p: ProjectPaths): ProjectState {
   if (!fs.existsSync(p.state)) throw new UserError(`Project "${p.name}" not found (${p.state}).`);
-  return readJson<ProjectState>(p.state);
+  const state = readJson<ProjectState>(p.state);
+  checkSchema("state", p.state, state);
+  return state;
 }
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {

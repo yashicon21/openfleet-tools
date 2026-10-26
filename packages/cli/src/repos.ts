@@ -1,4 +1,5 @@
 import { readJsonOr, writeJson } from "./fsutil.js";
+import { checkSchema } from "./migrate.js";
 import { UserError, type Workspace } from "./workspace.js";
 
 /** repos.json key: also the `<repo>` part of child ids. */
@@ -57,6 +58,7 @@ export function validateRepoKey(key: string | undefined): string {
 
 export function readRepos(ws: Workspace): ReposFile {
   const repos = readJsonOr<ReposFile>(ws.reposFile, emptyRepos());
+  checkSchema("repos", ws.reposFile, repos);
   for (const [key, entry] of Object.entries(repos.repos ?? {})) {
     if (entry.greenfield !== undefined && typeof entry.greenfield !== "boolean") {
       throw new UserError(`repos.json "${key}".greenfield must be true or false.`);

@@ -1,10 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
+import semver from "semver";
 import { installCore, installedCoreVersion, packageVersion } from "../core.js";
 import { disableIncompatible, emptyLock, SETTINGS_FILE } from "../extensions.js";
 import { parseHost, readConfig, setConfig, writeWorkspaceVersion } from "../config.js";
 import { DEFAULT_HOST, HOST_LABEL, HOSTS, type Host } from "../hosts.js";
 import { realish, writeJson } from "../fsutil.js";
+import { migrateWorkspace } from "../migrate.js";
 import { emptyRepos } from "../repos.js";
 import { findWorkspace, MARKER, requireWorkspace, UserError, workspaceAt, type Workspace } from "../workspace.js";
 import { out, warn } from "./output.js";
@@ -178,6 +180,18 @@ export function cmdUpdate(): number {
   const ws = requireWorkspace();
   const before = installedCoreVersion(ws);
   const version = packageVersion();
+  if (before && semver.valid(before) && semver.valid(version) && semver.gt(before, version)) {
+    throw new UserError(
+      `This workspace runs OpenFleet core ${before}, newer than this CLI (${version}). ` +
+        "Install the newer CLI (`npm install @openfleet-tools/cli@latest`) instead of downgrading.",
+    );
+  }
+  // Migrate the JSON files first: every other step reads them.
+  for (const m of migrateWorkspace(ws)) {
+    out(
+      `Migrated ${path.relative(ws.root, m.file)} from schema v${m.from} to v${m.to} (backup: ${path.basename(m.backup)}).`,
+    );
+  }
   const disabled = disableIncompatible(ws, version);
   for (const name of disabled) {
     warn(
