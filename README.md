@@ -25,8 +25,6 @@ OpenFleet is built from the host's own primitives (custom agents, subagents, hoo
 6. **Integrate.** A repo with several children merges them into its integration branch and runs the full build and tests there.
 7. **Finalize.** Changes are staged in each worktree, or opened as cross-linked draft PRs. On GitHub, a repo with several children can open as a stack of smaller PRs instead, one per child ([stacked pull requests](https://docs.github.com/en/pull-requests/reference/stacked-prs-cli-commands), via `gh stack`; the grill asks). `summary.md` lists assumptions, failures and follow-ups, and `report.html` shows the whole run (see [Run report](#run-report)).
 
-See the [flow diagram](docs/flow.png) for the details.
-
 ## How it differs from `/fleet`
 
 |           | Copilot `/fleet`                                   | OpenFleet                                                         |
@@ -333,7 +331,7 @@ Packages:
 
 To try a local build, run `node packages/create/dist/index.js ../my-fleet --cli file:$PWD/packages/cli`. Set `OPENFLEET_COPILOT_BIN` to use a different `copilot` binary.
 
-Design notes are in [docs/design.md](docs/design.md), and the flow is in [docs/flow.mmd](docs/flow.mmd).
+Design notes, including the full run flow, are in [docs/design.md](docs/design.md).
 
 The website ([openfleet.tools](https://openfleet.tools)) is a single static page in `site/index.html`, with no build step. Pushes to `main` that touch `site/` deploy it to GitHub Pages through [`pages.yml`](.github/workflows/pages.yml).
 
