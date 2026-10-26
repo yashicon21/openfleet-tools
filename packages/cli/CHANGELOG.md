@@ -1,5 +1,44 @@
 # @openfleet-tools/cli
 
+## 0.7.0
+
+### Minor Changes
+
+- [`d7504b4`](https://github.com/yashicon21/openfleet-tools/commit/d7504b4aff58239c7e444077eb4a3d22dd18b3b9) Thanks [@yashicon21](https://github.com/yashicon21)! - Greenfield preflight, completion and `continue`.
+  
+  - Preflight for greenfield projects checks that `node`, `git`, `docker` and the toolchains the stack needs (`state.toolchains`, for example `pnpm`, `uv`, `go`) are on PATH, and that their package registries are reachable (honouring `npm_config_registry`, `PIP_INDEX_URL`/`UV_INDEX_URL` and `GOPROXY`). Failures name the tool or registry with an install hint.
+  - Greenfield completion: when the end-to-end flow (the system child) passed, the result is committed on the new repo's `main` (new completion mode `main`), or, with a GitHub remote, pushed as one draft PR into `main` with everything after the initial commit. Otherwise nothing lands and the summary says why.
+  - New command `npx openfleet continue <project> [name]` starts the next slice of a finished greenfield project: a new project (default `<project>-2`) whose spec draft holds the previous Layout, Stack and Follow-ups backlog and whose contracts are copied over. Its repos are reused (no longer greenfield), the grill skips the stack questions, and the same scope caps apply. Logs `project.continued`.
+  - The run report shows `greenfield` or `continues <project>` in its header.
+
+- [`d7504b4`](https://github.com/yashicon21/openfleet-tools/commit/d7504b4aff58239c7e444077eb4a3d22dd18b3b9) Thanks [@yashicon21](https://github.com/yashicon21)! - The coordinator can now run greenfield projects end to end.
+  
+  - The grill detects a request for a new system, proposes services and contracts, recommends one monorepo, asks the stack questions once with a recommendation each, offers a GitHub remote, shows the greenfield caps and cuts the request to an MVP slice with one end-to-end flow, moving the rest to `## Follow-ups`. The spec gains **Layout**, **Stack**, **End-to-end flow**, a **Kind** column and **Follow-ups**.
+  - New helper `npx openfleet spec-check <project>` lists what would block approving a greenfield spec, so the grill fixes it before the last question.
+  - After approval the coordinator creates the repos with `npx openfleet repo create`; preflight accepts a greenfield project's repos that do not exist yet.
+  - Each greenfield child's agents get kind-specific instructions in their assignment: the setup child scaffolds with official generators run non-interactively, the contracts child writes schemas and generated clients, services and the frontend build on them, and the system child adds docker-compose, generated dev-only credentials in a git-ignored `.env.local`, seed data and the end-to-end flow.
+  - New helper `npx openfleet repo confirm <key> [--package <name> [--path <dir>]] [--build|--test|--e2e <cmd>] [--copy-file <f>]` records the commands the setup and system children's testers confirmed in `repos.json`.
+
+- [`d7504b4`](https://github.com/yashicon21/openfleet-tools/commit/d7504b4aff58239c7e444077eb4a3d22dd18b3b9) Thanks [@yashicon21](https://github.com/yashicon21)! - First building blocks for greenfield projects (new systems built from scratch).
+  
+  - New helper `npx openfleet repo create <key> [--github <owner/name>] [--project <name>]` creates `repos/<key>` with an empty initial commit on `main` and registers it in `repos.json` with `greenfield: true`. It refuses a non-empty folder or an existing key. `--github` also creates a private GitHub repo with `gh` and pushes the initial commit, with clear errors when `gh` is missing or not signed in. `--project` marks the project as greenfield and logs a `repo.created` event.
+  - Project state gains `greenfield` and children gain `kind` (`setup`, `contracts`, `service`, `frontend`, `system`). In a greenfield project OpenFleet adds the run order to `dependsOn`: setup → contracts → services and frontend → system.
+
+- [`d7504b4`](https://github.com/yashicon21/openfleet-tools/commit/d7504b4aff58239c7e444077eb4a3d22dd18b3b9) Thanks [@yashicon21](https://github.com/yashicon21)! - Greenfield projects are capped at an MVP slice, enforced by the CLI.
+  
+  - Approving a greenfield spec (`specApproved: true`) is refused, with every problem listed, when a child has no `kind`, when there are more services, children or acceptance criteria per child than allowed, or when `spec.md` has no non-empty `## Follow-ups` section listing what was cut.
+  - New workspace settings `greenfield.maxServices` (default 5), `greenfield.maxChildren` (12) and `greenfield.maxCriteriaPerChild` (8), changed with `npx openfleet config set greenfield.<key> <n>`.
+  - `plan.rejected` now requires a `reason`, and accepts the new `out-of-scope` for plans that build a Follow-ups item. Coordinators check greenfield plans against Follow-ups, and testers flag endpoints, pages or tables that no contract or acceptance criterion asks for.
+
+- [`d7504b4`](https://github.com/yashicon21/openfleet-tools/commit/d7504b4aff58239c7e444077eb4a3d22dd18b3b9) Thanks [@yashicon21](https://github.com/yashicon21)! - Draft PRs can open as GitHub stacked pull requests.
+  
+  - With the `draft-pr` completion mode on GitHub, the grill asks whether a repo with several children (including a greenfield monorepo) should open as a stack of smaller PRs, one per child in merge order, instead of one PR. It checks for the `gh stack` extension and offers to install it. The choice is saved as `prStack`.
+  - New helper `npx openfleet stack <project> <repo>` creates one branch per merged child from the integration branch's history (the top layer is the integration branch, with any integration fixes), records the layers and logs `stack.created`. Finalize then opens them with `gh stack init` and `gh stack submit --auto`, and falls back to one PR if `gh stack` fails.
+
+### Patch Changes
+
+- [`d7504b4`](https://github.com/yashicon21/openfleet-tools/commit/d7504b4aff58239c7e444077eb4a3d22dd18b3b9) Thanks [@yashicon21](https://github.com/yashicon21)! - Document greenfield projects in the READMEs, the design notes, the flow diagram source and the site's quick start, and add a greenfield demo (`pnpm demo --greenfield`) with the invoice and payment tracker prompt.
+
 ## 0.6.0
 
 ### Minor Changes

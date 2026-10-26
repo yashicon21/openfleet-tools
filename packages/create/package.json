@@ -1,6 +1,6 @@
 {
   "name": "@openfleet-tools/create",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Scaffold an OpenFleet workspace: npm create @openfleet-tools",
   "license": "MIT",
   "homepage": "https://openfleet.tools",
