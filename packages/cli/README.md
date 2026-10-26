@@ -1,5 +1,7 @@
 # @openfleet-tools/cli
 
+<img src="https://raw.githubusercontent.com/yashicon21/openfleet-tools/main/docs/brand/logo-horizontal-light.png" alt="OpenFleet" height="48" />
+
 Coordinate **one change across many repos**, or build **a new system from scratch**, with [GitHub Copilot CLI](https://github.com/github/copilot-cli) or [Claude Code](https://code.claude.com).
 
 You describe the change once. A **coordinator** agent turns it into a spec with you, then runs a **planner → implementer → tester** pipeline for each repo, monorepo package or path-scoped unit (such as one page of an app), in parallel, each in its own git worktree. A repo with several children gets its own **repo coordinator**, which merges them into one integration branch and one PR. Every agent action is recorded in an append-only event log.
