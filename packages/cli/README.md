@@ -34,6 +34,8 @@ npm create @openfleet-tools@latest   # or: npx @openfleet-tools/create; asks Cop
 npx openfleet new better-auth "Move every service to better-auth"
 ```
 
+> **Run `npx openfleet` inside your workspace folder** (the one `npm create` set up). There, npx runs the OpenFleet CLI installed in it. Outside it, npx would offer to download a different, unrelated npm package that is also named `openfleet`. To run OpenFleet from anywhere, use the scoped name: `npx @openfleet-tools/cli <command>`.
+
 To try it on a toy example first, run `pnpm demo` from a checkout of this repo. See [examples/demo](https://github.com/yashicon21/openfleet-tools/blob/main/examples/demo/README.md).
 
 The coordinator then:
