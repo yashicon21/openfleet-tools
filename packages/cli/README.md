@@ -26,8 +26,6 @@ This package provides the `openfleet` command and the plugin it installs for eac
 6. **Integrate.** A repo with several children merges them into its integration branch and runs the full build and tests there.
 7. **Finalize.** Changes are staged in each worktree, or opened as cross-linked draft PRs. On GitHub, a repo with several children can open as a stack of smaller PRs instead, one per child ([stacked pull requests](https://docs.github.com/en/pull-requests/reference/stacked-prs-cli-commands), via `gh stack`; the grill asks). `summary.md` lists assumptions, failures and follow-ups, and `report.html` shows the whole run (see [Run report](#run-report)).
 
-See the [flow diagram](https://github.com/yashicon21/openfleet-tools/blob/main/docs/flow.png) for the details.
-
 ## Quick start
 
 Requirements: Node.js 22+, git, a signed-in agent host ([Copilot CLI](https://github.com/github/copilot-cli), or [Claude Code](https://code.claude.com) 2.1.219 or later), and optionally `gh` for draft PRs. Runs on macOS and Linux; on Windows, use WSL2 (native Windows is not supported).
