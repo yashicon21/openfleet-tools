@@ -1,5 +1,29 @@
 # @openfleet-tools/cli
 
+## 0.8.0
+
+### Minor Changes
+
+- [#3](https://github.com/yashicon21/openfleet-tools/pull/3) [`44e3081`](https://github.com/yashicon21/openfleet-tools/commit/44e30810521abd9fe7c63e52799a2d7703f2aac1) Thanks [@yashicon21](https://github.com/yashicon21)! - Choose the model for each agent role.
+  
+  - New workspace setting `models.<copilot|claude>.<key>`, set with `npx openfleet config set models.<host>.<key> <model>` (`""` removes one). Keys: `default`, `coordinator`, `repo-coordinator`, `planner`, `baseline`, `implementer`, `tester` and `extensions` (extension agents). A role without a model uses `default`, then the host's own default, so one model for everything and any mix per role both work.
+  - The models are written into the generated agent files (`model:`), as given for each host (Claude Code ids are no longer shortened), and the coordinator also gets `--model` at launch unless one is passed after `--`. `config set models.*` regenerates the agents right away; a change applies from the next `new` or `resume`.
+  - The grill shows the models for the project's host and how to change them.
+  - The coordinator's launch logs `models.configured`, and `npx openfleet report` shows a "Models by role" table: the configured model next to the models the transcripts show each role used.
+
+- [#2](https://github.com/yashicon21/openfleet-tools/pull/2) [`969a23e`](https://github.com/yashicon21/openfleet-tools/commit/969a23e0a0ca553f233c041047e4aee749772a58) Thanks [@yashicon21](https://github.com/yashicon21)! - Spending limits and stopping a run.
+  
+  - New workspace settings `budget.maxTokens` and `budget.maxCost` (USD, priced with `pricing`), set with `npx openfleet config set budget.<key> <n>`; a project can override them (`budget` in its state, offered in the grill). Before every spawn, `npx openfleet claim` reads the run's token usage from the host transcripts. It logs `budget.warning` once at 80%, and when a limit is reached it halts the run: `claim` returns `{"result":"stop"}`, `next` returns only a `halt` action, and the coordinators spawn nothing more, let running agents finish, write the summary and stop.
+  - New commands `npx openfleet pause <name>` and `npx openfleet cancel <name>` (both with `--reason`) halt a run from another terminal. A cancelled project is `cancelled` and frees its workspace slots; worktrees and branches are kept.
+  - `npx openfleet resume` clears a halt and warns if a spending limit is still reached; a cancelled project needs `--reopen`. `status` shows the halt and usage against the limits. New events `run.halted`, `run.resumed` and `budget.warning`.
+  - `npx openfleet report` shows the spending limits against usage, every halt, resume and 80% warning, and marks a halted run in its header.
+
+- [#2](https://github.com/yashicon21/openfleet-tools/pull/2) [`849fbdf`](https://github.com/yashicon21/openfleet-tools/commit/849fbdf5fb681bc003a71fddb586f4c1e8905497) Thanks [@yashicon21](https://github.com/yashicon21)! - Safe upgrades between versions.
+  
+  - `state.json`, `repos.json` and `extensions.lock.json` are checked against the schema this CLI reads. A file from a newer OpenFleet is refused with "upgrade the CLI", and one with an older schema is refused with "run `npx openfleet update`", instead of being misread.
+  - `npx openfleet update` migrates every one of those files first, keeping a `<file>.v<N>.bak` copy of each original, and refuses to downgrade a workspace whose core is newer than the CLI.
+  - A test upgrades a workspace made with 0.6.0 and checks that its projects keep working.
+
 ## 0.7.0
 
 ### Minor Changes
