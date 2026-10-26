@@ -462,6 +462,35 @@ function usageRow(label: string, u: Usage, cost?: number, showCost = false): str
   return `<tr><td>${esc(label)}</td><td class="n">${num(u.calls)}</td><td class="n">${num(u.output)}</td><td class="n">${num(u.input)}</td><td class="n">${num(writes)}</td><td class="n">${num(u.cacheRead)}</td><td class="n">${num(totalTokens(u))}</td>${showCost ? `<td class="n">${cost === undefined ? "no price" : usd(cost)}</td>` : ""}</tr>`;
 }
 
+const MODEL_ROLES = ["coordinator", "repo-coordinator", "planner", "baseline", "implementer", "tester", "extensions"];
+
+/** Per role: the model configured at launch, and the models the transcripts show it actually used. */
+function modelsHtml(m: ReportModel): string {
+  const used = new Map<string, Map<string, number>>();
+  for (const [role, byModel] of Object.entries(m.tokens?.byRoleModel ?? {})) {
+    const key = role.startsWith("ext-") || role === "extension" ? "extensions" : role;
+    const into = used.get(key) ?? new Map<string, number>();
+    for (const [model, u] of Object.entries(byModel)) into.set(model, (into.get(model) ?? 0) + totalTokens(u));
+    used.set(key, into);
+  }
+  const configured = m.models?.configured;
+  if (!configured && !used.size) return "";
+  const rows = MODEL_ROLES.filter((r) => configured?.[r] || used.has(r)).map((r) => {
+    const set = configured ? (configured[r] ?? "host default") : "not recorded";
+    const actual = [...(used.get(r) ?? new Map<string, number>())]
+      .sort((a, b) => b[1] - a[1])
+      .map(([model, n]) => `<code>${esc(model)}</code> (${fmtTokens(n)})`)
+      .join(", ");
+    const label = r === "extensions" ? "Extensions" : roleLabel(r);
+    return `<tr><td>${esc(label)}</td><td>${configured?.[r] ? `<code>${esc(set)}</code>` : esc(set)}</td><td>${actual || "—"}</td></tr>`;
+  });
+  if (!rows.length) return "";
+  const note = m.models?.changed
+    ? '<p class="muted">The models changed between sessions of this run; "Configured" shows the last launch.</p>'
+    : "";
+  return `<h3>Models by role</h3><div class="card tbl"><table><thead><tr><th></th><th>Configured</th><th>Used (tokens)</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>${note}`;
+}
+
 const HALT_LABEL: Record<string, string> = {
   budget: "spending limit reached",
   paused: "paused",
@@ -515,7 +544,7 @@ function tokensSection(m: ReportModel): Section {
       eyebrow: "Tokens and cost",
       title: "Token usage: not available.",
       lead: `No ${m.host === "claude" ? "Claude Code" : "Copilot CLI"} transcripts for this run's sessions were found on this machine.`,
-      body: limitsHtml(m),
+      body: modelsHtml(m) + limitsHtml(m),
     };
   }
   const showCost = t.cost !== undefined;
@@ -550,7 +579,7 @@ function tokensSection(m: ReportModel): Section {
       ? `${fmtTokens(totalTokens(t.total))} tokens, about ${usd(t.cost!.total)}.`
       : `${fmtTokens(totalTokens(t.total))} tokens across ${plural(t.total.calls, "API call")}.`,
     lead: notes.join(" "),
-    body: `<h3>By role</h3><div class="card tbl"><table>${head}<tbody>${byRole}${total}</tbody></table></div><h3>By model</h3><div class="card tbl"><table>${head}<tbody>${byModel}</tbody></table></div>${limitsHtml(m)}`,
+    body: `<h3>By role</h3><div class="card tbl"><table>${head}<tbody>${byRole}${total}</tbody></table></div><h3>By model</h3><div class="card tbl"><table>${head}<tbody>${byModel}</tbody></table></div>${modelsHtml(m)}${limitsHtml(m)}`,
   };
 }
 

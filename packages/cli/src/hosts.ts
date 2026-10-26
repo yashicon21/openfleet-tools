@@ -145,3 +145,11 @@ export function claudePluginManifest(copilotPlugin: Record<string, unknown>): Re
   const { name, description, version, license } = copilotPlugin;
   return { name, description, version, license };
 }
+
+/** Set (or replace) an agent file's `model` frontmatter field, exactly as given. */
+export function withModel(agent: string, model: string | undefined): string {
+  if (!model) return agent;
+  const { fields, body } = parseFrontmatter(agent);
+  const kept = fields.filter(([k]) => k !== "model").map(([k, raw]) => `${k}: ${raw}`);
+  return `---\n${[...kept, `model: ${JSON.stringify(model)}`].join("\n")}\n---\n${body}`;
+}

@@ -52,6 +52,7 @@ export const EVENT_TYPES = [
   "run.halted",
   "run.resumed",
   "budget.warning",
+  "models.configured",
 ] as const;
 
 export type KnownEventType = (typeof EVENT_TYPES)[number];

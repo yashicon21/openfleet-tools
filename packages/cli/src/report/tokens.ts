@@ -63,6 +63,8 @@ export interface TokenReport {
   total: Usage;
   byRole: Record<string, Usage>;
   byModel: Record<string, Usage>;
+  /** Usage per role, split by the model that served it. */
+  byRoleModel: Record<string, Record<string, Usage>>;
   cost?: Cost;
 }
 
@@ -226,8 +228,10 @@ export function aggregate(host: Host, files: string[], messages: Message[]): Tok
     total: emptyUsage(),
     byRole: {},
     byModel: {},
+    byRoleModel: {},
   };
   for (const m of unique) {
+    add(((report.byRoleModel[m.role] ??= {})[m.model] ??= emptyUsage()), m.usage);
     add(report.total, m.usage);
     add((report.byRole[m.role] ??= emptyUsage()), m.usage);
     add((report.byModel[m.model] ??= emptyUsage()), m.usage);

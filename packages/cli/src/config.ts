@@ -19,6 +19,8 @@ export interface WorkspaceConfig {
   greenfield?: Partial<GreenfieldLimits>;
   /** Spending limits for every run (`config set budget.<key> <n>`); a project can override them. */
   budget?: Partial<BudgetLimits>;
+  /** Model per agent role, per host (`config set models.<host>.<role> <model>`); unset roles use `default`, then the host's own default. */
+  models?: Partial<Record<Host, RoleModels>>;
 }
 
 /** USD per million tokens. Cache writes: `cacheWrite5m`/`cacheWrite1h` where the host tells them apart, else `cacheWrite`. */
@@ -36,7 +38,23 @@ export const DEFAULT_MAX_PARALLEL = 6;
 export const DEFAULT_CONFIG: WorkspaceConfig = { maxParallel: DEFAULT_MAX_PARALLEL, host: DEFAULT_HOST };
 const KEYS = Object.keys(DEFAULT_CONFIG) as (keyof WorkspaceConfig)[];
 /** Settings with no default: `pricing` is set by editing openfleet.json, `greenfield` and `budget` with `config set <group>.<key>`. */
-const OPTIONAL_KEYS = ["pricing", "greenfield", "budget"];
+const OPTIONAL_KEYS = ["pricing", "greenfield", "budget", "models"];
+
+/** Keys under `models.<host>`: the agent roles, `extensions` (extension agents) and `default` (everything else). */
+export const MODEL_KEYS = [
+  "default",
+  "coordinator",
+  "repo-coordinator",
+  "planner",
+  "baseline",
+  "implementer",
+  "tester",
+  "extensions",
+] as const;
+export type ModelKey = (typeof MODEL_KEYS)[number];
+export type RoleModels = Partial<Record<ModelKey, string>>;
+/** Model names as the hosts spell them: `claude-sonnet-5-5`, `sonnet`, `Claude Sonnet 5.5`, `gpt-5 (preview)`, `opus[1m]`. */
+const MODEL_NAME = /^[A-Za-z0-9][\w.:/ ()[\]-]{0,99}$/;
 
 export interface BudgetLimits {
   /** Tokens (input, output and cache) the run may use in total, read from the host transcripts. */
@@ -128,6 +146,54 @@ export function parseBudget(value: unknown): Partial<BudgetLimits> {
   return out;
 }
 
+export function parseModels(value: unknown): Partial<Record<Host, RoleModels>> {
+  if (!isPlainObject(value)) throw new UserError("models must be an object keyed by host (copilot, claude).");
+  const out: Partial<Record<Host, RoleModels>> = {};
+  for (const [host, roles] of Object.entries(value)) {
+    if (!isHost(host)) throw new UserError(`models: unknown host "${host}". Use ${HOSTS.join(" or ")}.`);
+    if (!isPlainObject(roles)) throw new UserError(`models.${host} must be an object of role → model.`);
+    const entry: RoleModels = {};
+    for (const [k, m] of Object.entries(roles)) {
+      if (!(MODEL_KEYS as readonly string[]).includes(k)) {
+        throw new UserError(`models.${host}: unknown key "${k}". Known: ${MODEL_KEYS.join(", ")}.`);
+      }
+      if (typeof m !== "string" || !MODEL_NAME.test(m.trim())) {
+        throw new UserError(`models.${host}.${k} must be a model name (got ${JSON.stringify(m)}).`);
+      }
+      entry[k as ModelKey] = m.trim();
+    }
+    out[host] = entry;
+  }
+  return out;
+}
+
+/** The model an agent of `key` uses on `host`, if one is configured. */
+export function modelFor(config: WorkspaceConfig, host: Host, key: Exclude<ModelKey, "default">): string | undefined {
+  const m = config.models?.[host];
+  return m?.[key] ?? m?.default;
+}
+
+/** `config set models.<host>.<key> <model>`; an empty value removes the key. */
+function setModel(ws: Workspace, key: string, value: string): WorkspaceConfig {
+  const [, host, role, ...rest] = key.split(".");
+  if (!host || !role || rest.length) {
+    throw new UserError(`Use: npx openfleet config set models.<${HOSTS.join("|")}>.<${MODEL_KEYS.join("|")}> <model>`);
+  }
+  const next = updateMarker(ws, (current) => {
+    const models = isPlainObject(current.models) ? { ...current.models } : {};
+    const forHost = isPlainObject(models[host]) ? { ...models[host] } : {};
+    if (value.trim() === "") delete forHost[role];
+    else forHost[role] = value;
+    models[host] = forHost;
+    parseModels(models);
+    const out = { ...current, models };
+    if (!Object.keys(forHost).length) delete (out.models as Record<string, unknown>)[host];
+    if (!Object.keys(out.models).length) delete (out as Record<string, unknown>).models;
+    return out;
+  });
+  return { ...DEFAULT_CONFIG, ...validate(next, configFile(ws)) };
+}
+
 /** Effective greenfield caps: openfleet.json `greenfield` over the defaults. */
 export function greenfieldLimits(config: WorkspaceConfig): GreenfieldLimits {
   return { ...DEFAULT_GREENFIELD_LIMITS, ...config.greenfield };
@@ -139,6 +205,7 @@ const PARSERS: { [K in keyof WorkspaceConfig]-?: (value: unknown) => WorkspaceCo
   pricing: parsePricing,
   greenfield: parseGreenfield,
   budget: parseBudget,
+  models: parseModels,
 };
 
 function validate(raw: unknown, file: string): Partial<WorkspaceConfig> {
@@ -157,7 +224,10 @@ function validate(raw: unknown, file: string): Partial<WorkspaceConfig> {
     try {
       out[key] = PARSERS[key](raw[key]);
     } catch (err) {
-      if (err instanceof UserError && (key === "pricing" || key === "greenfield" || key === "budget"))
+      if (
+        err instanceof UserError &&
+        (key === "pricing" || key === "greenfield" || key === "budget" || key === "models")
+      )
         throw new UserError(`${file}: ${err.message}`);
       throw err;
     }
@@ -174,6 +244,7 @@ export function readConfig(ws: Workspace): WorkspaceConfig {
 
 /** Validate and write one key under a workspace lock. Returns the new effective config. */
 export function setConfig(ws: Workspace, key: string, value: string): WorkspaceConfig {
+  if (key.startsWith("models.")) return setModel(ws, key, value);
   const group = (["greenfield", "budget"] as const).find((g) => key.startsWith(`${g}.`));
   if (group) {
     const sub = key.slice(group.length + 1);

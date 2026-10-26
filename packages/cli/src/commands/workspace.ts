@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import semver from "semver";
-import { installCore, installedCoreVersion, packageVersion } from "../core.js";
+import { installCore, installedCoreVersion, packageVersion, syncExtensions } from "../core.js";
 import { disableIncompatible, emptyLock, SETTINGS_FILE } from "../extensions.js";
 import { parseHost, readConfig, setConfig, writeWorkspaceVersion } from "../config.js";
 import { DEFAULT_HOST, HOST_LABEL, HOSTS, type Host } from "../hosts.js";
@@ -215,6 +215,9 @@ export function cmdConfig(args: string[]): number {
   }
   const [sub, key, value, ...extra] = args;
   if (sub !== "set" || !key || value === undefined || extra.length) throw new UserError(CONFIG_USAGE);
-  out(JSON.stringify(setConfig(ws, key, value), null, 2));
+  const next = setConfig(ws, key, value);
+  // Models are written into the generated agent files: regenerate them now.
+  if (key.startsWith("models.")) syncExtensions(ws, warn);
+  out(JSON.stringify(next, null, 2));
   return 0;
 }
