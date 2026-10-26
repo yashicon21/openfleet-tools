@@ -1,7 +1,7 @@
 {
   "name": "@openfleet-tools/cli",
   "version": "0.8.0",
-  "description": "Coordinate one change across many repos with GitHub Copilot CLI.",
+  "description": "Coordinate one change across many repos with GitHub Copilot CLI or Claude Code agents.",
   "license": "MIT",
   "homepage": "https://openfleet.tools",
   "repository": {
@@ -29,9 +29,16 @@
   },
   "keywords": [
     "copilot",
+    "github-copilot",
+    "claude-code",
+    "claude",
+    "ai-agents",
     "multi-repo",
+    "monorepo",
+    "worktree",
     "agents",
-    "coordination"
+    "coordination",
+    "cli"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && chmod +x dist/bin.js",
