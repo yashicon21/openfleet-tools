@@ -1,0 +1,9 @@
+{
+  "name": "openfleet",
+  "description": "OpenFleet core: coordinate one change across many repos with a coordinator and per-repo planner/implementer/tester agents.",
+  "version": "0.0.0",
+  "license": "MIT",
+  "agents": "agents/",
+  "skills": "skills/",
+  "hooks": "hooks.json"
+}

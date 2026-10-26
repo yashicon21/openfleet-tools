@@ -1,0 +1,7 @@
+dist/
+coverage/
+pnpm-lock.yaml
+**/CHANGELOG.md
+# Written by the Changesets CLI and consumed by `changeset version`.
+.changeset/*.md
+docs/flow.png

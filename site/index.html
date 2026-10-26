@@ -1,0 +1,4345 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenFleet: one change across many repos</title>
+    <meta
+      name="description"
+      content="Write one prompt. OpenFleet turns it into a spec with you, then runs a coordinated fleet of agents that plan, build and test the change in every repo at once."
+    />
+    <meta name="theme-color" content="#0E0E10" />
+    <link rel="canonical" href="https://openfleet.tools/" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Ccircle cx='15' cy='15' r='12' fill='none' stroke='%2348A6EE' stroke-width='3'/%3E%3Ccircle cx='15' cy='15' r='5' fill='%23EE5AD6'/%3E%3Ccircle cx='15' cy='3' r='3' fill='%23EDEB3C'/%3E%3C/svg%3E"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="OpenFleet: one change across many repos" />
+    <meta
+      property="og:description"
+      content="Write one prompt. OpenFleet turns it into a spec with you, then runs a coordinated fleet of agents that plan, build and test the change in every repo at once."
+    />
+    <meta property="og:url" content="https://openfleet.tools/" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Russo+One&amp;family=Saira+Semi+Condensed:wght@500;600;700&amp;family=Share+Tech+Mono&amp;display=swap"
+    />
+    <style>
+      .of-mq-wrap {
+        position: relative;
+      }
+      .of-mq.paused .of-track {
+        animation-play-state: paused;
+      }
+      .of-mq-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        border: 2px solid #2b1e1b;
+        border-radius: 8px;
+        background: #0e0e10;
+        color: #f4f4f6;
+        cursor: pointer;
+      }
+      .of-mq-toggle:hover {
+        background: #1c1b21;
+      }
+      .of-mq-toggle .i-play,
+      .of-mq-toggle[aria-pressed="true"] .i-pause {
+        display: none;
+      }
+      .of-mq-toggle[aria-pressed="true"] .i-play {
+        display: block;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .of-mq-toggle {
+          display: none;
+        }
+      }
+      .of-qs-list {
+        margin: 0;
+        padding: 22px 24px 26px;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .of-qs {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .of-qs-c {
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+        font-size: 14px;
+        color: #5f5754;
+      }
+      .of-qs-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 4px 4px 14px;
+        border-radius: 8px;
+        background: #dfe2e6;
+      }
+      .of-qs-row code {
+        flex: 1 1 auto;
+        min-width: 0;
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+        font-size: 17px;
+        line-height: 24px;
+        color: #2b1e1b;
+        overflow-wrap: anywhere;
+        padding: 6px 0;
+      }
+      .of-qs-s {
+        color: #1632e6;
+      }
+      .of-qs-copy {
+        flex: none;
+        align-self: center;
+        min-height: 44px;
+        min-width: 72px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 6px;
+        background: #2b1e1b;
+        color: #eef0f2;
+        cursor: pointer;
+        font-family: "Russo One", "Arial Black", sans-serif;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+      }
+      @media (max-width: 479px) {
+        .of-qs-list {
+          padding: 18px 16px 20px;
+        }
+        .of-qs-row code {
+          font-size: 14px;
+          line-height: 22px;
+        }
+        .of-qs-copy {
+          min-width: 64px;
+        }
+      }
+      .of-qs-copy:hover {
+        background: #4a3934;
+      }
+      .of-qs-copy:focus-visible {
+        outline: 2px solid #1632e6;
+        outline-offset: 2px;
+      }
+      .of-legend {
+        display: flex;
+        gap: 4px 14px;
+        flex-wrap: wrap;
+      }
+      .of-lg {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .of-lg i {
+        width: 14px;
+        height: 8px;
+        border-radius: 3px;
+        display: inline-block;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      html {
+        scroll-behavior: smooth;
+        scrollbar-color: #45434c #0e0e10;
+      }
+      body {
+        margin: 0;
+        background: #0e0e10;
+      }
+      ::selection {
+        background: #edeb3c;
+        color: #2b1e1b;
+      }
+      [id] {
+        scroll-margin-top: 104px;
+      }
+      h2,
+      h3 {
+        text-wrap: balance;
+      }
+      p {
+        text-wrap: pretty;
+      }
+      p code,
+      td code {
+        white-space: nowrap;
+      }
+      a {
+        color: #f4f4f6;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 2px;
+        text-decoration-color: #ee5ad6;
+      }
+      a:hover {
+        color: #48a6ee;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible,
+      li:focus-visible {
+        outline: 2px solid #48a6ee;
+        outline-offset: 3px;
+        border-radius: 8px;
+      }
+      .of-track {
+        display: flex;
+        width: max-content;
+        animation: of-scroll 32s linear infinite;
+      }
+      .of-track.of-rev {
+        animation-direction: reverse;
+      }
+      .of-sep {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        background: #2b1e1b;
+        transform: rotate(45deg);
+        margin: 0 20px;
+        vertical-align: middle;
+      }
+      @keyframes of-scroll {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+      .of-navlink:hover {
+        background: #2e2d35;
+        color: #f4f4f6;
+      }
+      .of-ghost:hover {
+        background: #1c1b21;
+        border-color: #a8a6af;
+        color: #f4f4f6;
+      }
+      .of-btn {
+        transition:
+          transform 80ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          box-shadow 80ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          background-color 120ms;
+      }
+      .of-btn:hover {
+        background: #6bb8f2;
+        color: #2b1e1b;
+      }
+      .of-btn:active {
+        transform: translateY(4px);
+        box-shadow: 0 0 0 0 #2b1e1b;
+      }
+      .of-copy:hover {
+        background: #45434c;
+      }
+      .of-sg {
+        transition:
+          background-color 400ms cubic-bezier(0.16, 1, 0.3, 1),
+          box-shadow 400ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .of-st {
+        transition:
+          background-color 250ms cubic-bezier(0.16, 1, 0.3, 1),
+          color 250ms;
+      }
+      .of-replay:hover {
+        background: #4a3934;
+      }
+      @keyframes of-work {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.45;
+        }
+      }
+      @keyframes of-evt-in {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .of-live .of-cur {
+        animation: of-work 1.1s ease-in-out infinite;
+      }
+      .of-live .of-evt {
+        animation: of-evt-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      .of-cmd:last-child {
+        border-bottom: 0;
+      }
+      .of-tile {
+        transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .of-cell:hover .of-tile {
+        transform: scale(1.04);
+      }
+      .of-slotchips {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .of-slotchips li {
+        padding: 10px 18px;
+        border-radius: 999px;
+        color: #2b1e1b;
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+        font-size: 20px;
+        line-height: 26px;
+      }
+      .of-skip {
+        position: absolute;
+        left: 16px;
+        top: -80px;
+        z-index: 20;
+        padding: 12px 16px;
+        border-radius: 8px;
+        background: #edeb3c;
+        color: #2b1e1b;
+        font-family: "Russo One", "Arial Black", sans-serif;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .of-skip:focus,
+      .of-skip:hover {
+        top: 12px;
+        color: #2b1e1b;
+      }
+      .of-menu {
+        display: none;
+        position: relative;
+      }
+      .of-menu summary {
+        list-style: none;
+        cursor: pointer;
+      }
+      .of-menu summary::-webkit-details-marker {
+        display: none;
+      }
+      .of-menu[open] summary {
+        background: #2e2d35;
+      }
+      .of-gh:hover {
+        background: #2e2d35 !important;
+      }
+      .of-menu a:hover {
+        background: #2e2d35;
+        color: #f4f4f6;
+      }
+      .of-b-x {
+        background: #1c1b21;
+        color: #f4f4f6;
+        border: 2px solid #45434c;
+        border-radius: 28px;
+        padding: 28px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 20px;
+        box-sizing: border-box;
+      }
+      @media (min-width: 960px) {
+        .of-b-x {
+          grid-column: span 2;
+        }
+      }
+      .of-x-tile {
+        align-self: flex-start;
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: #2e2d35;
+        color: #f4f4f6;
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+        font-size: 14px;
+        line-height: 22px;
+        transform-origin: left top;
+      }
+      .of-x-h {
+        margin: 0;
+        font-family: "Russo One", "Arial Black", sans-serif;
+        font-weight: 400;
+        font-size: 22px;
+        line-height: 26px;
+      }
+      .of-x-p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 22px;
+        color: #a8a6af;
+      }
+      .of-x-p code {
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+        color: #f4f4f6;
+      }
+      @media (max-width: 959px) {
+        .of-bento {
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+        .of-b-a {
+          grid-column: span 2 !important;
+          grid-row: span 1 !important;
+        }
+        .of-b-b {
+          grid-column: span 2 !important;
+        }
+        .of-pin {
+          position: static !important;
+        }
+        .of-stack {
+          position: relative !important;
+          top: auto !important;
+        }
+      }
+      @media (max-width: 719px) {
+        .of-navlinks {
+          display: none !important;
+        }
+        .of-menu {
+          display: block;
+        }
+      }
+      @media (max-width: 599px) {
+        .of-bento {
+          grid-template-columns: minmax(0, 1fr) !important;
+        }
+        .of-b-a,
+        .of-b-b,
+        .of-b-c,
+        .of-b-d {
+          grid-column: auto !important;
+          grid-row: auto !important;
+        }
+      }
+      @media (max-width: 479px) {
+        .of-copylabel {
+          display: none;
+        }
+        .of-copy {
+          min-width: 44px !important;
+        }
+        .of-cmdtext {
+          font-size: 13px !important;
+        }
+        .of-ghlabel {
+          display: none;
+        }
+        .of-gh {
+          padding: 0 13px !important;
+        }
+        .of-logo {
+          font-size: 20px !important;
+        }
+        .of-herobtns a {
+          flex: 1 1 100%;
+          justify-content: center;
+        }
+        .of-chip {
+          font-size: 0.55em !important;
+        }
+        .of-rname {
+          width: 80px !important;
+          font-size: 14px !important;
+          white-space: nowrap;
+        }
+        .of-slug,
+        .of-rlabel {
+          display: none;
+        }
+        .of-replay {
+          padding: 0 14px !important;
+        }
+        .of-evbox {
+          min-height: 196px !important;
+        }
+        .of-seg {
+          width: 56px !important;
+        }
+        .of-legend {
+          padding-left: 90px !important;
+          gap: 4px 10px !important;
+        }
+        .of-term {
+          font-size: 14px !important;
+          padding: 20px !important;
+        }
+      }
+      @supports (animation-timeline: view()) {
+        @media (prefers-reduced-motion: no-preference) {
+          .of-motion .of-rise {
+            animation: of-rise linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 30%;
+          }
+          @keyframes of-rise {
+            from {
+              opacity: 0.3;
+              transform: translateY(40px) scale(0.92);
+            }
+            to {
+              opacity: 1;
+              transform: none;
+            }
+          }
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        .of-track {
+          animation: none;
+        }
+        .of-btn,
+        .of-tile,
+        .of-sg,
+        .of-st {
+          transition: none;
+        }
+        .of-live .of-cur,
+        .of-live .of-evt {
+          animation: none;
+        }
+      }
+      .rp-sec {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: clamp(112px, 13vw, 176px) 24px 0;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 48px;
+      }
+      .rp-intro {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px 64px;
+        align-items: flex-end;
+        justify-content: space-between;
+      }
+      .rp-h2 {
+        margin: 0;
+        flex: 1 1 420px;
+        max-width: 680px;
+        font-family: "Russo One", "Arial Black", sans-serif;
+        font-weight: 400;
+        font-size: clamp(32px, 4.6vw, 56px);
+        line-height: 1.02;
+        color: #f4f4f6;
+      }
+      .rp-introside {
+        flex: 1 1 340px;
+        max-width: 460px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: flex-start;
+      }
+      .rp-introside p {
+        margin: 0;
+        font-size: 17px;
+        line-height: 27px;
+        color: #a8a6af;
+      }
+      .rp-introside code {
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+        color: #f4f4f6;
+      }
+      .rp-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 0 18px;
+        box-sizing: border-box;
+        border-radius: 8px;
+        border: 2px solid #a8a6af;
+        color: #f4f4f6;
+        text-decoration: none;
+        font-family: "Russo One", "Arial Black", sans-serif;
+        font-size: 14px;
+        letter-spacing: 0.02em;
+      }
+      .rp-fig {
+        margin: 0;
+        background: #1c1b21;
+        border: 1px solid #45434c;
+        border-radius: 28px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .rp-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 16px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .rp-title {
+        font-family: "Russo One", "Arial Black", sans-serif;
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        color: #a8a6af;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .rp-dots {
+        display: inline-flex;
+        gap: 4px;
+      }
+      .rp-dots i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: block;
+      }
+      .rp-dots i:nth-child(1) {
+        background: #48a6ee;
+      }
+      .rp-dots i:nth-child(2) {
+        background: #ee5ad6;
+      }
+      .rp-dots i:nth-child(3) {
+        background: #edeb3c;
+      }
+      .rp-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .rp-btn {
+        font-family: "Russo One", "Arial Black", sans-serif;
+        font-size: 14px;
+        letter-spacing: 0.04em;
+        color: #2b1e1b;
+        background: #48a6ee;
+        border: 2px solid #2b1e1b;
+        border-radius: 8px;
+        padding: 0 16px;
+        height: 44px;
+        box-shadow: 0 4px 0 0 #2b1e1b;
+        cursor: pointer;
+        white-space: nowrap;
+        transition:
+          transform 80ms,
+          box-shadow 80ms;
+      }
+      .rp-btn:hover {
+        background: #6bb8f2;
+      }
+      .rp-btn:active {
+        transform: translateY(4px);
+        box-shadow: 0 0 0 0 #2b1e1b;
+      }
+      .rp-controls input[type="range"] {
+        accent-color: #48a6ee;
+        width: 180px;
+        height: 44px;
+      }
+      .rp-controls input[type="range"]:focus-visible {
+        outline: 2px solid #48a6ee;
+        outline-offset: 3px;
+      }
+      .rp-clock {
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+        font-size: 28px;
+        color: #edeb3c;
+        min-width: 64px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .rp-split {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 290px;
+        gap: 16px;
+      }
+      .rp-scroll {
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-color: #45434c transparent;
+      }
+      .rp-hint {
+        display: none;
+        margin: -8px 0 0;
+        font-size: 14px;
+        line-height: 20px;
+        color: #a8a6af;
+      }
+      @media (max-width: 639px) {
+        .rp-hint {
+          display: block;
+        }
+      }
+      .rp-scroll svg {
+        display: block;
+        width: 100%;
+      }
+      .rp-scroll svg text {
+        font-family: "Saira Semi Condensed", "Arial Narrow", sans-serif;
+      }
+      .rp-log {
+        background: #0e0e10;
+        border: 1px solid #45434c;
+        border-radius: 16px;
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+        min-height: 220px;
+        overflow: hidden;
+      }
+      .rp-log h3 {
+        margin: 0;
+        font-family: "Russo One", "Arial Black", sans-serif;
+        font-weight: 400;
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        color: #a8a6af;
+      }
+      .rp-log ol {
+        margin: 0;
+        list-style: none;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .rp-log li {
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+        font-size: 13px;
+        line-height: 17px;
+        color: #a8a6af;
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 8px;
+        animation: rp-pop 220ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .rp-log li b {
+        font-weight: 400;
+        color: #f4f4f6;
+        display: block;
+      }
+      .rp-log li:first-child b {
+        color: #f4f4f6;
+        text-decoration: underline 2px #45434c;
+        text-underline-offset: 4px;
+      }
+      .rp-log li em {
+        font-style: normal;
+        display: block;
+        overflow-wrap: anywhere;
+      }
+      @keyframes rp-pop {
+        from {
+          opacity: 0;
+          transform: translateY(-6px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .rp-cap {
+        max-width: 680px;
+        margin: 0;
+        font-size: 14px;
+        line-height: 22px;
+        color: #a8a6af;
+      }
+      .rp-cap code {
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+        color: #f4f4f6;
+      }
+      .rp-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        font-size: 14px;
+        line-height: 20px;
+        color: #a8a6af;
+      }
+      .rp-legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .rp-legend i {
+        display: inline-block;
+        width: 18px;
+        height: 10px;
+        border-radius: 3px;
+      }
+      .rp-legend i.rp-dash {
+        height: 0;
+        border-top: 2px dashed #a8a6af;
+        border-radius: 0;
+      }
+      @media (max-width: 900px) {
+        .rp-split {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .rp-log {
+          min-height: 0;
+        }
+      }
+      @media (max-width: 639px) {
+        .rp-fig {
+          padding: 16px;
+          border-radius: 16px;
+        }
+        .rp-controls {
+          width: 100%;
+        }
+        .rp-controls input[type="range"] {
+          flex: 1;
+          width: auto;
+          min-width: 0;
+        }
+        .rp-clock {
+          font-size: 24px;
+        }
+        .rp-title {
+          font-size: 12px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .rp-log li {
+          animation: none;
+        }
+        .rp-btn {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="sr-announce"
+      aria-live="polite"
+      style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap"
+    ></div>
+    <div
+      id="of-root"
+      style="
+        min-height: 100vh;
+        overflow-x: clip;
+        background: #0e0e10;
+        color: #f4f4f6;
+        font-family: &quot;Saira Semi Condensed&quot;, &quot;Arial Narrow&quot;, system-ui, sans-serif;
+        font-size: 16px;
+        line-height: 22px;
+        font-weight: 500;
+      "
+    >
+      <a class="of-skip" href="#content">Skip to content</a>
+      <header style="position: sticky; top: 12px; z-index: 10; padding: 12px 16px 0">
+        <nav
+          aria-label="Main"
+          style="
+            max-width: 1168px;
+            margin: 0 auto;
+            padding: 8px 8px 8px 20px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: #1c1b21;
+            border: 1px solid #45434c;
+            border-radius: 999px;
+          "
+        >
+          <a
+            href="#top"
+            class="of-logo"
+            aria-label="OpenFleet home"
+            style="
+              display: flex;
+              min-height: 44px;
+              align-items: center;
+              gap: 10px;
+              text-decoration: none;
+              color: #48a6ee;
+              font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+              font-size: 22px;
+              line-height: 24px;
+              letter-spacing: -0.01em;
+            "
+          >
+            <svg width="26" height="26" viewBox="0 0 30 30" aria-hidden="true">
+              <circle cx="15" cy="15" r="12" fill="none" stroke="#48A6EE" stroke-width="3"></circle>
+              <circle cx="15" cy="15" r="5" fill="#EE5AD6"></circle>
+              <circle cx="15" cy="3" r="3" fill="#EDEB3C"></circle>
+            </svg>
+            OPENFLEET
+          </a>
+          <div style="display: flex; align-items: center; gap: 2px">
+            <div class="of-navlinks" style="display: flex; align-items: center; gap: 2px">
+              <a
+                class="of-navlink"
+                href="how-it-works.html"
+                style="
+                  padding: 11px 14px;
+                  border-radius: 999px;
+                  text-decoration: none;
+                  color: #a8a6af;
+                  font-weight: 600;
+                "
+                >How it works</a
+              >
+              <a
+                class="of-navlink"
+                href="quickstart.html"
+                style="
+                  padding: 11px 14px;
+                  border-radius: 999px;
+                  text-decoration: none;
+                  color: #a8a6af;
+                  font-weight: 600;
+                "
+                >Quick start</a
+              >
+              <a
+                class="of-navlink"
+                href="extensions.html"
+                style="
+                  padding: 11px 14px;
+                  border-radius: 999px;
+                  text-decoration: none;
+                  color: #a8a6af;
+                  font-weight: 600;
+                "
+                >Extensions</a
+              >
+            </div>
+            <details class="of-menu">
+              <summary
+                aria-label="Menu"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 8px;
+                  height: 44px;
+                  padding: 0 14px;
+                  border-radius: 999px;
+                  color: #f4f4f6;
+                  font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                  font-size: 13px;
+                  letter-spacing: 0.04em;
+                "
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#F4F4F6"
+                  stroke-width="2.25"
+                  stroke-linecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M4 7h16"></path>
+                  <path d="M4 12h16"></path>
+                  <path d="M4 17h16"></path></svg
+                >MENU
+              </summary>
+              <div
+                style="
+                  position: absolute;
+                  right: 0;
+                  top: 52px;
+                  min-width: 220px;
+                  box-sizing: border-box;
+                  padding: 8px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 2px;
+                  background: #1c1b21;
+                  border: 1px solid #45434c;
+                  border-radius: 16px;
+                "
+              >
+                <a
+                  href="how-it-works.html"
+                  style="
+                    padding: 12px 14px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    color: #a8a6af;
+                    font-weight: 600;
+                  "
+                  >How it works</a
+                >
+                <a
+                  href="quickstart.html"
+                  style="
+                    padding: 12px 14px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    color: #a8a6af;
+                    font-weight: 600;
+                  "
+                  >Quick start</a
+                >
+                <a
+                  href="extensions.html"
+                  style="
+                    padding: 12px 14px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    color: #a8a6af;
+                    font-weight: 600;
+                  "
+                  >Extensions</a
+                >
+              </div>
+            </details>
+            <a
+              href="https://github.com/yashicon21/openfleet-tools"
+              aria-label="OpenFleet on GitHub"
+              class="of-gh"
+              style="
+                margin-left: 6px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                height: 44px;
+                padding: 0 18px;
+                box-sizing: border-box;
+                border-radius: 999px;
+                background: transparent;
+                border: 2px solid #45434c;
+                color: #f4f4f6;
+                text-decoration: none;
+                font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                font-size: 14px;
+                letter-spacing: 0.02em;
+              "
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#F4F4F6"
+                stroke-width="2.25"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="6" cy="6" r="2.5"></circle>
+                <circle cx="6" cy="18" r="2.5"></circle>
+                <circle cx="18" cy="9" r="2.5"></circle>
+                <path d="M6 8.5v7"></path>
+                <path d="M18 11.5c0 3-3 4-9 5"></path>
+              </svg>
+              <span class="of-ghlabel">GITHUB</span>
+            </a>
+          </div>
+        </nav>
+      </header>
+
+      <main id="top">
+        <span id="content"></span>
+
+        <section
+          style="
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: clamp(72px, 9vw, 120px) 24px clamp(80px, 9vw, 128px);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(40px, 5vw, 64px);
+          "
+        >
+          <h1
+            style="
+              margin: 0;
+              max-width: 1150px;
+              font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+              font-weight: 400;
+              font-size: clamp(40px, 8.6vw, 120px);
+              line-height: 0.92;
+              letter-spacing: -0.02em;
+              color: #f4f4f6;
+            "
+          >
+            ONE CHANGE.<br /><span style="color: #48a6ee">EVERY REPO.</span>
+          </h1>
+          <div
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              gap: 48px clamp(48px, 8vw, 120px);
+              align-items: flex-start;
+              justify-content: space-between;
+            "
+          >
+            <div
+              style="
+                flex: 1 1 400px;
+                max-width: 520px;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 28px;
+                align-items: flex-start;
+              "
+            >
+              <p style="margin: 0; font-size: 20px; line-height: 30px; color: #a8a6af">
+                Describe the change once. A coordinator agent turns it into a spec with you, checks every plan against
+                the others, then runs a planner → implementer → tester pipeline for each repo, package or part of an
+                app, in parallel, each in its own git worktree.
+              </p>
+              <div class="of-herobtns" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center">
+                <a
+                  class="of-btn"
+                  href="#quickstart"
+                  style="
+                    display: inline-flex;
+                    align-items: center;
+                    height: 56px;
+                    padding: 0 28px;
+                    box-sizing: border-box;
+                    border-radius: 8px;
+                    background: #48a6ee;
+                    border: 2px solid #2b1e1b;
+                    box-shadow: 0 4px 0 0 #2b1e1b;
+                    color: #2b1e1b;
+                    text-decoration: none;
+                    font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                    font-size: 18px;
+                    letter-spacing: 0.02em;
+                  "
+                  >GET STARTED</a
+                >
+                <a
+                  class="of-ghost"
+                  href="https://github.com/yashicon21/openfleet-tools"
+                  style="
+                    display: inline-flex;
+                    align-items: center;
+                    height: 56px;
+                    padding: 0 24px;
+                    box-sizing: border-box;
+                    border-radius: 8px;
+                    border: 2px solid #45434c;
+                    color: #f4f4f6;
+                    text-decoration: none;
+                    font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                    font-size: 16px;
+                    letter-spacing: 0.02em;
+                  "
+                  >VIEW ON GITHUB</a
+                >
+              </div>
+              <div style="width: 100%; display: flex; flex-direction: column; gap: 14px">
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 6px 6px 6px 16px;
+                    border-radius: 8px;
+                    background: #1c1b21;
+                    border: 1px solid #45434c;
+                  "
+                >
+                  <span
+                    aria-hidden="true"
+                    style="
+                      font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                      font-size: 17px;
+                      color: #ee5ad6;
+                    "
+                    >$</span
+                  >
+                  <code
+                    class="of-cmdtext"
+                    tabindex="0"
+                    style="
+                      flex: 1 1 auto;
+                      min-width: 0;
+                      overflow-x: auto;
+                      white-space: nowrap;
+                      font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                      font-size: 17px;
+                      line-height: 44px;
+                      color: #f4f4f6;
+                    "
+                    >npm create @openfleet-tools@latest</code
+                  >
+                  <button
+                    class="of-copy"
+                    type="button"
+                    id="of-copy"
+                    aria-label="Copy install command"
+                    style="
+                      flex: none;
+                      display: inline-flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 6px;
+                      height: 44px;
+                      min-width: 96px;
+                      padding: 0 12px;
+                      box-sizing: border-box;
+                      border: 0;
+                      border-radius: 6px;
+                      background: #2e2d35;
+                      color: #f4f4f6;
+                      cursor: pointer;
+                      font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                      font-size: 12px;
+                      letter-spacing: 0.06em;
+                    "
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#F4F4F6"
+                      stroke-width="2.25"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <rect x="8" y="8" width="12" height="12" rx="2"></rect>
+                      <path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"></path>
+                    </svg>
+                    <span id="of-copy-label" class="of-copylabel" aria-live="polite">COPY</span>
+                  </button>
+                </div>
+                <p
+                  style="
+                    margin: 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    font-size: 14px;
+                    line-height: 20px;
+                    color: #a8a6af;
+                  "
+                >
+                  <span aria-hidden="true" style="display: flex; gap: 3px"
+                    ><span style="width: 6px; height: 14px; border-radius: 3px; background: #48a6ee"></span
+                    ><span style="width: 6px; height: 14px; border-radius: 3px; background: #ee5ad6"></span
+                    ><span style="width: 6px; height: 14px; border-radius: 3px; background: #edeb3c"></span></span
+                  >Run it in a new, empty folder. Early release · open source · MIT.
+                </p>
+              </div>
+            </div>
+
+            <div
+              style="
+                flex: 0 1 520px;
+                min-width: 0;
+                margin-top: clamp(0px, 3vw, 32px);
+                background: #eef0f2;
+                color: #2b1e1b;
+                border-radius: 28px;
+                overflow: hidden;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 12px;
+                  min-height: 60px;
+                  padding: 8px 8px 8px 24px;
+                  box-sizing: border-box;
+                  background: #2b1e1b;
+                "
+              >
+                <span
+                  style="
+                    font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                    font-size: 13px;
+                    letter-spacing: 0.06em;
+                    color: #edeb3c;
+                  "
+                  >EXAMPLE RUN</span
+                >
+                <span style="display: flex; align-items: center; gap: 10px">
+                  <span
+                    style="
+                      font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                      font-size: 14px;
+                      color: #eef0f2;
+                      padding-right: 16px;
+                      white-space: nowrap;
+                    "
+                    ><span class="of-slug">account-id · </span
+                    ><span style="color: #edeb3c"><span id="of-done">1</span>/6</span> done</span
+                  >
+                  <button
+                    id="of-replay"
+                    hidden
+                    class="of-replay"
+                    type="button"
+                    aria-label="Replay example run"
+                    style="
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 6px;
+                      height: 44px;
+                      padding: 0 14px;
+                      border: 0;
+                      border-radius: 999px;
+                      background: #2e2d35;
+                      color: #eef0f2;
+                      cursor: pointer;
+                      font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                      font-size: 12px;
+                      letter-spacing: 0.06em;
+                    "
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#EEF0F2"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M4 12a8 8 0 1 0 3-6.2"></path>
+                      <path d="M4 4v5h5"></path></svg
+                    ><span class="of-rlabel">REPLAY</span>
+                  </button>
+                </span>
+              </div>
+              <div style="padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 14px">
+                <p style="margin: 0; font-size: 18px; line-height: 25px; font-weight: 600">
+                  “Rename
+                  <code style="font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace">user_id</code> to
+                  <code style="font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace">account_id</code> in
+                  the API, both SDKs and every client”
+                </p>
+                <div
+                  class="of-legend"
+                  aria-hidden="true"
+                  style="
+                    padding-left: 104px;
+                    margin-bottom: -6px;
+                    font-size: 12px;
+                    line-height: 16px;
+                    font-weight: 600;
+                    color: #5f5754;
+                  "
+                >
+                  <span class="of-lg"><i style="background: #48a6ee"></i>planner</span
+                  ><span class="of-lg"><i style="background: #ee5ad6"></i>implementer</span
+                  ><span class="of-lg"><i style="background: #edeb3c"></i>tester</span>
+                </div>
+                <ul
+                  id="of-rows"
+                  aria-label="Repos in this run"
+                  style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column"
+                >
+                  <li
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 12px;
+                      padding: 9px 0;
+                      border-bottom: 2px solid #dfe2e6;
+                    "
+                  >
+                    <span
+                      class="of-rname"
+                      style="
+                        width: 92px;
+                        flex: none;
+                        font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                        font-size: 17px;
+                      "
+                      >api</span
+                    ><span class="of-seg" aria-hidden="true" style="display: flex; gap: 3px; width: 84px; flex: none"
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #48a6ee;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #ee5ad6;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #edeb3c;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span></span
+                    ><span
+                      class="of-st"
+                      style="
+                        margin-left: auto;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 5px;
+                        padding: 4px 9px;
+                        border-radius: 8px;
+                        box-shadow: inset 0 0 0 2px #2b1e1b;
+                        background: #eef0f2;
+                        color: #2b1e1b;
+                        font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                        font-size: 12px;
+                        letter-spacing: 0.04em;
+                        white-space: nowrap;
+                      "
+                      ><svg
+                        width="11"
+                        height="11"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#2B1E1B"
+                        stroke-width="3.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M5 12.5l4.5 4.5L19 7.5"></path></svg
+                      >DONE<span
+                        style="
+                          position: absolute;
+                          width: 1px;
+                          height: 1px;
+                          overflow: hidden;
+                          clip: rect(0 0 0 0);
+                          white-space: nowrap;
+                        "
+                        >: plan, implement and test complete</span
+                      ></span
+                    >
+                  </li>
+                  <li
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 12px;
+                      padding: 9px 0;
+                      border-bottom: 2px solid #dfe2e6;
+                    "
+                  >
+                    <span
+                      class="of-rname"
+                      style="
+                        width: 92px;
+                        flex: none;
+                        font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                        font-size: 17px;
+                      "
+                      >sdk-js</span
+                    ><span class="of-seg" aria-hidden="true" style="display: flex; gap: 3px; width: 84px; flex: none"
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #48a6ee;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #ee5ad6;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span
+                      ><span
+                        class="of-sg of-cur"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #edeb3c;
+                          box-shadow: inset 0 0 0 2px #2b1e1b;
+                        "
+                      ></span></span
+                    ><span
+                      class="of-st"
+                      style="
+                        margin-left: auto;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 5px;
+                        padding: 4px 9px;
+                        border-radius: 8px;
+                        background: #dfe2e6;
+                        color: #2b1e1b;
+                        font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                        font-size: 12px;
+                        letter-spacing: 0.04em;
+                        white-space: nowrap;
+                      "
+                      >TEST<span
+                        style="
+                          position: absolute;
+                          width: 1px;
+                          height: 1px;
+                          overflow: hidden;
+                          clip: rect(0 0 0 0);
+                          white-space: nowrap;
+                        "
+                        >: testing</span
+                      ></span
+                    >
+                  </li>
+                  <li
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 12px;
+                      padding: 9px 0;
+                      border-bottom: 2px solid #dfe2e6;
+                    "
+                  >
+                    <span
+                      class="of-rname"
+                      style="
+                        width: 92px;
+                        flex: none;
+                        font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                        font-size: 17px;
+                      "
+                      >sdk-python</span
+                    ><span class="of-seg" aria-hidden="true" style="display: flex; gap: 3px; width: 84px; flex: none"
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #48a6ee;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #ee5ad6;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span
+                      ><span
+                        class="of-sg of-cur"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #edeb3c;
+                          box-shadow: inset 0 0 0 2px #2b1e1b;
+                        "
+                      ></span></span
+                    ><span
+                      class="of-st"
+                      style="
+                        margin-left: auto;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 5px;
+                        padding: 4px 9px;
+                        border-radius: 8px;
+                        background: #fff1cc;
+                        color: #8a5300;
+                        font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                        font-size: 12px;
+                        letter-spacing: 0.04em;
+                        white-space: nowrap;
+                      "
+                      ><svg
+                        width="11"
+                        height="11"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#8A5300"
+                        stroke-width="3"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M20 12a8 8 0 1 1-3-6.2"></path>
+                        <path d="M20 4v5h-5"></path></svg
+                      >RETRY 1/3<span
+                        style="
+                          position: absolute;
+                          width: 1px;
+                          height: 1px;
+                          overflow: hidden;
+                          clip: rect(0 0 0 0);
+                          white-space: nowrap;
+                        "
+                        >: tests failed, retrying</span
+                      ></span
+                    >
+                  </li>
+                  <li
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 12px;
+                      padding: 9px 0;
+                      border-bottom: 2px solid #dfe2e6;
+                    "
+                  >
+                    <span
+                      class="of-rname"
+                      style="
+                        width: 92px;
+                        flex: none;
+                        font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                        font-size: 17px;
+                      "
+                      >billing</span
+                    ><span class="of-seg" aria-hidden="true" style="display: flex; gap: 3px; width: 84px; flex: none"
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #48a6ee;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #ee5ad6;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span
+                      ><span
+                        class="of-sg of-cur"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #edeb3c;
+                          box-shadow: inset 0 0 0 2px #2b1e1b;
+                        "
+                      ></span></span
+                    ><span
+                      class="of-st"
+                      style="
+                        margin-left: auto;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 5px;
+                        padding: 4px 9px;
+                        border-radius: 8px;
+                        background: #dfe2e6;
+                        color: #2b1e1b;
+                        font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                        font-size: 12px;
+                        letter-spacing: 0.04em;
+                        white-space: nowrap;
+                      "
+                      >TEST<span
+                        style="
+                          position: absolute;
+                          width: 1px;
+                          height: 1px;
+                          overflow: hidden;
+                          clip: rect(0 0 0 0);
+                          white-space: nowrap;
+                        "
+                        >: testing</span
+                      ></span
+                    >
+                  </li>
+                  <li
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 12px;
+                      padding: 9px 0;
+                      border-bottom: 2px solid #dfe2e6;
+                    "
+                  >
+                    <span
+                      class="of-rname"
+                      style="
+                        width: 92px;
+                        flex: none;
+                        font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                        font-size: 17px;
+                      "
+                      >web<span aria-hidden="true" style="color: #5f5754; font-size: 14px"> ×3</span
+                      ><span
+                        style="
+                          position: absolute;
+                          width: 1px;
+                          height: 1px;
+                          overflow: hidden;
+                          clip: rect(0 0 0 0);
+                          white-space: nowrap;
+                        "
+                      >
+                        (3 parts)</span
+                      ></span
+                    ><span class="of-seg" aria-hidden="true" style="display: flex; gap: 3px; width: 84px; flex: none"
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #48a6ee;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span
+                      ><span
+                        class="of-sg of-cur"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #ee5ad6;
+                          box-shadow: inset 0 0 0 2px #2b1e1b;
+                        "
+                      ></span
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #dfe2e6;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span></span
+                    ><span
+                      class="of-st"
+                      style="
+                        margin-left: auto;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 5px;
+                        padding: 4px 9px;
+                        border-radius: 8px;
+                        background: #dfe2e6;
+                        color: #2b1e1b;
+                        font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                        font-size: 12px;
+                        letter-spacing: 0.04em;
+                        white-space: nowrap;
+                      "
+                      >IMPLEMENT<span
+                        style="
+                          position: absolute;
+                          width: 1px;
+                          height: 1px;
+                          overflow: hidden;
+                          clip: rect(0 0 0 0);
+                          white-space: nowrap;
+                        "
+                        >: implementing</span
+                      ></span
+                    >
+                  </li>
+                  <li style="display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 0">
+                    <span
+                      class="of-rname"
+                      style="
+                        width: 92px;
+                        flex: none;
+                        font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                        font-size: 17px;
+                      "
+                      >mobile</span
+                    ><span class="of-seg" aria-hidden="true" style="display: flex; gap: 3px; width: 84px; flex: none"
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #48a6ee;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #dfe2e6;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span
+                      ><span
+                        class="of-sg"
+                        style="
+                          flex: 1;
+                          height: 10px;
+                          border-radius: 3px;
+                          background: #dfe2e6;
+                          box-shadow: inset 0 0 0 0px #2b1e1b;
+                        "
+                      ></span></span
+                    ><span
+                      class="of-st"
+                      style="
+                        margin-left: auto;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 5px;
+                        padding: 4px 9px;
+                        border-radius: 8px;
+                        background: #dfe2e6;
+                        color: #5f5754;
+                        font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                        font-size: 12px;
+                        letter-spacing: 0.04em;
+                        white-space: nowrap;
+                      "
+                      >AFTER SDK-JS<span
+                        style="
+                          position: absolute;
+                          width: 1px;
+                          height: 1px;
+                          overflow: hidden;
+                          clip: rect(0 0 0 0);
+                          white-space: nowrap;
+                        "
+                        >: plan agreed, waiting until sdk-js finishes</span
+                      ></span
+                    >
+                  </li>
+                </ul>
+                <div
+                  id="of-events"
+                  class="of-evbox"
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    min-height: 132px;
+                    padding: 14px 16px;
+                    border-radius: 16px;
+                    background: #2b1e1b;
+                    color: #eef0f2;
+                    font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                    font-size: 14px;
+                    line-height: 20px;
+                    box-sizing: border-box;
+                  "
+                >
+                  <div aria-hidden="true" style="color: #a8a6af">events.jsonl</div>
+                  <div class="of-evt" style="display: flex; gap: 10px; flex-wrap: wrap">
+                    <span style="color: #f4f4f6">plans.consistent</span
+                    ><span style="min-width: 0; overflow-wrap: anywhere">8 plans agree, gate open</span>
+                  </div>
+                  <div class="of-evt" style="display: flex; gap: 10px; flex-wrap: wrap">
+                    <span style="color: #f4f4f6">contract.changed</span
+                    ><span style="min-width: 0; overflow-wrap: anywhere">contracts/account.json → 4 repos</span>
+                  </div>
+                  <div class="of-evt" style="display: flex; gap: 10px; flex-wrap: wrap">
+                    <span style="color: #f4f4f6">assumption</span
+                    ><span style="min-width: 0; overflow-wrap: anywhere"
+                      >sdk-python keeps user_id as a read-only alias</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="of-mq-wrap">
+          <div class="of-mq" aria-hidden="true" style="overflow: hidden; display: flex; flex-direction: column">
+            <div style="background: #48a6ee; overflow: hidden; height: 40px; display: flex; align-items: center">
+              <div
+                class="of-track"
+                style="
+                  font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                  font-size: 18px;
+                  letter-spacing: 0.04em;
+                  color: #2b1e1b;
+                  white-space: nowrap;
+                "
+              >
+                <span
+                  >SPEC<i class="of-sep"></i>PLAN<i class="of-sep"></i>GATE<i class="of-sep"></i>IMPLEMENT<i
+                    class="of-sep"
+                  ></i
+                  >TEST<i class="of-sep"></i>SPEC<i class="of-sep"></i>PLAN<i class="of-sep"></i>GATE<i
+                    class="of-sep"
+                  ></i
+                  >IMPLEMENT<i class="of-sep"></i>TEST<i class="of-sep"></i>SPEC<i class="of-sep"></i>PLAN<i
+                    class="of-sep"
+                  ></i
+                  >GATE<i class="of-sep"></i>IMPLEMENT<i class="of-sep"></i>TEST<i class="of-sep"></i></span
+                ><span
+                  >SPEC<i class="of-sep"></i>PLAN<i class="of-sep"></i>GATE<i class="of-sep"></i>IMPLEMENT<i
+                    class="of-sep"
+                  ></i
+                  >TEST<i class="of-sep"></i>SPEC<i class="of-sep"></i>PLAN<i class="of-sep"></i>GATE<i
+                    class="of-sep"
+                  ></i
+                  >IMPLEMENT<i class="of-sep"></i>TEST<i class="of-sep"></i>SPEC<i class="of-sep"></i>PLAN<i
+                    class="of-sep"
+                  ></i
+                  >GATE<i class="of-sep"></i>IMPLEMENT<i class="of-sep"></i>TEST<i class="of-sep"></i
+                ></span>
+              </div>
+            </div>
+            <div style="background: #ee5ad6; overflow: hidden; height: 40px; display: flex; align-items: center">
+              <div
+                class="of-track of-rev"
+                style="
+                  font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                  font-size: 18px;
+                  letter-spacing: 0.04em;
+                  color: #2b1e1b;
+                  white-space: nowrap;
+                "
+              >
+                <span
+                  >ONE CHANGE<i class="of-sep"></i>MANY REPOS<i class="of-sep"></i>ONE CHANGE<i class="of-sep"></i>MANY
+                  REPOS<i class="of-sep"></i>ONE CHANGE<i class="of-sep"></i>MANY REPOS<i class="of-sep"></i>ONE
+                  CHANGE<i class="of-sep"></i>MANY REPOS<i class="of-sep"></i></span
+                ><span
+                  >ONE CHANGE<i class="of-sep"></i>MANY REPOS<i class="of-sep"></i>ONE CHANGE<i class="of-sep"></i>MANY
+                  REPOS<i class="of-sep"></i>ONE CHANGE<i class="of-sep"></i>MANY REPOS<i class="of-sep"></i>ONE
+                  CHANGE<i class="of-sep"></i>MANY REPOS<i class="of-sep"></i
+                ></span>
+              </div>
+            </div>
+            <div style="background: #edeb3c; overflow: hidden; height: 40px; display: flex; align-items: center">
+              <div
+                class="of-track"
+                style="
+                  font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                  font-size: 18px;
+                  letter-spacing: 0.04em;
+                  color: #2b1e1b;
+                  white-space: nowrap;
+                "
+              >
+                <span
+                  >WORKTREES<i class="of-sep"></i>CONTRACTS<i class="of-sep"></i>BASELINES<i class="of-sep"></i>EVENT
+                  LOG<i class="of-sep"></i>DRAFT PRS<i class="of-sep"></i>WORKTREES<i class="of-sep"></i>CONTRACTS<i
+                    class="of-sep"
+                  ></i
+                  >BASELINES<i class="of-sep"></i>EVENT LOG<i class="of-sep"></i>DRAFT PRS<i class="of-sep"></i></span
+                ><span
+                  >WORKTREES<i class="of-sep"></i>CONTRACTS<i class="of-sep"></i>BASELINES<i class="of-sep"></i>EVENT
+                  LOG<i class="of-sep"></i>DRAFT PRS<i class="of-sep"></i>WORKTREES<i class="of-sep"></i>CONTRACTS<i
+                    class="of-sep"
+                  ></i
+                  >BASELINES<i class="of-sep"></i>EVENT LOG<i class="of-sep"></i>DRAFT PRS<i class="of-sep"></i
+                ></span>
+              </div>
+            </div>
+          </div>
+          <button class="of-mq-toggle" type="button" aria-pressed="false" aria-label="Pause the scrolling banner">
+            <svg class="i-pause" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <rect x="3" y="2" width="3.5" height="12" rx="1" fill="currentColor" />
+              <rect x="9.5" y="2" width="3.5" height="12" rx="1" fill="currentColor" />
+            </svg>
+            <svg class="i-play" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M4 2.5v11a1 1 0 0 0 1.5.86l9-5.5a1 1 0 0 0 0-1.72l-9-5.5A1 1 0 0 0 4 2.5Z" fill="currentColor" />
+            </svg>
+          </button>
+        </div>
+
+        <section id="run" aria-labelledby="run-h" class="rp-sec">
+          <div class="rp-intro">
+            <h2 id="run-h" class="rp-h2">Six repos. One coordinator. All at once.</h2>
+            <div class="rp-introside">
+              <p>
+                Every planner runs first, and no code is written until the plans agree. Then each child (a repo, package
+                or part of an app) gets an implementer and a tester, side by side. Ordering holds:
+                <code>mobile</code> waits for <code>sdk-js</code>. <code>web</code>’s three parts merge into one branch.
+                A broken test gets a fresh implementer, and any call the spec didn’t cover is logged for you to confirm.
+                Every step lands in <code>events.jsonl</code>.
+              </p>
+              <a class="of-ghost rp-link" href="how-it-works.html">WATCH THE WHOLE RUN, EVENT BY EVENT</a>
+            </div>
+          </div>
+          <figure class="rp-fig" id="rp-fig">
+            <noscript
+              ><p class="rp-cap">
+                The run diagram needs JavaScript, which is turned off. The caption below and the How it works page tell
+                the same story in text.
+              </p></noscript
+            >
+            <div class="rp-head">
+              <span class="rp-title"
+                ><span class="rp-dots" aria-hidden="true"><i></i><i></i><i></i></span>EXAMPLE RUN · ACCOUNT-ID</span
+              >
+              <div class="rp-controls">
+                <button class="rp-btn" type="button" id="rp-play">↺ REPLAY</button
+                ><input
+                  type="range"
+                  min="0"
+                  max="268"
+                  value="268"
+                  id="rp-scrub"
+                  aria-label="Scrub the example run"
+                /><span class="rp-clock" id="rp-clock">4:28</span>
+              </div>
+            </div>
+            <div class="rp-split">
+              <div class="rp-scroll" tabindex="0" role="region" aria-label="Run timeline, scrolls sideways">
+                <svg
+                  id="rp-swim"
+                  viewBox="0 0 1000 420"
+                  role="img"
+                  aria-label="Swimlane of the example run: the project bar on top, then one lane per child showing plan, implement and test. No code starts until the plans-ready gate. sdk-python writes baseline tests first, breaks one once and retries. web's three children merge into one branch. mobile waits for sdk-js."
+                ></svg>
+              </div>
+              <p class="rp-hint" aria-hidden="true">Swipe sideways to see the whole run →</p>
+              <div class="rp-log">
+                <h3>LATEST EVENTS</h3>
+                <ol id="rp-log"></ol>
+              </div>
+            </div>
+            <div class="rp-legend" aria-hidden="true">
+              <span><i style="background: #48a6ee"></i>planner</span
+              ><span><i style="background: #ee5ad6"></i>implementer</span
+              ><span><i style="background: #edeb3c"></i>tester</span
+              ><span><i style="background: none; box-shadow: inset 0 0 0 2px #edeb3c"></i>Baseline</span
+              ><span><i style="background: #fff1cc; box-shadow: inset 0 0 0 2px #8a5300"></i>Failed test</span
+              ><span><i style="background: none; box-shadow: inset 0 0 0 2px #f4f4f6"></i>Merge, build, test</span
+              ><span><i class="rp-dash"></i>Waiting on another child</span
+              ><span><i style="border: 2px dashed #f4f4f6; background: none"></i>You</span>
+            </div>
+            <p class="rp-cap">
+              Mocked run: the timings are made up, but every event type is one OpenFleet really logs. Replay a real run
+              with <code>pnpm demo</code> from a repo checkout, or
+              <a href="how-it-works.html">see this run event by event</a>.
+            </p>
+          </figure>
+        </section>
+
+        <section
+          id="how"
+          aria-labelledby="how-h"
+          style="
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: clamp(112px, 13vw, 176px) 24px 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 48px 64px;
+            align-items: flex-start;
+          "
+        >
+          <div
+            class="of-pin"
+            style="
+              flex: 1 1 320px;
+              min-width: 0;
+              position: sticky;
+              top: 120px;
+              display: flex;
+              flex-direction: column;
+              gap: 20px;
+            "
+          >
+            <h2
+              id="how-h"
+              style="
+                margin: 0;
+                font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                font-weight: 400;
+                font-size: clamp(32px, 4.6vw, 56px);
+                line-height: 1.03;
+                color: #f4f4f6;
+              "
+            >
+              You answer questions once. Then it’s hands-off.
+            </h2>
+            <p style="margin: 0; max-width: 40ch; font-size: 18px; line-height: 28px; color: #a8a6af">
+              Questions from the agents go to the coordinator, or to a repo coordinator for a repo split into parts.
+              They answer from the spec, or decide and log an assumption for you to review.
+            </p>
+          </div>
+          <ol
+            style="
+              flex: 1.25 1 440px;
+              min-width: 0;
+              margin: 0;
+              padding: 0;
+              list-style: none;
+              display: flex;
+              flex-direction: column;
+              gap: 40px;
+            "
+          >
+            <li
+              class="of-stack"
+              style="
+                position: sticky;
+                top: 120px;
+                background: #eef0f2;
+                color: #2b1e1b;
+                border: 2px solid #2b1e1b;
+                box-shadow: 0 4px 0 0 #2b1e1b;
+                border-radius: 28px;
+                padding: 32px;
+                min-height: 260px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+              "
+            >
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+                <span
+                  style="
+                    font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                    font-size: 48px;
+                    line-height: 48px;
+                    color: #1632e6;
+                  "
+                  >1</span
+                ><span
+                  style="
+                    padding: 2px 8px;
+                    border-radius: 8px;
+                    border: 2px dashed #2b1e1b;
+                    color: #2b1e1b;
+                    font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                    font-size: 12px;
+                    letter-spacing: 0.06em;
+                  "
+                  >WITH YOU</span
+                >
+              </div>
+              <h3
+                style="
+                  margin: 0;
+                  font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                  font-weight: 400;
+                  font-size: 34px;
+                  line-height: 40px;
+                "
+              >
+                Grill
+              </h3>
+              <p style="margin: 0; font-size: 17px; line-height: 26px; color: #5f5754">
+                The coordinator interviews you about the change, suggests repos from
+                <code style="font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace; color: #2b1e1b"
+                  >repos.json</code
+                >, splits a big app into parts if you want, and confirms build and test commands.
+              </p>
+            </li>
+            <li
+              class="of-stack"
+              style="
+                position: sticky;
+                top: 148px;
+                background: #eef0f2;
+                color: #2b1e1b;
+                border: 2px solid #2b1e1b;
+                box-shadow: 0 4px 0 0 #2b1e1b;
+                border-radius: 28px;
+                padding: 32px;
+                min-height: 260px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+              "
+            >
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+                <span
+                  style="
+                    font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                    font-size: 48px;
+                    line-height: 48px;
+                    color: #1632e6;
+                  "
+                  >2</span
+                ><span
+                  style="
+                    padding: 2px 8px;
+                    border-radius: 8px;
+                    border: 2px dashed #2b1e1b;
+                    color: #2b1e1b;
+                    font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                    font-size: 12px;
+                    letter-spacing: 0.06em;
+                  "
+                  >WITH YOU</span
+                >
+              </div>
+              <h3
+                style="
+                  margin: 0;
+                  font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                  font-weight: 400;
+                  font-size: 34px;
+                  line-height: 40px;
+                "
+              >
+                Spec
+              </h3>
+              <p style="margin: 0; font-size: 17px; line-height: 26px; color: #5f5754">
+                It writes
+                <code style="font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace; color: #2b1e1b"
+                  >spec.md</code
+                >: goal, repos and their parts, contracts, a shared approach, baselines, ordering, acceptance criteria
+                and branches. One last question, “anything to change?”, and your answer starts the run.
+              </p>
+            </li>
+            <li
+              class="of-stack"
+              style="
+                position: sticky;
+                top: 176px;
+                background: #eef0f2;
+                color: #2b1e1b;
+                border: 2px solid #2b1e1b;
+                box-shadow: 0 4px 0 0 #2b1e1b;
+                border-radius: 28px;
+                padding: 32px;
+                min-height: 260px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+              "
+            >
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+                <span
+                  style="
+                    font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                    font-size: 48px;
+                    line-height: 48px;
+                    color: #1632e6;
+                  "
+                  >3</span
+                ><span
+                  style="
+                    padding: 4px 10px;
+                    border-radius: 8px;
+                    background: #dfe2e6;
+                    color: #2b1e1b;
+                    font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                    font-size: 12px;
+                    letter-spacing: 0.06em;
+                  "
+                  >HANDS-OFF</span
+                >
+              </div>
+              <h3
+                style="
+                  margin: 0;
+                  font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                  font-weight: 400;
+                  font-size: 34px;
+                  line-height: 40px;
+                "
+              >
+                Plan, then agree
+              </h3>
+              <p style="margin: 0; font-size: 17px; line-height: 26px; color: #5f5754">
+                Every planner runs at once, read-only. Before any code is written, all plans are checked against the
+                spec’s shared approach and against each other. Then the plans-ready gate opens.
+              </p>
+            </li>
+            <li
+              class="of-stack"
+              style="
+                position: sticky;
+                top: 204px;
+                background: #eef0f2;
+                color: #2b1e1b;
+                border: 2px solid #2b1e1b;
+                box-shadow: 0 4px 0 0 #2b1e1b;
+                border-radius: 28px;
+                padding: 32px;
+                min-height: 260px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+              "
+            >
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+                <span
+                  style="
+                    font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                    font-size: 48px;
+                    line-height: 48px;
+                    color: #1632e6;
+                  "
+                  >4</span
+                ><span
+                  style="
+                    padding: 4px 10px;
+                    border-radius: 8px;
+                    background: #dfe2e6;
+                    color: #2b1e1b;
+                    font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                    font-size: 12px;
+                    letter-spacing: 0.06em;
+                  "
+                  >HANDS-OFF</span
+                >
+              </div>
+              <h3
+                style="
+                  margin: 0;
+                  font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                  font-weight: 400;
+                  font-size: 34px;
+                  line-height: 40px;
+                "
+              >
+                Build, test, merge
+              </h3>
+              <p style="margin: 0; font-size: 17px; line-height: 26px; color: #5f5754">
+                In dependency order: an optional baseline, then an implementer and a tester. A failing test gets up to 3
+                retries, then one guided attempt. A repo split into parts merges them into one branch and runs its full
+                build and tests.
+              </p>
+            </li>
+            <li
+              class="of-stack"
+              style="
+                position: sticky;
+                top: 232px;
+                background: #eef0f2;
+                color: #2b1e1b;
+                border: 2px solid #2b1e1b;
+                box-shadow: 0 4px 0 0 #2b1e1b;
+                border-radius: 28px;
+                padding: 32px;
+                min-height: 260px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+              "
+            >
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+                <span
+                  style="
+                    font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                    font-size: 48px;
+                    line-height: 48px;
+                    color: #1632e6;
+                  "
+                  >5</span
+                ><span
+                  style="
+                    padding: 2px 8px;
+                    border-radius: 8px;
+                    border: 2px dashed #2b1e1b;
+                    color: #2b1e1b;
+                    font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                    font-size: 12px;
+                    letter-spacing: 0.06em;
+                  "
+                  >YOUR REVIEW</span
+                >
+              </div>
+              <h3
+                style="
+                  margin: 0;
+                  font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                  font-weight: 400;
+                  font-size: 34px;
+                  line-height: 40px;
+                "
+              >
+                Finish
+              </h3>
+              <p style="margin: 0; font-size: 17px; line-height: 26px; color: #5f5754">
+                Changes come back staged in each worktree for your review, or as draft PRs that link to each other, one
+                per repo. The summary lists every assumption, failure and follow-up.
+              </p>
+            </li>
+          </ol>
+        </section>
+
+        <section
+          id="features"
+          aria-labelledby="feat-h"
+          style="
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: clamp(112px, 13vw, 176px) 24px 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+          "
+        >
+          <h2
+            id="feat-h"
+            style="
+              margin: 0;
+              max-width: 900px;
+              font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+              font-weight: 400;
+              font-size: clamp(32px, 4.6vw, 56px);
+              line-height: 1.02;
+              color: #f4f4f6;
+            "
+          >
+            Everything a change across many repos needs.
+          </h2>
+          <div
+            class="of-bento"
+            style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: dense; gap: 16px"
+          >
+            <article
+              class="of-cell of-b-a of-rise"
+              style="
+                grid-column: span 2;
+                grid-row: span 2;
+                background: #eef0f2;
+                color: #2b1e1b;
+                border-radius: 28px;
+                padding: 32px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                gap: 32px;
+                min-height: 440px;
+                box-sizing: border-box;
+              "
+            >
+              <div style="display: flex; flex-direction: column; gap: 12px; max-width: 440px">
+                <h3
+                  style="
+                    margin: 0;
+                    font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                    font-weight: 400;
+                    font-size: 34px;
+                    line-height: 40px;
+                  "
+                >
+                  A worktree and branch for every child.
+                </h3>
+                <p style="margin: 0; font-size: 17px; line-height: 26px; color: #5f5754">
+                  Each repo, monorepo package or part of an app gets its own git worktree and branch. Agents never share
+                  a working tree. Parts of one repo merge into a single branch, and one PR.
+                </p>
+              </div>
+              <div
+                class="of-tile"
+                style="display: flex; flex-direction: column; align-items: flex-start; transform-origin: left bottom"
+              >
+                <span
+                  style="
+                    padding: 4px 12px;
+                    border-radius: 8px;
+                    background: #2b1e1b;
+                    color: #edeb3c;
+                    font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                    font-size: 16px;
+                    line-height: 22px;
+                  "
+                  >main</span
+                >
+                <ul
+                  aria-label="Example branches for the account-id run. web's three parts merge into openfleet/account-id."
+                  style="
+                    margin: 0 0 0 20px;
+                    padding: 0;
+                    list-style: none;
+                    display: flex;
+                    flex-direction: column;
+                    align-self: stretch;
+                  "
+                >
+                  <li style="display: flex; align-items: stretch; gap: 10px">
+                    <span aria-hidden="true" style="position: relative; width: 22px; flex: none"
+                      ><span
+                        style="position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #2b1e1b"
+                      ></span
+                      ><span
+                        style="position: absolute; left: 0; top: 19px; width: 20px; height: 2px; background: #2b1e1b"
+                      ></span></span
+                    ><span
+                      style="
+                        display: flex;
+                        flex-wrap: wrap;
+                        align-items: baseline;
+                        gap: 0 14px;
+                        padding: 8px 0;
+                        min-width: 0;
+                      "
+                      ><span
+                        style="
+                          width: 92px;
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 17px;
+                          line-height: 22px;
+                          color: #2b1e1b;
+                        "
+                        >api</span
+                      ><span
+                        style="
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 14px;
+                          line-height: 22px;
+                          color: #1632e6;
+                          overflow-wrap: anywhere;
+                        "
+                        >openfleet/account-id</span
+                      ></span
+                    >
+                  </li>
+                  <li style="display: flex; align-items: stretch; gap: 10px">
+                    <span aria-hidden="true" style="position: relative; width: 22px; flex: none"
+                      ><span
+                        style="position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #2b1e1b"
+                      ></span
+                      ><span
+                        style="position: absolute; left: 0; top: 19px; width: 20px; height: 2px; background: #2b1e1b"
+                      ></span></span
+                    ><span
+                      style="
+                        display: flex;
+                        flex-wrap: wrap;
+                        align-items: baseline;
+                        gap: 0 14px;
+                        padding: 8px 0;
+                        min-width: 0;
+                      "
+                      ><span
+                        style="
+                          width: 92px;
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 17px;
+                          line-height: 22px;
+                          color: #2b1e1b;
+                        "
+                        >sdk-js</span
+                      ><span
+                        style="
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 14px;
+                          line-height: 22px;
+                          color: #1632e6;
+                          overflow-wrap: anywhere;
+                        "
+                        >openfleet/account-id</span
+                      ></span
+                    >
+                  </li>
+                  <li style="display: flex; align-items: stretch; gap: 10px">
+                    <span aria-hidden="true" style="position: relative; width: 22px; flex: none"
+                      ><span
+                        style="position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #2b1e1b"
+                      ></span
+                      ><span
+                        style="position: absolute; left: 0; top: 19px; width: 20px; height: 2px; background: #2b1e1b"
+                      ></span></span
+                    ><span
+                      style="
+                        display: flex;
+                        flex-wrap: wrap;
+                        align-items: baseline;
+                        gap: 0 14px;
+                        padding: 8px 0;
+                        min-width: 0;
+                      "
+                      ><span
+                        style="
+                          width: 92px;
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 17px;
+                          line-height: 22px;
+                          color: #2b1e1b;
+                        "
+                        >sdk-python</span
+                      ><span
+                        style="
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 14px;
+                          line-height: 22px;
+                          color: #1632e6;
+                          overflow-wrap: anywhere;
+                        "
+                        >openfleet/account-id</span
+                      ></span
+                    >
+                  </li>
+                  <li style="display: flex; align-items: stretch; gap: 10px">
+                    <span aria-hidden="true" style="position: relative; width: 22px; flex: none"
+                      ><span
+                        style="position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #2b1e1b"
+                      ></span
+                      ><span
+                        style="position: absolute; left: 0; top: 19px; width: 20px; height: 2px; background: #2b1e1b"
+                      ></span></span
+                    ><span
+                      style="
+                        display: flex;
+                        flex-wrap: wrap;
+                        align-items: baseline;
+                        gap: 0 14px;
+                        padding: 8px 0;
+                        min-width: 0;
+                      "
+                      ><span
+                        style="
+                          width: 92px;
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 17px;
+                          line-height: 22px;
+                          color: #2b1e1b;
+                        "
+                        >billing</span
+                      ><span
+                        style="
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 14px;
+                          line-height: 22px;
+                          color: #1632e6;
+                          overflow-wrap: anywhere;
+                        "
+                        >openfleet/account-id</span
+                      ></span
+                    >
+                  </li>
+                  <li style="display: flex; align-items: stretch; gap: 10px">
+                    <span aria-hidden="true" style="position: relative; width: 22px; flex: none"
+                      ><span
+                        style="position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #2b1e1b"
+                      ></span
+                      ><span
+                        style="position: absolute; left: 0; top: 19px; width: 20px; height: 2px; background: #2b1e1b"
+                      ></span></span
+                    ><span
+                      style="
+                        display: flex;
+                        flex-wrap: wrap;
+                        align-items: baseline;
+                        gap: 0 14px;
+                        padding: 8px 0;
+                        min-width: 0;
+                      "
+                      ><span
+                        style="
+                          width: 92px;
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 17px;
+                          line-height: 22px;
+                          color: #2b1e1b;
+                        "
+                        >web/setup</span
+                      ><span
+                        style="
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 14px;
+                          line-height: 22px;
+                          color: #1632e6;
+                          overflow-wrap: anywhere;
+                        "
+                        >openfleet/account-id--setup</span
+                      ></span
+                    >
+                  </li>
+                  <li style="display: flex; align-items: stretch; gap: 10px">
+                    <span aria-hidden="true" style="position: relative; width: 22px; flex: none"
+                      ><span
+                        style="position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #2b1e1b"
+                      ></span
+                      ><span
+                        style="position: absolute; left: 0; top: 19px; width: 20px; height: 2px; background: #2b1e1b"
+                      ></span></span
+                    ><span
+                      style="
+                        display: flex;
+                        flex-wrap: wrap;
+                        align-items: baseline;
+                        gap: 0 14px;
+                        padding: 8px 0;
+                        min-width: 0;
+                      "
+                      ><span
+                        style="
+                          width: 92px;
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 17px;
+                          line-height: 22px;
+                          color: #2b1e1b;
+                        "
+                        >web/app</span
+                      ><span
+                        style="
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 14px;
+                          line-height: 22px;
+                          color: #1632e6;
+                          overflow-wrap: anywhere;
+                        "
+                        >openfleet/account-id--app</span
+                      ></span
+                    >
+                  </li>
+                  <li style="display: flex; align-items: stretch; gap: 10px">
+                    <span aria-hidden="true" style="position: relative; width: 22px; flex: none"
+                      ><span
+                        style="position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #2b1e1b"
+                      ></span
+                      ><span
+                        style="position: absolute; left: 0; top: 19px; width: 20px; height: 2px; background: #2b1e1b"
+                      ></span></span
+                    ><span
+                      style="
+                        display: flex;
+                        flex-wrap: wrap;
+                        align-items: baseline;
+                        gap: 0 14px;
+                        padding: 8px 0;
+                        min-width: 0;
+                      "
+                      ><span
+                        style="
+                          width: 92px;
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 17px;
+                          line-height: 22px;
+                          color: #2b1e1b;
+                        "
+                        >web/ui</span
+                      ><span
+                        style="
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 14px;
+                          line-height: 22px;
+                          color: #1632e6;
+                          overflow-wrap: anywhere;
+                        "
+                        >openfleet/account-id--ui</span
+                      ></span
+                    >
+                  </li>
+                  <li style="display: flex; align-items: stretch; gap: 10px">
+                    <span aria-hidden="true" style="position: relative; width: 22px; flex: none"
+                      ><span
+                        style="position: absolute; left: 0; top: 0; height: 20px; width: 2px; background: #2b1e1b"
+                      ></span
+                      ><span
+                        style="position: absolute; left: 0; top: 19px; width: 20px; height: 2px; background: #2b1e1b"
+                      ></span></span
+                    ><span
+                      style="
+                        display: flex;
+                        flex-wrap: wrap;
+                        align-items: baseline;
+                        gap: 0 14px;
+                        padding: 8px 0;
+                        min-width: 0;
+                      "
+                      ><span
+                        style="
+                          width: 92px;
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 17px;
+                          line-height: 22px;
+                          color: #2b1e1b;
+                        "
+                        >mobile</span
+                      ><span
+                        style="
+                          font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                          font-size: 14px;
+                          line-height: 22px;
+                          color: #1632e6;
+                          overflow-wrap: anywhere;
+                        "
+                        >openfleet/account-id</span
+                      ></span
+                    >
+                  </li>
+                </ul>
+              </div>
+            </article>
+
+            <article
+              class="of-cell of-b-b of-rise"
+              style="
+                grid-column: span 2;
+                background: #eef0f2;
+                color: #2b1e1b;
+                border-radius: 28px;
+                padding: 32px;
+                overflow: hidden;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px 32px;
+                align-items: flex-end;
+                justify-content: space-between;
+                box-sizing: border-box;
+              "
+            >
+              <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 10px">
+                <h3
+                  style="
+                    margin: 0;
+                    font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                    font-weight: 400;
+                    font-size: 28px;
+                    line-height: 32px;
+                  "
+                >
+                  Shared contracts keep repos in step.
+                </h3>
+                <p style="margin: 0; font-size: 17px; line-height: 25px; font-weight: 600">
+                  The coordinator writes shared fixtures, and every repo’s contract tests run against them. A contract
+                  change is broadcast to the repos it affects.
+                </p>
+              </div>
+              <code
+                class="of-tile"
+                style="
+                  flex: none;
+                  padding: 10px 16px;
+                  border-radius: 16px;
+                  background: #2b1e1b;
+                  color: #f4f4f6;
+                  font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                  font-size: 24px;
+                "
+                >contracts/</code
+              >
+            </article>
+
+            <article
+              class="of-cell of-b-c of-rise"
+              style="
+                background: #2b1e1b;
+                color: #f4f4f6;
+                border-radius: 28px;
+                padding: 28px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                gap: 20px;
+                box-sizing: border-box;
+              "
+            >
+              <pre
+                class="of-tile"
+                style="
+                  margin: 0;
+                  white-space: pre;
+                  overflow-x: auto;
+                  font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                  font-size: 14px;
+                  line-height: 21px;
+                  color: #a8a6af;
+                  transform-origin: left top;
+                "
+              >{
+  "seq": <span style="color: #F4F4F6;">7</span>,
+  "actor": <span style="color: #EE5AD6;">"api/implementer"</span>,
+  "type": <span style="color: #F4F4F6;">"file.edited"</span>
+}</pre>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <h3
+                  style="
+                    margin: 0;
+                    font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                    font-weight: 400;
+                    font-size: 22px;
+                    line-height: 26px;
+                  "
+                >
+                  Every action on the record.
+                </h3>
+                <p style="margin: 0; font-size: 14px; line-height: 22px; color: #a8a6af">
+                  An append-only
+                  <code style="font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace; color: #f4f4f6"
+                    >events.jsonl</code
+                  >
+                  with patches. Secrets are redacted.
+                </p>
+              </div>
+            </article>
+
+            <article
+              class="of-cell of-b-d of-rise"
+              style="
+                background: #1c1b21;
+                color: #f4f4f6;
+                border: 2px solid #45434c;
+                border-radius: 28px;
+                padding: 28px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                gap: 20px;
+                box-sizing: border-box;
+              "
+            >
+              <svg
+                class="of-tile"
+                width="44"
+                height="44"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#F4F4F6"
+                stroke-width="2.25"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                style="transform-origin: left top"
+              >
+                <path d="M20 12a8 8 0 1 1-3-6.2"></path>
+                <path d="M20 4v5h-5"></path>
+              </svg>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <h3
+                  style="
+                    margin: 0;
+                    font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                    font-weight: 400;
+                    font-size: 22px;
+                    line-height: 26px;
+                  "
+                >
+                  Pick up where it stopped.
+                </h3>
+                <p style="margin: 0; font-size: 14px; line-height: 22px; color: #a8a6af">
+                  A failed child doesn’t stop the run. State lives in
+                  <code style="font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace; color: #f4f4f6"
+                    >state.json</code
+                  >, so
+                  <code style="font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace; color: #f4f4f6"
+                    >openfleet resume</code
+                  >
+                  continues later.
+                </p>
+              </div>
+            </article>
+
+            <article class="of-cell of-b-x of-rise">
+              <code class="of-tile of-x-tile">plans.consistent</code>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <h3 class="of-x-h">Plans agree before code.</h3>
+                <p class="of-x-p">
+                  Every planner runs first. Their plans are checked against the spec’s shared approach and against each
+                  other, per repo and then across repos, before the <code>plans-ready</code> gate opens.
+                </p>
+              </div>
+            </article>
+
+            <article class="of-cell of-b-x of-rise">
+              <code class="of-tile of-x-tile">.env.local</code>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <h3 class="of-x-h">Apps run side by side.</h3>
+                <p class="of-x-p">
+                  Each child gets its own port range, so apps and end-to-end tests run in parallel without clashing.
+                  Git-ignored files like <code>.env.local</code> are copied into every worktree, never committed.
+                </p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section
+          id="quickstart"
+          aria-labelledby="qs-h"
+          style="
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: clamp(112px, 13vw, 176px) 24px 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px 64px;
+            align-items: flex-start;
+          "
+        >
+          <div style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+            <h2
+              id="qs-h"
+              style="
+                margin: 0;
+                font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                font-weight: 400;
+                font-size: clamp(32px, 4.6vw, 56px);
+                line-height: 1.04;
+                color: #f4f4f6;
+              "
+            >
+              Three commands to your first fleet.
+            </h2>
+            <p style="margin: 0; font-size: 18px; line-height: 28px; color: #a8a6af">
+              You need Node.js 20+, git and a signed-in GitHub Copilot CLI or Claude Code. The quick start covers your
+              repos, what a run does, what it can touch and every command.
+            </p>
+            <a
+              class="of-ghost"
+              href="quickstart.html"
+              style="
+                align-self: flex-start;
+                display: inline-flex;
+                align-items: center;
+                height: 52px;
+                padding: 0 22px;
+                box-sizing: border-box;
+                border-radius: 8px;
+                border: 2px solid #45434c;
+                color: #f4f4f6;
+                text-decoration: none;
+                font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                font-size: 14px;
+                letter-spacing: 0.02em;
+              "
+              >READ THE QUICK START</a
+            >
+          </div>
+          <div
+            class="of-rise"
+            style="
+              flex: 1.3 1 460px;
+              min-width: 0;
+              background: #eef0f2;
+              color: #2b1e1b;
+              border-radius: 28px;
+              overflow: hidden;
+            "
+          >
+            <div style="display: flex; align-items: center; gap: 8px; padding: 14px 20px; background: #2b1e1b">
+              <span
+                aria-hidden="true"
+                style="width: 12px; height: 12px; border-radius: 50%; background: #48a6ee"
+              ></span>
+              <span
+                aria-hidden="true"
+                style="width: 12px; height: 12px; border-radius: 50%; background: #ee5ad6"
+              ></span>
+              <span
+                aria-hidden="true"
+                style="width: 12px; height: 12px; border-radius: 50%; background: #edeb3c"
+              ></span>
+              <span
+                style="
+                  margin-left: 8px;
+                  font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                  font-size: 14px;
+                  color: #eef0f2;
+                "
+                >~/my-fleet</span
+              >
+            </div>
+            <ol class="of-term of-qs-list">
+              <li class="of-qs">
+                <span class="of-qs-c"># 1. make a workspace</span>
+                <div class="of-qs-row">
+                  <code>mkdir my-fleet &amp;&amp; cd my-fleet</code
+                  ><button
+                    class="of-qs-copy"
+                    type="button"
+                    data-copy="mkdir my-fleet && cd my-fleet"
+                    aria-label="Copy step 1: make a workspace"
+                  >
+                    COPY
+                  </button>
+                </div>
+              </li>
+              <li class="of-qs">
+                <span class="of-qs-c"># 2. install OpenFleet into it</span>
+                <div class="of-qs-row">
+                  <code>npm create @openfleet-tools@latest</code
+                  ><button
+                    class="of-qs-copy"
+                    type="button"
+                    data-copy="npm create @openfleet-tools@latest"
+                    aria-label="Copy step 2: install OpenFleet into it"
+                  >
+                    COPY
+                  </button>
+                </div>
+              </li>
+              <li class="of-qs">
+                <span class="of-qs-c"># 3. describe the change</span>
+                <div class="of-qs-row">
+                  <code
+                    >npx openfleet new account-id
+                    <span class="of-qs-s">"Rename user_id to account_id everywhere"</span></code
+                  ><button
+                    class="of-qs-copy"
+                    type="button"
+                    data-copy='npx openfleet new account-id "Rename user_id to account_id everywhere"'
+                    aria-label="Copy step 3: describe the change"
+                  >
+                    COPY
+                  </button>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </section>
+
+        <section
+          id="extensions"
+          aria-labelledby="ext-h"
+          style="
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: clamp(112px, 13vw, 176px) 24px 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              gap: 24px 64px;
+              align-items: flex-end;
+              justify-content: space-between;
+            "
+          >
+            <h2
+              id="ext-h"
+              style="
+                margin: 0;
+                flex: 1 1 420px;
+                max-width: 640px;
+                font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                font-weight: 400;
+                font-size: clamp(32px, 4.6vw, 56px);
+                line-height: 1.03;
+                color: #f4f4f6;
+              "
+            >
+              Extend any step of the run.
+            </h2>
+            <div
+              style="
+                flex: 1 1 340px;
+                max-width: 460px;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                align-items: flex-start;
+              "
+            >
+              <p style="margin: 0; font-size: 17px; line-height: 27px; color: #a8a6af">
+                An extension is a folder of instructions. It can run its own agent at one of six points in the run, add
+                to what an agent is told, or add a command.
+              </p>
+              <a
+                class="of-ghost"
+                href="extensions.html"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  height: 44px;
+                  padding: 0 18px;
+                  box-sizing: border-box;
+                  border-radius: 8px;
+                  border: 2px solid #a8a6af;
+                  color: #f4f4f6;
+                  text-decoration: none;
+                  font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                  font-size: 14px;
+                  letter-spacing: 0.02em;
+                "
+                >SEE HOW EXTENSIONS WORK</a
+              >
+            </div>
+          </div>
+          <ol aria-label="Phase slots, in run order" class="of-slotchips">
+            <li style="background: #eef0f2">pre-spec</li>
+            <li style="background: #48a6ee">post-plan</li>
+            <li style="background: #48a6ee">plans-ready</li>
+            <li style="background: #ee5ad6">pre-implement</li>
+            <li style="background: #edeb3c">post-test</li>
+            <li style="background: #eef0f2">post-run</li>
+          </ol>
+        </section>
+
+        <section
+          aria-labelledby="cta-h"
+          style="
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: clamp(128px, 15vw, 200px) 24px clamp(112px, 13vw, 168px);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            text-align: center;
+          "
+        >
+          <h2
+            id="cta-h"
+            style="
+              margin: 0;
+              max-width: 1100px;
+              font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+              font-weight: 400;
+              font-size: clamp(44px, 8vw, 88px);
+              line-height: 1.04;
+              letter-spacing: -0.015em;
+              color: #f4f4f6;
+            "
+          >
+            Write one prompt.<br />Run it across<span
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                align-items: center;
+                gap: 0.12em;
+                margin-top: 0.2em;
+              "
+              ><span
+                class="of-chip"
+                aria-hidden="true"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  height: 1.7em;
+                  padding: 0 0.7em;
+                  margin: 0;
+                  border-radius: 999px;
+                  background: #eef0f2;
+                  color: #2b1e1b;
+                  font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                  font-size: 0.42em;
+                  letter-spacing: 0;
+                "
+                >api</span
+              ><span
+                class="of-chip"
+                aria-hidden="true"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  height: 1.7em;
+                  padding: 0 0.7em;
+                  margin: 0;
+                  border-radius: 999px;
+                  background: #eef0f2;
+                  color: #2b1e1b;
+                  font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                  font-size: 0.42em;
+                  letter-spacing: 0;
+                "
+                >sdk-js</span
+              ><span
+                class="of-chip"
+                aria-hidden="true"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  height: 1.7em;
+                  padding: 0 0.7em;
+                  margin: 0;
+                  border-radius: 999px;
+                  background: #eef0f2;
+                  color: #2b1e1b;
+                  font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                  font-size: 0.42em;
+                  letter-spacing: 0;
+                "
+                >sdk-python</span
+              ><span
+                class="of-chip"
+                aria-hidden="true"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  height: 1.7em;
+                  padding: 0 0.7em;
+                  margin: 0;
+                  border-radius: 999px;
+                  background: #eef0f2;
+                  color: #2b1e1b;
+                  font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                  font-size: 0.42em;
+                  letter-spacing: 0;
+                "
+                >web</span
+              ><span
+                class="of-chip"
+                aria-hidden="true"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  height: 1.7em;
+                  padding: 0 0.7em;
+                  margin: 0;
+                  border-radius: 999px;
+                  background: #2e2d35;
+                  color: #f4f4f6;
+                  font-family: &quot;Share Tech Mono&quot;, ui-monospace, monospace;
+                  font-size: 0.42em;
+                  letter-spacing: 0;
+                "
+                >+2</span
+              ></span
+            ><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)"
+              >&#32;every repo</span
+            >
+          </h2>
+          <p style="margin: 0; max-width: 46ch; font-size: 20px; line-height: 30px; color: #a8a6af">
+            A coordinated fleet of agents carries the change through every repo. You review the result when it’s done.
+          </p>
+          <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: center">
+            <a
+              class="of-btn"
+              href="quickstart.html"
+              style="
+                display: inline-flex;
+                align-items: center;
+                height: 60px;
+                padding: 0 32px;
+                box-sizing: border-box;
+                border-radius: 8px;
+                background: #48a6ee;
+                border: 2px solid #2b1e1b;
+                box-shadow: 0 4px 0 0 #2b1e1b;
+                color: #2b1e1b;
+                text-decoration: none;
+                font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                font-size: 18px;
+                letter-spacing: 0.02em;
+              "
+              >GET STARTED</a
+            >
+            <a
+              class="of-ghost"
+              href="https://github.com/yashicon21/openfleet-tools"
+              style="
+                display: inline-flex;
+                align-items: center;
+                height: 60px;
+                padding: 0 28px;
+                box-sizing: border-box;
+                border-radius: 8px;
+                border: 2px solid #45434c;
+                color: #f4f4f6;
+                text-decoration: none;
+                font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                font-size: 17px;
+                letter-spacing: 0.02em;
+              "
+              >VIEW ON GITHUB</a
+            >
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <div aria-hidden="true" style="display: flex; height: 8px">
+          <span style="flex: 1; background: #48a6ee"></span><span style="flex: 1; background: #ee5ad6"></span
+          ><span style="flex: 1; background: #edeb3c"></span>
+        </div>
+        <div
+          style="
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px 40px;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <span
+              style="
+                font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                font-size: 20px;
+                color: #48a6ee;
+              "
+              >OPENFLEET</span
+            >
+            <span style="font-size: 14px; color: #a8a6af">Open source · MIT licensed</span>
+          </div>
+          <nav aria-label="Footer" style="display: flex; flex-wrap: wrap; gap: 4px; margin: 0 -14px">
+            <a
+              class="of-navlink"
+              href="how-it-works.html"
+              style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+              >How it works</a
+            >
+            <a
+              class="of-navlink"
+              href="quickstart.html"
+              style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+              >Quick start</a
+            >
+            <a
+              class="of-navlink"
+              href="extensions.html"
+              style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+              >Extensions</a
+            >
+            <a
+              class="of-navlink"
+              href="https://github.com/yashicon21/openfleet-tools"
+              style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+              >GitHub</a
+            >
+            <a
+              class="of-navlink"
+              href="https://www.npmjs.com/package/@openfleet-tools/cli"
+              style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+              >npm</a
+            >
+            <a
+              class="of-navlink"
+              href="https://github.com/yashicon21/openfleet-tools/blob/main/docs/events.md"
+              style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+              >Events schema</a
+            >
+            <a
+              class="of-navlink"
+              href="https://github.com/yashicon21/openfleet-tools/blob/main/docs/design.md"
+              style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+              >Design notes</a
+            >
+            <a
+              class="of-navlink"
+              href="https://github.com/yashicon21/openfleet-tools/issues"
+              style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+              >Issues</a
+            >
+          </nav>
+        </div>
+      </footer>
+    </div>
+    <script>
+      (function () {
+        var NAMES = ["api", "sdk-js", "sdk-python", "billing", "web", "mobile"];
+        // Per repo: 0–4 = not started → done; g = plan done, waiting at the plans-ready gate;
+        // b = writing baseline tests; w = waiting on sdk-js; r = retry; m = merging web's parts and testing them.
+        var STEPS = [
+          [1, 1, 1, 1, 1, 1],
+          ["g", "g", "g", "g", 1, "g"],
+          [2, 2, "b", 2, 2, "w"],
+          [3, 2, 2, 3, 2, "w"],
+          [4, 3, "r", 3, 2, "w"],
+          [4, 4, 2, 4, 3, 2],
+          [4, 4, 3, 4, "m", 3],
+          [4, 4, 4, 4, 4, 4],
+        ];
+        var EVENTS_AT_STEP = [0, 1, 2, 2, 3, 3, 4, 5];
+        var EVENTS = [
+          { color: "#F4F4F6", type: "plans.consistent", text: "8 plans agree, gate open" },
+          { color: "#F4F4F6", type: "contract.changed", text: "contracts/account.json → 4 repos" },
+          { color: "#F4F4F6", type: "assumption", text: "sdk-python keeps user_id as a read-only alias" },
+          { color: "#F4F4F6", type: "child.merged", text: "web/app → openfleet/account-id" },
+          { color: "#F4F4F6", type: "run.completed", text: "6 draft PRs opened, cross-linked" },
+        ];
+        var SR =
+          "position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;";
+        var MONO = "font-family: 'Share Tech Mono', ui-monospace, monospace;";
+        var DISP = "font-family: 'Russo One', 'Arial Black', sans-serif;";
+        var TICK =
+          '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#2B1E1B" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
+        var RETRY =
+          '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8A5300" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-3-6.2"></path><path d="M20 4v5h-5"></path></svg>';
+
+        var ROLE_BG = ["#48A6EE", "#EE5AD6", "#EDEB3C"];
+        // still: the plan is done but nothing else has started, so only the plan segment fills.
+        function segment(p, k, still) {
+          var bg = "#DFE2E6";
+          var ring = "0px";
+          var cls = "of-sg";
+          if (still) {
+            if (k === 0) bg = ROLE_BG[0];
+          } else if (p === 4 || p > k + 1) {
+            bg = ROLE_BG[k];
+          } else if (p === k + 1) {
+            bg = ROLE_BG[k];
+            ring = "2px";
+            cls = "of-sg of-cur";
+          }
+          return (
+            '<span class="' +
+            cls +
+            '" style="flex: 1; height: 10px; border-radius: 3px; background: ' +
+            bg +
+            "; box-shadow: inset 0 0 0 " +
+            ring +
+            ' #2B1E1B;"></span>'
+          );
+        }
+
+        function rowsHtml(phases) {
+          var done = 0;
+          var html = phases
+            .map(function (ph, i) {
+              var retry = ph === "r";
+              var wait = ph === "w";
+              var gate = ph === "g";
+              var base = ph === "b";
+              var merge = ph === "m";
+              var p = retry ? 3 : wait ? 2 : gate || base ? 2 : merge ? 4 : ph;
+              var label, sr, bg, fg, icon;
+              icon = "";
+              if (merge) {
+                label = "MERGE + TEST";
+                sr = ": merging its 3 parts into one branch and running the full build and tests";
+                bg = "#DFE2E6";
+                fg = "#2B1E1B";
+              } else if (p === 4) {
+                done += 1;
+                label = "DONE";
+                sr = ": plan, implement and test complete";
+                bg = "#EEF0F2";
+                fg = "#2B1E1B";
+                icon = TICK;
+              } else if (retry) {
+                label = "RETRY 1/3";
+                sr = ": tests failed, retrying";
+                bg = "#FFF1CC";
+                fg = "#8A5300";
+                icon = RETRY;
+              } else if (wait) {
+                label = "AFTER SDK-JS";
+                sr = ": plan agreed, waiting until sdk-js finishes";
+                bg = "#DFE2E6";
+                fg = "#5F5754";
+              } else if (gate) {
+                label = "AT THE GATE";
+                sr = ": plan done, waiting until every plan agrees";
+                bg = "#DFE2E6";
+                fg = "#5F5754";
+              } else if (base) {
+                label = "BASELINE";
+                sr = ": writing tests for today’s behaviour";
+                bg = "#DFE2E6";
+                fg = "#2B1E1B";
+              } else {
+                label = ["", "PLAN", "IMPLEMENT", "TEST"][p];
+                sr = ["", ": planning", ": implementing", ": testing"][p];
+                bg = "#DFE2E6";
+                fg = "#2B1E1B";
+              }
+              var still = wait || gate || base;
+              var border = i === phases.length - 1 ? "0" : "2px solid #DFE2E6";
+              var chipEdge = p === 4 ? "box-shadow: inset 0 0 0 2px #2B1E1B; " : "";
+              return (
+                '<li style="display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: ' +
+                border +
+                ';"><span class="of-rname" style="width: 92px; flex: none; ' +
+                MONO +
+                ' font-size: 17px;">' +
+                NAMES[i] +
+                (NAMES[i] === "web"
+                  ? '<span aria-hidden="true" style="color: #5F5754; font-size: 14px;"> ×3</span><span style="' +
+                    SR +
+                    '"> (3 parts)</span>'
+                  : "") +
+                '</span><span class="of-seg" aria-hidden="true" style="display: flex; gap: 3px; width: 84px; flex: none;">' +
+                segment(p, 0, still) +
+                segment(p, 1, still) +
+                segment(p, 2, still) +
+                '</span><span class="of-st" style="margin-left: auto; display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 8px; ' +
+                chipEdge +
+                "background: " +
+                bg +
+                "; color: " +
+                fg +
+                "; " +
+                DISP +
+                ' font-size: 12px; letter-spacing: 0.04em; white-space: nowrap;">' +
+                icon +
+                label +
+                '<span style="' +
+                SR +
+                '">' +
+                sr +
+                "</span></span></li>"
+              );
+            })
+            .join("");
+          return { html: html, done: done };
+        }
+
+        function eventsHtml(count) {
+          return (
+            '<div aria-hidden="true" style="color: #A8A6AF;">events.jsonl</div>' +
+            (count === 0 ? '<div style="color: #A8A6AF;">Waiting for the first coordinator event…</div>' : "") +
+            // The latest three, so the box never grows while the run plays.
+            EVENTS.slice(Math.max(0, count - 3), count)
+              .map(function (ev) {
+                return (
+                  '<div class="of-evt" style="display: flex; gap: 10px; flex-wrap: wrap;"><span style="color: ' +
+                  ev.color +
+                  ';">' +
+                  ev.type +
+                  '</span><span style="min-width: 0; overflow-wrap: anywhere;">' +
+                  ev.text +
+                  "</span></div>"
+                );
+              })
+              .join("")
+          );
+        }
+
+        var root = document.getElementById("of-root");
+        var rows = document.getElementById("of-rows");
+        var events = document.getElementById("of-events");
+        var doneCount = document.getElementById("of-done");
+        var replay = document.getElementById("of-replay");
+        var copyButton = document.getElementById("of-copy");
+        var copyLabel = document.getElementById("of-copy-label");
+        var timers = [];
+        var copyTimer;
+
+        function show(step) {
+          var r = rowsHtml(STEPS[step]);
+          rows.innerHTML = r.html;
+          doneCount.textContent = String(r.done);
+          events.innerHTML = eventsHtml(EVENTS_AT_STEP[step]);
+          var last = step === STEPS.length - 1;
+          if (last) playing = false;
+          replay.hidden = !last && !playing;
+          replayLabel.textContent = last ? "REPLAY" : "SKIP";
+          replay.setAttribute("aria-label", last ? "Replay the example run" : "Skip to the end of the run");
+        }
+
+        var playing = false;
+        var replayLabel = replay.querySelector(".of-rlabel");
+        var cursor = 0;
+        function runFrom(from, lead) {
+          timers.forEach(clearTimeout);
+          timers = [];
+          playing = true;
+          root.classList.add("of-live");
+          cursor = from;
+          show(from);
+          for (var i = from + 1; i < STEPS.length; i++) {
+            timers.push(
+              setTimeout(
+                function (k) {
+                  cursor = k;
+                  show(k);
+                }.bind(null, i),
+                (lead || 0) + (i - from) * 1100,
+              ),
+            );
+          }
+        }
+        function play(lead) {
+          runFrom(0, lead);
+        }
+        // Pause the hero run while it's off screen and pick up from the same step when it's back.
+        var held = false;
+        if ("IntersectionObserver" in window) {
+          new IntersectionObserver(function (es) {
+            es.forEach(function (e) {
+              if (!e.isIntersecting && playing) {
+                timers.forEach(clearTimeout);
+                timers = [];
+                held = true;
+              } else if (e.isIntersecting && held) {
+                held = false;
+                runFrom(cursor, 300);
+              }
+            });
+          }).observe(rows);
+        }
+
+        replay.addEventListener("click", function () {
+          if (playing) {
+            timers.forEach(clearTimeout);
+            timers = [];
+            show(STEPS.length - 1);
+          } else play(0);
+        });
+
+        var live = document.getElementById("sr-announce");
+        function say(msg) {
+          live.textContent = "";
+          setTimeout(function () {
+            live.textContent = msg;
+          }, 50);
+        }
+        // Clipboard API first; fall back to a hidden textarea; say so if both fail.
+        function copyText(text, onDone) {
+          function ok() {
+            onDone();
+            say("Copied: " + text);
+          }
+          function fallback() {
+            var ta = document.createElement("textarea");
+            ta.value = text;
+            ta.setAttribute("readonly", "");
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            var done = false;
+            try {
+              done = document.execCommand("copy");
+            } catch (e) {
+              done = false;
+            }
+            document.body.removeChild(ta);
+            if (done) ok();
+            else say("Copy didn't work here. Select the command and copy it yourself: " + text);
+          }
+          if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(ok, fallback);
+          else fallback();
+        }
+        copyButton.addEventListener("click", function () {
+          copyText("npm create @openfleet-tools@latest", function () {
+            copyLabel.textContent = "COPIED";
+            clearTimeout(copyTimer);
+            copyTimer = setTimeout(function () {
+              copyLabel.textContent = "COPY";
+            }, 1800);
+          });
+        });
+        document.querySelectorAll(".of-qs-copy").forEach(function (btn) {
+          var t;
+          btn.addEventListener("click", function () {
+            copyText(btn.getAttribute("data-copy"), function () {
+              btn.textContent = "COPIED";
+              clearTimeout(t);
+              t = setTimeout(function () {
+                btn.textContent = "COPY";
+              }, 1800);
+            });
+          });
+        });
+
+        root.classList.add("of-motion");
+        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (!reduce && window.scrollY < window.innerHeight) {
+          play(500);
+        } else {
+          show(4);
+        }
+      })();
+      (function () {
+        var fig = document.getElementById("rp-fig");
+        if (!fig) return;
+        var svg = document.getElementById("rp-swim");
+        var logEl = document.getElementById("rp-log");
+        var btn = document.getElementById("rp-play");
+        var range = document.getElementById("rp-scrub");
+        var clock = document.getElementById("rp-clock");
+        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var narrowMq = window.matchMedia ? window.matchMedia("(max-width: 639px)") : { matches: false };
+        var NS = "http://www.w3.org/2000/svg";
+
+        // Example timings, in seconds. p = plan, b = baseline, i = implement, t = test, f = failed test,
+        // w = waiting on another child, k = merged into web's integration branch, m = web's full build and tests.
+        var LANES = [
+          {
+            name: "api",
+            segs: [
+              ["p", 50, 80],
+              ["i", 112, 160],
+              ["t", 162, 180],
+            ],
+          },
+          {
+            name: "sdk-js",
+            segs: [
+              ["p", 50, 82],
+              ["i", 112, 165],
+              ["t", 167, 190],
+            ],
+          },
+          {
+            name: "sdk-python",
+            segs: [
+              ["p", 51, 84],
+              ["b", 112, 135],
+              ["i", 137, 175],
+              ["f", 177, 195],
+              ["i", 198, 220],
+              ["t", 222, 240],
+            ],
+          },
+          {
+            name: "billing",
+            segs: [
+              ["p", 51, 86],
+              ["i", 113, 170],
+              ["t", 172, 196],
+            ],
+          },
+          {
+            name: "web",
+            segs: [
+              ["k", 155, 155, "web/setup"],
+              ["k", 218, 218, "web/ui"],
+              ["k", 225, 225, "web/app"],
+              ["m", 226, 244],
+            ],
+          },
+          {
+            name: "web/setup",
+            segs: [
+              ["p", 52, 78],
+              ["i", 113, 140],
+              ["t", 142, 152],
+            ],
+          },
+          {
+            name: "web/app",
+            segs: [
+              ["p", 79, 104],
+              ["w", 109, 156, "after setup"],
+              ["i", 157, 200],
+              ["t", 202, 222],
+            ],
+          },
+          {
+            name: "web/ui",
+            segs: [
+              ["p", 81, 106],
+              ["w", 109, 156, "after setup"],
+              ["i", 157, 195],
+              ["t", 197, 215],
+            ],
+          },
+          {
+            name: "mobile",
+            segs: [
+              ["p", 52, 80],
+              ["w", 109, 193, "after sdk-js"],
+              ["i", 194, 235],
+              ["t", 237, 255],
+            ],
+          },
+        ];
+        var PROJECT = [
+          ["GRILL + SPEC", 0, 39, "raised"],
+          ["YOU", 39, 47, "you"],
+          ["RUNNING", 47, 258, "raised"],
+          ["FINALIZE", 258, 268, "raised"],
+        ];
+        var MARKS = [
+          { t: 109, label: "plans-ready gate", color: "#F4F4F6" },
+          { t: 120, label: "contract.changed", color: "#F4F4F6" },
+          { t: 196, label: "assumption", color: "#F4F4F6" },
+        ];
+        var END = 268;
+        var COLORS = { p: "#48A6EE", b: "none", i: "#EE5AD6", t: "#EDEB3C", f: "#FFF1CC", m: "none" };
+        var ROLE = { p: "planner", b: "baseline", i: "implementer", t: "tester", f: "tester" };
+
+        var EVENTS = [
+          { t: 0, type: "project.created", text: "account-id" },
+          { t: 38, type: "spec.written", text: "spec.md, 6 repos, 8 children" },
+          { t: 46, type: "spec.approved", text: "you approved the spec" },
+          { t: 109, type: "plans.consistent", text: "8 plans agree, gate open" },
+          { t: 120, type: "contract.changed", text: "contracts/account.json → 4 repos" },
+          { t: 135, type: "baseline.passed", text: "sdk-python · 3 tests protected" },
+          { t: 196, type: "assumption", text: "sdk-python keeps user_id as an alias" },
+          { t: 264, type: "run.completed", text: "6 draft PRs, cross-linked" },
+        ];
+        LANES.forEach(function (lane) {
+          lane.segs.forEach(function (s) {
+            if (s[0] === "w") {
+              EVENTS.push({ t: s[1], type: "ordering", text: lane.name + " waits, " + s[3] });
+              return;
+            }
+            if (s[0] === "k") {
+              EVENTS.push({ t: s[1], type: "child.merged", text: s[3] + " → openfleet/account-id" });
+              return;
+            }
+            if (s[0] === "m") {
+              EVENTS.push({ t: s[2], type: "test.run", text: "web · full build + tests pass" });
+              return;
+            }
+            EVENTS.push({ t: s[1], type: "agent.spawned", text: lane.name + "/" + ROLE[s[0]] });
+            if (s[0] === "t") EVENTS.push({ t: s[2], type: "test.run", text: lane.name + " · pass" });
+            if (s[0] === "f") EVENTS.push({ t: s[2], type: "test.run", text: lane.name + " · fail, retry 1/3" });
+          });
+        });
+        EVENTS.sort(function (a, b) {
+          return a.t - b.t;
+        });
+
+        function fmt(t) {
+          t = Math.max(0, Math.round(t));
+          var s = t % 60;
+          return Math.floor(t / 60) + ":" + (s < 10 ? "0" : "") + s;
+        }
+        function el(name, attrs, text) {
+          var n = document.createElementNS(NS, name);
+          for (var k in attrs) n.setAttribute(k, attrs[k]);
+          if (text != null) n.textContent = text;
+          svg.appendChild(n);
+          return n;
+        }
+
+        var bars = [];
+        var dims;
+        var markEls = [];
+        var head;
+        var projEls = [];
+
+        function build() {
+          var narrow = narrowMq.matches;
+          while (svg.firstChild) svg.removeChild(svg.firstChild);
+          bars = [];
+          markEls = [];
+          projEls = [];
+          var W = narrow ? 640 : 1000;
+          var X0 = narrow ? 4 : 120;
+          var X1 = narrow ? 632 : 990;
+          var x = function (t) {
+            return X0 + (t / END) * (X1 - X0);
+          };
+          var PY = narrow ? 20 : 10;
+          var LY = narrow ? 70 : 60;
+          var LH = narrow ? 46 : 42;
+          if (!narrow)
+            el(
+              "text",
+              {
+                x: 0,
+                y: PY + 18,
+                fill: "#A8A6AF",
+                "font-size": 12,
+                "letter-spacing": 1,
+                style: "font-family: 'Russo One', sans-serif",
+              },
+              "PROJECT",
+            );
+          PROJECT.forEach(function (p) {
+            var w = x(p[2]) - x(p[1]) - 2;
+            var you = p[3] === "you";
+            var r = el("rect", {
+              x: x(p[1]),
+              y: PY,
+              width: Math.max(2, w),
+              height: 26,
+              rx: 6,
+              fill: you ? "none" : "#26252C",
+              stroke: you ? "#F4F4F6" : "none",
+              "stroke-width": you ? 2 : 0,
+              "stroke-dasharray": you ? "6 4" : "none",
+            });
+            projEls.push({ r: r, a: p[1] });
+            // Use the full label when it fits, a short one when it doesn't, nothing otherwise.
+            var plab = [p[0], p[0].split(" ")[0]].filter(function (l) {
+              return w > l.length * 8 + 16;
+            })[0];
+            if (plab && !you)
+              el(
+                "text",
+                {
+                  x: x(p[1]) + 8,
+                  y: PY + 18,
+                  "font-size": 12,
+                  fill: "#A8A6AF",
+                  style: "font-family: 'Russo One', sans-serif",
+                },
+                plab,
+              );
+            if (you)
+              el(
+                "text",
+                {
+                  x: x(p[1]) + w / 2,
+                  y: PY + 42,
+                  "font-size": 12,
+                  fill: "#F4F4F6",
+                  "text-anchor": "middle",
+                  style: "font-family: 'Russo One', sans-serif",
+                },
+                "YOU",
+              );
+          });
+          LANES.forEach(function (lane, i) {
+            var y = LY + i * LH;
+            var labY = narrow ? y + 11 : y + 24;
+            var barY = narrow ? y + 17 : y + 8;
+            var barH = narrow ? 18 : 22;
+            el("line", {
+              x1: X0,
+              x2: X1,
+              y1: barY + barH / 2,
+              y2: barY + barH / 2,
+              stroke: "#45434C",
+              "stroke-width": 1,
+              "stroke-dasharray": "2 6",
+            });
+            el(
+              "text",
+              {
+                x: narrow ? X0 : 0,
+                y: labY,
+                "font-size": narrow ? 14 : 16,
+                fill: "#F4F4F6",
+                style: "font-family: 'Share Tech Mono', monospace",
+              },
+              lane.name,
+            );
+            if (lane.name === "web" && !narrow)
+              el(
+                "text",
+                {
+                  x: 38,
+                  y: labY,
+                  "font-size": 12,
+                  "letter-spacing": 1,
+                  fill: "#A8A6AF",
+                  style: "font-family: 'Russo One', sans-serif",
+                },
+                "MERGE",
+              );
+            lane.segs.forEach(function (s) {
+              if (s[0] === "w") {
+                var line = el("line", {
+                  x1: x(s[1]),
+                  x2: x(s[1]),
+                  y1: barY + barH / 2,
+                  y2: barY + barH / 2,
+                  stroke: "#A8A6AF",
+                  "stroke-width": 2,
+                  "stroke-dasharray": "5 5",
+                });
+                bars.push({ kind: "w", node: line, a: s[1], b: s[2], x: x });
+                // The label sits on the lane's own dashed line, on a patch of panel colour.
+                // Start the label clear of the gate and contract marks drawn at the same moment.
+                var lx = x(s[1] + 14);
+                var pad = el("rect", {
+                  x: lx - 4,
+                  y: barY + barH / 2 - 9,
+                  width: s[3].length * 7 + 10,
+                  height: 18,
+                  fill: "#1C1B21",
+                });
+                bars.push({ kind: "label", node: pad, a: s[1] });
+                var lab = el(
+                  "text",
+                  {
+                    x: lx,
+                    y: barY + barH / 2 + 4,
+                    "font-size": 12,
+                    fill: "#A8A6AF",
+                    style: "font-family: 'Share Tech Mono', monospace",
+                  },
+                  s[3],
+                );
+                bars.push({ kind: "label", node: lab, a: s[1] });
+                return;
+              }
+              if (s[0] === "k") {
+                var tk = el("rect", { x: x(s[1]) - 1, y: barY, width: 3, height: barH, fill: "#F4F4F6" });
+                bars.push({ kind: "label", node: tk, a: s[1] });
+                return;
+              }
+              var attrs = { x: x(s[1]), y: barY, height: barH, rx: 5, width: 0, fill: COLORS[s[0]] };
+              if (s[0] === "f") {
+                attrs.stroke = "#8A5300";
+                attrs["stroke-width"] = 2;
+              }
+              if (s[0] === "b" || s[0] === "m") {
+                attrs.stroke = s[0] === "b" ? "#EDEB3C" : "#F4F4F6";
+                attrs["stroke-width"] = 2;
+                attrs.y = barY + 1;
+                attrs.height = barH - 2;
+              }
+              var r = el("rect", attrs);
+              bars.push({ kind: "bar", node: r, a: s[1], b: s[2], x: x });
+              if (s[0] === "f") {
+                var fl = el(
+                  "text",
+                  {
+                    x: x(s[2]) - 4,
+                    y: barY + barH / 2 + 4,
+                    "font-size": 12,
+                    fill: "#8A5300",
+                    "text-anchor": "end",
+                    style: "font-family: 'Russo One', sans-serif",
+                  },
+                  "FAIL",
+                );
+                bars.push({ kind: "label", node: fl, a: s[2] });
+              }
+            });
+          });
+          var bottom = LY + LANES.length * LH + 4;
+          MARKS.forEach(function (m, mi) {
+            var ln = el("line", {
+              x1: x(m.t),
+              x2: x(m.t),
+              y1: LY - 6,
+              y2: bottom,
+              stroke: m.color,
+              "stroke-width": 2,
+              "stroke-dasharray": "3 4",
+            });
+            var tx = el(
+              "text",
+              {
+                x: x(m.t) + 6,
+                y: bottom + 18 + mi * 15,
+                "font-size": 12,
+                fill: m.color,
+                style: "font-family: 'Share Tech Mono', monospace",
+              },
+              m.label,
+            );
+            markEls.push({ t: m.t, nodes: [ln, tx] });
+          });
+          var axisY = bottom + 18 + MARKS.length * 15;
+          el("line", { x1: X0, x2: X1, y1: axisY, y2: axisY, stroke: "#45434C", "stroke-width": 2 });
+          for (var s = 0; s <= END; s += 60) {
+            el("line", { x1: x(s), x2: x(s), y1: axisY, y2: axisY + 6, stroke: "#45434C", "stroke-width": 2 });
+            el(
+              "text",
+              {
+                x: x(s),
+                y: axisY + 22,
+                "font-size": 13,
+                fill: "#A8A6AF",
+                "text-anchor": s === 0 ? "start" : "middle",
+                style: "font-family: 'Share Tech Mono', monospace",
+              },
+              fmt(s),
+            );
+          }
+          head = el("line", { x1: x(END), x2: x(END), y1: PY - 4, y2: axisY, stroke: "#F4F4F6", "stroke-width": 2 });
+          svg.setAttribute("viewBox", "0 0 " + W + " " + (axisY + 30));
+          svg.style.minWidth = narrow ? "640px" : "720px";
+          dims = { x: x };
+        }
+
+        var lastShown = -1;
+        function frame(t) {
+          var x = dims.x;
+          bars.forEach(function (b) {
+            if (b.kind === "bar") {
+              var w = Math.max(0, Math.min(t, b.b) - b.a);
+              b.node.setAttribute("width", Math.max(0, x(b.a + w) - x(b.a)));
+            } else if (b.kind === "w") {
+              b.node.setAttribute("x2", x(Math.max(b.a, Math.min(t, b.b))));
+              b.node.style.opacity = t >= b.a ? 1 : 0;
+            } else {
+              b.node.style.opacity = t >= b.a ? 1 : 0;
+            }
+          });
+          markEls.forEach(function (m) {
+            m.nodes.forEach(function (n) {
+              n.style.opacity = t >= m.t ? 1 : 0;
+            });
+          });
+          projEls.forEach(function (p) {
+            p.r.style.opacity = t >= p.a ? 1 : 0.3;
+          });
+          head.setAttribute("x1", x(t));
+          head.setAttribute("x2", x(t));
+          var n = 0;
+          while (n < EVENTS.length && EVENTS[n].t <= t) n++;
+          if (n !== lastShown) {
+            lastShown = n;
+            var keep = narrowMq.matches ? 4 : 7;
+            logEl.innerHTML = EVENTS.slice(Math.max(0, n - keep), n)
+              .reverse()
+              .map(function (e) {
+                return (
+                  "<li><span>" + fmt(e.t) + "</span><span><b>" + e.type + "</b><em>" + e.text + "</em></span></li>"
+                );
+              })
+              .join("");
+          }
+        }
+
+        var t = END;
+        var playing = false;
+        var raf = 0;
+        var last = 0;
+        var DURATION_MS = 12000;
+        function set(v) {
+          t = Math.max(0, Math.min(END, v));
+          range.value = String(Math.round(t));
+          range.setAttribute("aria-valuetext", fmt(t) + " of " + fmt(END));
+          clock.textContent = fmt(t);
+          frame(t);
+        }
+        function label() {
+          btn.textContent = playing ? "❚❚ PAUSE" : t >= END ? "↺ REPLAY" : "▶ PLAY";
+        }
+        function tick(now) {
+          var dt = now - last;
+          last = now;
+          set(t + (dt / DURATION_MS) * END);
+          if (t >= END) {
+            playing = false;
+            label();
+            return;
+          }
+          raf = requestAnimationFrame(tick);
+        }
+        var stepTimer = 0;
+        // Reduced motion: the replay runs as eight still frames instead of continuous movement.
+        function stepTick() {
+          set(t + END / 8);
+          if (t >= END) {
+            playing = false;
+            label();
+            return;
+          }
+          stepTimer = setTimeout(stepTick, 900);
+        }
+        function play() {
+          if (t >= END) set(0);
+          playing = true;
+          label();
+          if (reduce) {
+            stepTimer = setTimeout(stepTick, 900);
+            return;
+          }
+          last = performance.now();
+          raf = requestAnimationFrame(tick);
+        }
+        function pause() {
+          playing = false;
+          cancelAnimationFrame(raf);
+          clearTimeout(stepTimer);
+          label();
+        }
+        btn.addEventListener("click", function () {
+          if (playing) pause();
+          else play();
+        });
+        range.addEventListener("input", function () {
+          pause();
+          set(Number(range.value));
+          label();
+        });
+
+        build();
+        set(END);
+        label();
+        var onChange = function () {
+          build();
+          lastShown = -1;
+          frame(t);
+        };
+        if (narrowMq.addEventListener) narrowMq.addEventListener("change", onChange);
+        if ("IntersectionObserver" in window) {
+          var started = false;
+          new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (e) {
+                // First arrival plays the run once (with motion allowed); leaving pauses it.
+                if (e.isIntersecting && !started && !reduce) {
+                  started = true;
+                  play();
+                } else if (!e.isIntersecting && playing) pause();
+              });
+            },
+            { threshold: 0.3 },
+          ).observe(fig);
+        }
+      })();
+    </script>
+    <script>
+      (function () {
+        var t = document.querySelector(".of-mq-toggle"),
+          m = document.querySelector(".of-mq");
+        if (!t || !m) return;
+        t.addEventListener("click", function () {
+          var paused = t.getAttribute("aria-pressed") !== "true";
+          t.setAttribute("aria-pressed", String(paused));
+          t.setAttribute("aria-label", paused ? "Play the scrolling banner" : "Pause the scrolling banner");
+          m.classList.toggle("paused", paused);
+        });
+      })();
+      // Mobile menu: close on Escape (returning focus to the toggle) and after following a link.
+      (function () {
+        var menu = document.querySelector(".of-menu");
+        if (!menu) return;
+        var toggle = menu.querySelector("summary");
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && menu.open) {
+            menu.open = false;
+            toggle.focus();
+          }
+        });
+        menu.addEventListener("click", function (e) {
+          if (e.target.closest("a")) menu.open = false;
+        });
+      })();
+    </script>
+  </body>
+</html>

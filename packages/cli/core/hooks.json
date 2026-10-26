@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "node \"${PLUGIN_ROOT}/lib/hooks/main.js\" sessionStart",
+        "powershell": "node \"${PLUGIN_ROOT}\\lib\\hooks\\main.js\" sessionStart",
+        "timeoutSec": 10
+      }
+    ],
+    "sessionEnd": [
+      {
+        "type": "command",
+        "bash": "node \"${PLUGIN_ROOT}/lib/hooks/main.js\" sessionEnd",
+        "powershell": "node \"${PLUGIN_ROOT}\\lib\\hooks\\main.js\" sessionEnd",
+        "timeoutSec": 10
+      }
+    ],
+    "subagentStart": [
+      {
+        "type": "command",
+        "bash": "node \"${PLUGIN_ROOT}/lib/hooks/main.js\" subagentStart",
+        "powershell": "node \"${PLUGIN_ROOT}\\lib\\hooks\\main.js\" subagentStart",
+        "timeoutSec": 10,
+        "matcher": "(openfleet:)?openfleet-.*"
+      }
+    ],
+    "subagentStop": [
+      {
+        "type": "command",
+        "bash": "node \"${PLUGIN_ROOT}/lib/hooks/main.js\" subagentStop",
+        "powershell": "node \"${PLUGIN_ROOT}\\lib\\hooks\\main.js\" subagentStop",
+        "timeoutSec": 30
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "node \"${PLUGIN_ROOT}/lib/hooks/main.js\" postToolUse",
+        "powershell": "node \"${PLUGIN_ROOT}\\lib\\hooks\\main.js\" postToolUse",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}

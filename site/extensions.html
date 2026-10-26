@@ -1,0 +1,1542 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Extensions · OpenFleet</title>
+    <meta
+      name="description"
+      content="OpenFleet extensions are folders of instructions. Run an agent at one of six phase slots, add to a role's instructions, add commands, and set workspace settings, with permissions declared up front."
+    />
+    <meta name="theme-color" content="#0E0E10" />
+    <link rel="canonical" href="https://openfleet.tools/extensions.html" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Ccircle cx='15' cy='15' r='12' fill='none' stroke='%2348A6EE' stroke-width='3'/%3E%3Ccircle cx='15' cy='15' r='5' fill='%23EE5AD6'/%3E%3Ccircle cx='15' cy='3' r='3' fill='%23EDEB3C'/%3E%3C/svg%3E"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Extensions · OpenFleet" />
+    <meta
+      property="og:description"
+      content="OpenFleet extensions are folders of instructions. Run an agent at one of six phase slots, add to a role's instructions, add commands, and set workspace settings, with permissions declared up front."
+    />
+    <meta property="og:url" content="https://openfleet.tools/extensions.html" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Russo+One&amp;family=Saira+Semi+Condensed:wght@500;600;700&amp;family=Share+Tech+Mono&amp;display=swap"
+    />
+    <style>
+      [hidden] {
+        display: none !important;
+      }
+      html {
+        scroll-behavior: smooth;
+        scrollbar-color: #45434c #0e0e10;
+      }
+      body {
+        margin: 0;
+        background: #0e0e10;
+      }
+      ::selection {
+        background: #edeb3c;
+        color: #2b1e1b;
+      }
+      [id] {
+        scroll-margin-top: 104px;
+      }
+      h2,
+      h3 {
+        text-wrap: balance;
+      }
+      p {
+        text-wrap: pretty;
+      }
+      p code,
+      td code {
+        white-space: nowrap;
+      }
+      a {
+        color: #f4f4f6;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 2px;
+        text-decoration-color: #ee5ad6;
+      }
+      a:hover {
+        color: #48a6ee;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      li:focus-visible {
+        outline: 2px solid #48a6ee;
+        outline-offset: 3px;
+        border-radius: 8px;
+      }
+      @keyframes of-scroll {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+      /* Same header on every page: don't inherit this page's larger body text. */
+      header nav {
+        font-size: 16px;
+        line-height: 22px;
+      }
+      header .of-logo {
+        min-height: 44px;
+      }
+      .of-navlink:hover {
+        background: #2e2d35;
+        color: #f4f4f6;
+      }
+      .of-btn {
+        transition:
+          transform 80ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          box-shadow 80ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          background-color 120ms;
+      }
+      .of-btn:hover {
+        background: #6bb8f2;
+        color: #2b1e1b;
+      }
+      .of-btn:active {
+        transform: translateY(4px);
+        box-shadow: 0 0 0 0 #2b1e1b;
+      }
+      .of-copy:hover {
+        background: #45434c;
+      }
+      @keyframes of-work {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.45;
+        }
+      }
+      @keyframes of-evt-in {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .of-skip {
+        position: absolute;
+        left: 16px;
+        top: -80px;
+        z-index: 20;
+        padding: 12px 16px;
+        border-radius: 8px;
+        background: #edeb3c;
+        color: #2b1e1b;
+        font-family: "Russo One", "Arial Black", sans-serif;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .of-skip:focus,
+      .of-skip:hover {
+        top: 12px;
+        color: #2b1e1b;
+      }
+      .of-menu {
+        display: none;
+        position: relative;
+      }
+      .of-menu summary {
+        list-style: none;
+        cursor: pointer;
+      }
+      .of-menu summary::-webkit-details-marker {
+        display: none;
+      }
+      .of-menu[open] summary {
+        background: #2e2d35;
+      }
+      .of-gh:hover {
+        background: #2e2d35 !important;
+      }
+      .of-menu a[aria-current="page"] {
+        background: #2e2d35 !important;
+      }
+      .of-menu a:hover {
+        background: #2e2d35;
+        color: #f4f4f6;
+      }
+      @media (max-width: 719px) {
+        .of-navlinks {
+          display: none !important;
+        }
+        .of-menu {
+          display: block;
+        }
+      }
+      @media (max-width: 479px) {
+        .of-copy {
+          min-width: 44px !important;
+        }
+        .of-ghlabel {
+          display: none;
+        }
+        .of-gh {
+          padding: 0 13px !important;
+        }
+        .of-logo {
+          font-size: 20px !important;
+        }
+      }
+      @supports (animation-timeline: view()) {
+        @media (prefers-reduced-motion: no-preference) {
+          @keyframes of-rise {
+            from {
+              opacity: 0.3;
+              transform: translateY(40px) scale(0.92);
+            }
+            to {
+              opacity: 1;
+              transform: none;
+            }
+          }
+          @keyframes of-word {
+            from {
+              opacity: 0.14;
+            }
+            to {
+              opacity: 1;
+            }
+          }
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        .of-btn {
+          transition: none;
+        }
+      }
+    </style>
+    <style>
+      /* Layout: a single reading column on the dark ground; replay figures break wider as dark "screens", numbers on bright cards. Superluck tokens. */
+      :root {
+        --ground: #0e0e10;
+        --raised: #1c1b21;
+        --raised-2: #26252c;
+        --line: #45434c;
+        --fg: #f4f4f6;
+        --muted: #a8a6af;
+        --card: #eef0f2;
+        --card-sunk: #dfe2e6;
+        --ink: #2b1e1b;
+        --ink-muted: #5f5754;
+        --cyan: #48a6ee;
+        --magenta: #ee5ad6;
+        --yellow: #edeb3c;
+        --counter: #1632e6;
+        --success: #17703a;
+        --display: "Russo One", "Arial Black", Impact, sans-serif;
+        --sans: "Saira Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+        --mono: "Share Tech Mono", ui-monospace, "SF Mono", Menlo, monospace;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--ground);
+        color: var(--fg);
+        font-family: var(--sans);
+        font-size: 18px;
+        line-height: 30px;
+        font-weight: 500;
+      }
+      p,
+      h1,
+      h2,
+      h3,
+      ul,
+      ol,
+      figure {
+        margin: 0;
+      }
+      a {
+        color: var(--fg);
+        text-decoration-color: var(--magenta);
+        text-underline-offset: 3px;
+      }
+      code,
+      .mono {
+        font-family: var(--mono);
+      }
+      code {
+        font-size: 0.95em;
+        color: var(--fg);
+        background: var(--raised);
+        padding: 1px 6px;
+        border-radius: 3px;
+      }
+
+      /* marquee */
+      .marquee {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .band {
+        white-space: nowrap;
+        font-family: var(--display);
+        font-size: 14px;
+        line-height: 26px;
+        letter-spacing: 0.08em;
+        color: var(--ink);
+        overflow: hidden;
+      }
+      .band span {
+        display: inline-block;
+        padding-left: 100%;
+        animation: slide 14s linear infinite;
+      }
+      .band:nth-child(2) span {
+        animation-duration: 18s;
+        animation-direction: reverse;
+      }
+      .band.c {
+        background: var(--cyan);
+      }
+      .band.m {
+        background: var(--magenta);
+      }
+      .band.y {
+        background: var(--yellow);
+      }
+      @keyframes slide {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-100%);
+        }
+      }
+
+      .wrap {
+        padding-left: max(24px, env(safe-area-inset-left, 0px));
+        padding-right: max(24px, env(safe-area-inset-right, 0px));
+      }
+      /* One left edge for the whole page: reading columns hang from the same
+         line as the hero and the wide figures, instead of re-centring. */
+      .col {
+        width: 100%;
+        max-width: 720px;
+        margin-left: max(0px, calc((100% - 1120px) / 2));
+        margin-right: auto;
+      }
+      .wide {
+        width: 100%;
+        max-width: 1120px;
+        margin-inline: auto;
+      }
+
+      /* hero */
+      .hero {
+        padding-block: 72px 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .kicker {
+        font-family: var(--display);
+        font-size: 14px;
+        letter-spacing: 0.12em;
+        color: var(--cyan);
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .kicker::before {
+        content: "";
+        width: 36px;
+        height: 8px;
+        background: linear-gradient(90deg, var(--cyan) 0 33.3%, var(--magenta) 33.3% 66.6%, var(--yellow) 66.6%);
+        border-radius: 3px;
+      }
+      h1 {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: clamp(44px, 8vw, 88px);
+        line-height: 0.98;
+        letter-spacing: -0.01em;
+        text-wrap: balance;
+      }
+      .dek {
+        font-size: 20px;
+        line-height: 32px;
+        color: var(--muted);
+        max-width: 720px;
+      }
+      .byline {
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 16px;
+        padding-block: 8px 24px;
+      }
+      .stat {
+        background: var(--card);
+        color: var(--ink);
+        border-radius: 16px;
+        padding: 18px 20px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+      .stat b {
+        font-family: var(--mono);
+        font-weight: 400;
+        font-size: clamp(24px, 2.8vw, 40px);
+        line-height: 1;
+        color: var(--counter);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .stat span {
+        font-family: var(--display);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: var(--ink-muted);
+      }
+
+      /* article */
+      article {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        padding-block: 24px 96px;
+      }
+      article section {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding-top: 64px;
+      }
+      h2 {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 34px;
+        line-height: 40px;
+        text-wrap: balance;
+      }
+      h2 small {
+        display: block;
+        font-family: var(--mono);
+        font-size: 14px;
+        line-height: 22px;
+        color: var(--magenta);
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+      }
+      .toc {
+        margin-bottom: 8px;
+      }
+      .toc details {
+        background: var(--raised);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+      }
+      .toc summary {
+        list-style: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 44px;
+        padding: 0 20px;
+        border-radius: 16px;
+        font-family: var(--mono);
+        font-size: 14px;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+      }
+      .toc summary::-webkit-details-marker {
+        display: none;
+      }
+      .toc summary::after {
+        content: "";
+        width: 8px;
+        height: 8px;
+        margin-bottom: 4px;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(45deg);
+      }
+      .toc details[open] summary::after {
+        margin-bottom: -4px;
+        transform: rotate(-135deg);
+      }
+      .toc ol {
+        list-style: none;
+        margin: 0;
+        padding: 0 8px 8px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 8px;
+      }
+      .toc li::marker {
+        content: "";
+      }
+      .toc a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 44px;
+        padding: 0 12px;
+        border-radius: 8px;
+        color: var(--fg);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 22px;
+      }
+      .toc a:hover {
+        background: #2e2d35;
+      }
+      .toc a:focus-visible,
+      .toc summary:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: -2px;
+      }
+      .toc a span {
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 400;
+        color: var(--muted);
+      }
+      @media (max-width: 719px) {
+        .toc ol {
+          grid-template-columns: 1fr;
+        }
+      }
+      .prose p {
+        color: var(--fg);
+      }
+      .prose strong {
+        color: var(--fg);
+        font-weight: 700;
+      }
+
+      .cmds {
+        background: var(--card);
+        color: var(--ink);
+        border-radius: 28px;
+        padding: 22px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .cmd {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 12px;
+        align-items: baseline;
+      }
+      .cmd b {
+        font-family: var(--mono);
+        font-weight: 400;
+        font-size: 28px;
+        color: var(--counter);
+      }
+      .cmd h3 {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 16px;
+      }
+      .cmd > div {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .cmd-chip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 4px 4px 14px;
+        border-radius: 8px;
+        background: var(--card-sunk);
+      }
+      .cmd-chip code {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        white-space: nowrap;
+        background: none;
+        padding: 0;
+        color: var(--ink);
+        line-height: 44px;
+      }
+      .cmd-copy {
+        flex: none;
+        height: 44px;
+        min-width: 80px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 6px;
+        background: var(--ink);
+        color: var(--card);
+        cursor: pointer;
+        font-family: var(--display);
+        font-size: 12px;
+        letter-spacing: 0.06em;
+      }
+      .cmd-copy:hover {
+        background: #4a3934;
+      }
+      .cmd-copy:focus-visible {
+        outline: 2px solid var(--counter);
+        outline-offset: 2px;
+      }
+      .closer {
+        padding-top: 88px;
+      }
+      .closer-cmd {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 6px 6px 16px;
+        border-radius: 8px;
+        background: var(--raised);
+        border: 1px solid var(--line);
+        font-family: var(--mono);
+        font-size: 17px;
+      }
+      .closer-cmd > span {
+        color: var(--magenta);
+      }
+      .closer-cmd code {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        white-space: nowrap;
+        color: var(--fg);
+        background: none;
+        padding: 0;
+        line-height: 44px;
+      }
+      .closer-cmd .of-copy {
+        flex: none;
+        height: 44px;
+        min-width: 88px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 6px;
+        background: #2e2d35;
+        color: var(--fg);
+        cursor: pointer;
+        font-family: var(--display);
+        font-size: 12px;
+        letter-spacing: 0.06em;
+      }
+      .closer-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+      }
+      .closer-go {
+        display: inline-flex;
+        align-items: center;
+        height: 56px;
+        padding: 0 28px;
+        border-radius: 8px;
+        background: var(--cyan);
+        border: 2px solid var(--ink);
+        box-shadow: 0 4px 0 0 var(--ink);
+        color: var(--ink);
+        text-decoration: none;
+        font-family: var(--display);
+        font-size: 18px;
+        letter-spacing: 0.02em;
+      }
+      .closer-go:focus-visible,
+      .closer-cmd .of-copy:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: 3px;
+      }
+      .source {
+        border-top: 2px solid var(--line);
+        padding-top: 20px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 22px;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+      .prose ul,
+      .prose ol {
+        padding-left: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .prose li::marker {
+        color: var(--magenta);
+        font-family: var(--mono);
+      }
+      .lead {
+        font-size: 20px;
+        line-height: 32px;
+        color: var(--muted);
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .codeblock {
+        margin-block: 0;
+        padding: 18px 20px;
+        border-radius: 16px;
+        background: var(--raised);
+        border: 1px solid var(--line);
+        overflow-x: auto;
+        font-family: var(--mono);
+        font-size: 14px;
+        line-height: 22px;
+        color: var(--muted);
+        white-space: pre;
+        tab-size: 2;
+      }
+      .codeblock b {
+        font-weight: 400;
+        color: var(--fg);
+      }
+      .codeblock i {
+        font-style: normal;
+        color: var(--magenta);
+      }
+      .ref {
+        display: flex;
+        flex-direction: column;
+        background: var(--card);
+        color: var(--ink);
+        border-radius: 28px;
+        padding: 8px 24px;
+      }
+      .ref > div {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        gap: 4px 24px;
+        align-items: baseline;
+        padding: 14px 0;
+        border-bottom: 2px solid var(--card-sunk);
+      }
+      .ref > div:last-child {
+        border-bottom: 0;
+      }
+      .ref dt code {
+        background: none;
+        padding: 0;
+        color: var(--ink);
+        font-size: 16px;
+        overflow-wrap: anywhere;
+      }
+      .ref dd {
+        margin: 0;
+        color: var(--ink-muted);
+        font-size: 16px;
+        line-height: 25px;
+      }
+      .ref dd code {
+        background: var(--card-sunk);
+        color: var(--ink);
+      }
+      .facts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .fact {
+        background: var(--raised);
+        border: 2px solid var(--line);
+        border-radius: 28px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0;
+      }
+      .fact h3 {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 22px;
+        line-height: 26px;
+      }
+      .fact p {
+        font-size: 16px;
+        line-height: 25px;
+        color: var(--muted);
+      }
+      .fact .tag {
+        align-self: flex-start;
+        font-size: 14px;
+      }
+      .slots {
+        list-style: none;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .slot {
+        border-radius: 28px;
+        padding: 24px;
+        color: var(--ink);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-width: 0;
+      }
+      .slot > code {
+        background: none;
+        padding: 0;
+        color: var(--ink);
+        font-size: 24px;
+        line-height: 28px;
+      }
+      .slot b {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 17px;
+        line-height: 22px;
+      }
+      .slot span {
+        display: block;
+        margin-top: 6px;
+        font-size: 14px;
+        line-height: 22px;
+        font-weight: 600;
+      }
+      .slot .scope {
+        align-self: flex-start;
+        font-family: var(--display);
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        padding: 2px 8px;
+        border-radius: 8px;
+        border: 2px solid var(--ink);
+        line-height: 18px;
+      }
+      .roles {
+        display: flex;
+        flex-direction: row !important;
+        flex-wrap: wrap;
+        gap: 8px;
+        list-style: none;
+        padding: 0 !important;
+      }
+      .roles li {
+        font-family: var(--mono);
+        font-size: 14px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--raised);
+      }
+      /* Long commands wrap instead of scrolling inside the chip. */
+      .cmd-chip code {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 24px;
+        padding-block: 10px;
+      }
+      .closer-ghost {
+        display: inline-flex;
+        align-items: center;
+        height: 56px;
+        padding: 0 24px;
+        border-radius: 8px;
+        border: 2px solid var(--line);
+        color: var(--fg);
+        text-decoration: none;
+        font-family: var(--display);
+        font-size: 16px;
+        letter-spacing: 0.02em;
+      }
+      .closer-ghost:hover {
+        background: #2e2d35;
+      }
+      @media (max-width: 860px) {
+        .slots {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 640px) {
+        body {
+          font-size: 17px;
+          line-height: 28px;
+        }
+        .hero {
+          padding-block: 44px 24px;
+          gap: 18px;
+        }
+        .dek,
+        .lead {
+          font-size: 18px;
+          line-height: 28px;
+        }
+        article section {
+          padding-top: 44px;
+          gap: 16px;
+        }
+        h2 {
+          font-size: 24px;
+        }
+        .cmd-copy {
+          min-width: 64px;
+        }
+        .cmd-chip code,
+        .closer-cmd code {
+          white-space: normal;
+          overflow-wrap: anywhere;
+          line-height: 24px;
+          padding-block: 10px;
+        }
+        .ref {
+          padding: 4px 18px;
+        }
+        .ref > div {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .facts,
+        .slots {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sr-announce" class="sr-only" aria-live="polite"></div>
+    <a class="of-skip" href="#content">Skip to content</a>
+    <header style="position: sticky; top: 12px; z-index: 10; padding: 12px 16px 0">
+      <nav
+        aria-label="Main"
+        style="
+          max-width: 1168px;
+          margin: 0 auto;
+          padding: 8px 8px 8px 20px;
+          box-sizing: border-box;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          background: #1c1b21;
+          border: 1px solid #45434c;
+          border-radius: 999px;
+        "
+      >
+        <a
+          href="index.html"
+          class="of-logo"
+          aria-label="OpenFleet home"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #48a6ee;
+            font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+            font-size: 22px;
+            line-height: 24px;
+            letter-spacing: -0.01em;
+          "
+        >
+          <svg width="26" height="26" viewBox="0 0 30 30" aria-hidden="true">
+            <circle cx="15" cy="15" r="12" fill="none" stroke="#48A6EE" stroke-width="3"></circle>
+            <circle cx="15" cy="15" r="5" fill="#EE5AD6"></circle>
+            <circle cx="15" cy="3" r="3" fill="#EDEB3C"></circle>
+          </svg>
+          OPENFLEET
+        </a>
+        <div style="display: flex; align-items: center; gap: 2px">
+          <div class="of-navlinks" style="display: flex; align-items: center; gap: 2px">
+            <a
+              class="of-navlink"
+              href="how-it-works.html"
+              style="padding: 11px 14px; border-radius: 999px; text-decoration: none; color: #a8a6af; font-weight: 600"
+              >How it works</a
+            >
+            <a
+              class="of-navlink"
+              href="quickstart.html"
+              style="padding: 11px 14px; border-radius: 999px; text-decoration: none; color: #a8a6af; font-weight: 600"
+              >Quick start</a
+            >
+            <a
+              class="of-navlink"
+              aria-current="page"
+              href="extensions.html"
+              style="
+                padding: 11px 14px;
+                border-radius: 999px;
+                text-decoration: none;
+                color: #2b1e1b;
+                background: #eef0f2;
+                font-weight: 600;
+              "
+              >Extensions</a
+            >
+          </div>
+          <details class="of-menu">
+            <summary
+              aria-label="Menu"
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                height: 44px;
+                padding: 0 14px;
+                border-radius: 999px;
+                color: #f4f4f6;
+                font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                font-size: 13px;
+                letter-spacing: 0.04em;
+              "
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#F4F4F6"
+                stroke-width="2.25"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <path d="M4 7h16"></path>
+                <path d="M4 12h16"></path>
+                <path d="M4 17h16"></path></svg
+              >MENU
+            </summary>
+            <div
+              style="
+                position: absolute;
+                right: 0;
+                top: 52px;
+                min-width: 220px;
+                padding: 8px;
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+                background: #1c1b21;
+                border: 1px solid #45434c;
+                border-radius: 16px;
+              "
+            >
+              <a
+                href="how-it-works.html"
+                style="padding: 12px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+                >How it works</a
+              >
+              <a
+                href="quickstart.html"
+                style="padding: 12px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+                >Quick start</a
+              >
+              <a
+                href="extensions.html"
+                aria-current="page"
+                style="padding: 12px 14px; border-radius: 8px; text-decoration: none; color: #f4f4f6; font-weight: 600"
+                >Extensions</a
+              >
+            </div>
+          </details>
+          <a
+            href="https://github.com/yashicon21/openfleet-tools"
+            aria-label="OpenFleet on GitHub"
+            class="of-gh"
+            style="
+              margin-left: 6px;
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              height: 44px;
+              padding: 0 18px;
+              box-sizing: border-box;
+              border-radius: 999px;
+              background: transparent;
+              border: 2px solid #45434c;
+              color: #f4f4f6;
+              text-decoration: none;
+              font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+              font-size: 14px;
+              letter-spacing: 0.02em;
+            "
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#F4F4F6"
+              stroke-width="2.25"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="6" cy="6" r="2.5"></circle>
+              <circle cx="6" cy="18" r="2.5"></circle>
+              <circle cx="18" cy="9" r="2.5"></circle>
+              <path d="M6 8.5v7"></path>
+              <path d="M18 11.5c0 3-3 4-9 5"></path>
+            </svg>
+            <span class="of-ghlabel">GITHUB</span>
+          </a>
+        </div>
+      </nav>
+    </header>
+    <section class="wrap intro" aria-labelledby="page-title">
+      <div class="wide hero">
+        <p class="kicker">EXTENSIONS</p>
+        <h1 id="page-title">Extend any step of the run.</h1>
+        <p class="dek">
+          An extension is a folder of instructions: a manifest and some Markdown, with no executable code. It can run
+          its own agent at a point in the run, add to what an agent is told, or add a command.
+        </p>
+      </div>
+    </section>
+    <main class="wrap" id="content">
+      <article>
+        <nav class="col toc" aria-label="On this page">
+          <details open>
+            <summary>ON THIS PAGE</summary>
+            <ol>
+              <li>
+                <a href="#add-h"><span>01</span>Add one from a folder or a git URL</a>
+              </li>
+              <li>
+                <a href="#slots-h"><span>02</span>Six points in the run</a>
+              </li>
+              <li>
+                <a href="#phase-h"><span>03</span>What a phase can do</a>
+              </li>
+              <li>
+                <a href="#aug-h"><span>04</span>Change what an agent is told</a>
+              </li>
+              <li>
+                <a href="#set-h"><span>05</span>Set once per workspace</a>
+              </li>
+              <li>
+                <a href="#perm-h"><span>06</span>Declared up front, enforced</a>
+              </li>
+              <li>
+                <a href="#man-h"><span>07</span>openfleet.extension.json</a>
+              </li>
+            </ol>
+          </details>
+        </nav>
+        <section class="col prose" aria-labelledby="add-h">
+          <h2 id="add-h"><small>01 · INSTALL</small>Add one from a folder or a git URL</h2>
+          <p>
+            <code>add</code> prints what the extension declares, including its permissions, so you can review it. Git
+            sources are pinned to a commit in <code>extensions.lock.json</code>; commit that file and
+            <code>extensions/</code>.
+          </p>
+        </section>
+        <div class="col cmds">
+          <div class="cmd">
+            <b>1</b>
+            <div>
+              <h3>FROM A LOCAL FOLDER</h3>
+              <div class="cmd-chip">
+                <code>npx openfleet add ../my-extension</code
+                ><button
+                  class="cmd-copy"
+                  type="button"
+                  data-copy="npx openfleet add ../my-extension"
+                  aria-label="Copy: npx openfleet add ../my-extension"
+                >
+                  COPY
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="cmd">
+            <b>2</b>
+            <div>
+              <h3>FROM GIT, AT A TAG</h3>
+              <div class="cmd-chip">
+                <code>npx openfleet add https://github.com/acme/audit.git#v1</code
+                ><button
+                  class="cmd-copy"
+                  type="button"
+                  data-copy="npx openfleet add https://github.com/acme/audit.git#v1"
+                  aria-label="Copy: npx openfleet add https://github.com/acme/audit.git#v1"
+                >
+                  COPY
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="cmd">
+            <b>3</b>
+            <div>
+              <h3>SEE WHAT’S INSTALLED</h3>
+              <div class="cmd-chip">
+                <code>npx openfleet extensions</code
+                ><button
+                  class="cmd-copy"
+                  type="button"
+                  data-copy="npx openfleet extensions"
+                  aria-label="Copy: npx openfleet extensions"
+                >
+                  COPY
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="col muted">Remove one with <code>npx openfleet remove &lt;name&gt;</code>.</p>
+
+        <section class="wide prose" aria-labelledby="slots-h">
+          <h2 id="slots-h"><small>02 · PHASE SLOTS</small>Six points in the run</h2>
+          <p class="col">Each phase entry runs as its own agent at one of these slots.</p>
+        </section>
+        <ul class="wide slots" aria-label="Phase slots">
+          <li class="slot" style="background: #eef0f2">
+            <code>pre-spec</code>
+            <span class="scope">ONCE</span>
+            <div>
+              <b>Before the spec</b
+              ><span>During the grill, ahead of the coordinator writing <code>spec.md</code>.</span>
+            </div>
+          </li>
+          <li class="slot" style="background: #48a6ee">
+            <code>post-plan</code>
+            <span class="scope">PER CHILD</span>
+            <div><b>After each plan</b><span>Once the child’s plan is validated against the spec.</span></div>
+          </li>
+          <li class="slot" style="background: #eef0f2">
+            <code>plans-ready</code>
+            <span class="scope">ONCE</span>
+            <div><b>When every plan agrees</b><span>After the consistency gate, before any code is written.</span></div>
+          </li>
+          <li class="slot" style="background: #ee5ad6">
+            <code>pre-implement</code>
+            <span class="scope">PER CHILD</span>
+            <div>
+              <b>Before each build</b
+              ><span>After the gate and the child’s baseline, right before its implementer.</span>
+            </div>
+          </li>
+          <li class="slot" style="background: #edeb3c">
+            <code>post-test</code>
+            <span class="scope">PER CHILD</span>
+            <div>
+              <b>After tests pass</b
+              ><span>The child is done only once it finishes, so it can publish a version its dependents use.</span>
+            </div>
+          </li>
+          <li class="slot" style="background: #eef0f2">
+            <code>post-run</code>
+            <span class="scope">ONCE</span>
+            <div>
+              <b>When the run is done</b
+              ><span>During finalize. For example, an audit of <code>events.jsonl</code>.</span>
+            </div>
+          </li>
+        </ul>
+
+        <section class="wide prose" aria-labelledby="phase-h">
+          <h2 id="phase-h"><small>03 · PHASES</small>What a phase can do</h2>
+        </section>
+        <div class="wide facts">
+          <div class="fact">
+            <code class="tag">"blocking": true</code>
+            <h3>Hold the run until it passes</h3>
+            <p>
+              A failure gets one retry with a fresh agent. If that fails too, the child is marked failed and its
+              dependents wait. In <code>plans-ready</code>, the gate stays closed and nothing is built.
+            </p>
+          </div>
+          <div class="fact">
+            <code class="tag">"when": { "files": [ … ] }</code>
+            <h3>Run only where it applies</h3>
+            <p>The entry runs only if one of the listed files exists in that child’s worktree.</p>
+          </div>
+          <div class="fact">
+            <code class="tag">"outputs"</code>
+            <h3>Hand values downstream</h3>
+            <p>
+              A published version or other value reaches every repo that depends on this one, directly or not. A
+              <code>prUrl</code> output means finalize updates that PR instead of opening a second one.
+            </p>
+          </div>
+          <div class="fact">
+            <code class="tag">"followUps"</code>
+            <h3>Leave notes for people</h3>
+            <p>Follow-ups are listed in <code>summary.md</code> and in the PRs they affect.</p>
+          </div>
+        </div>
+
+        <section class="col prose" aria-labelledby="aug-h">
+          <h2 id="aug-h"><small>04 · AUGMENTS AND COMMANDS</small>Change what an agent is told</h2>
+          <p>An augment appends instructions to one role’s prompt, for every child. The roles:</p>
+          <ul class="roles" aria-label="Roles">
+            <li>coordinator</li>
+            <li>repo-coordinator</li>
+            <li>planner</li>
+            <li>baseline</li>
+            <li>implementer</li>
+            <li>tester</li>
+          </ul>
+          <p>
+            An extension can also add commands. Each runs its own agent:
+            <code>npx openfleet &lt;command&gt;</code>.
+          </p>
+        </section>
+
+        <section class="col prose" aria-labelledby="set-h">
+          <h2 id="set-h"><small>05 · SETTINGS</small>Set once per workspace</h2>
+          <p>
+            An extension declares its settings with defaults. Your values live in
+            <code>extensions.config.json</code>, shared by every project. The grill asks about any setting that has no
+            value yet, so you only answer once. Settings are stored as plain text, so keep secrets out of them.
+          </p>
+        </section>
+        <dl class="col ref">
+          <div>
+            <dt><code>npx openfleet ext settings</code></dt>
+            <dd>Every declared setting, with its default and your value</dd>
+          </div>
+          <div>
+            <dt><code>npx openfleet ext settings --unset</code></dt>
+            <dd>Only the settings without a value yet</dd>
+          </div>
+          <div>
+            <dt><code>npx openfleet ext settings set &lt;ext&gt; &lt;key&gt; &lt;value&gt;</code></dt>
+            <dd>Set a value for the whole workspace</dd>
+          </div>
+        </dl>
+
+        <section class="col prose" aria-labelledby="perm-h">
+          <h2 id="perm-h"><small>06 · PERMISSIONS</small>Declared up front, enforced</h2>
+          <p>
+            Every extension can read. Anything more, <code>write</code>, <code>shell</code> or <code>web</code>, must be
+            declared in the manifest, and the generated agent’s tool allow-list only includes what was declared.
+          </p>
+        </section>
+
+        <section class="col prose" aria-labelledby="man-h">
+          <h2 id="man-h"><small>07 · A MANIFEST</small>openfleet.extension.json</h2>
+          <p>This one publishes a preview build after tests pass, and tells implementers to pin the version.</p>
+        </section>
+        <pre class="col codeblock" tabindex="0" role="region" aria-label="Example manifest">
+{
+  <b>"manifest"</b>: 2,
+  <b>"name"</b>: "publish",
+  <b>"version"</b>: "1.0.0",
+  <b>"core"</b>: "&gt;=0.2.0 &lt;1.0.0",
+  <b>"permissions"</b>: ["shell"],
+  <b>"phases"</b>: [
+    {
+      "slot": "post-test",
+      "instructions": "publish.md",
+      "blocking": true,
+      "when": { "files": [".changeset/config.json"] },
+      "timeoutMinutes": 45
+    }
+  ],
+  <b>"augments"</b>: [{ "role": "implementer", "instructions": "pin.md" }],
+  <b>"commands"</b>: { "publish-status": "status.md" },
+  <b>"settings"</b>: {
+    "label": {
+      "default": "preview",
+      "description": "Label that triggers the preview workflow"
+    }
+  }
+}</pre>
+
+        <section class="col prose closer" aria-labelledby="closer-h">
+          <h2 id="closer-h">Write your own</h2>
+          <p>The extension guide covers every field, slot and setting.</p>
+          <div class="closer-btns">
+            <a
+              class="of-btn closer-go"
+              href="https://github.com/yashicon21/openfleet-tools/blob/main/docs/extensions.md"
+              >READ THE EXTENSION GUIDE</a
+            >
+            <a class="closer-ghost" href="quickstart.html">QUICK START</a>
+          </div>
+        </section>
+      </article>
+    </main>
+
+    <footer>
+      <div aria-hidden="true" style="display: flex; height: 8px">
+        <span style="flex: 1; background: #48a6ee"></span><span style="flex: 1; background: #ee5ad6"></span
+        ><span style="flex: 1; background: #edeb3c"></span>
+      </div>
+      <div
+        style="
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 32px 24px 40px;
+          box-sizing: border-box;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 24px;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span
+            style="
+              font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+              font-size: 20px;
+              color: #48a6ee;
+            "
+            >OPENFLEET</span
+          >
+          <span style="font-size: 14px; color: #a8a6af">Open source · MIT licensed</span>
+        </div>
+        <nav aria-label="Footer" style="display: flex; flex-wrap: wrap; gap: 4px; margin: 0 -14px">
+          <a
+            class="of-navlink"
+            href="how-it-works.html"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >How it works</a
+          >
+          <a
+            class="of-navlink"
+            href="quickstart.html"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >Quick start</a
+          >
+          <a
+            class="of-navlink"
+            href="extensions.html"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >Extensions</a
+          >
+          <a
+            class="of-navlink"
+            href="https://github.com/yashicon21/openfleet-tools"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >GitHub</a
+          >
+          <a
+            class="of-navlink"
+            href="https://www.npmjs.com/package/@openfleet-tools/cli"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >npm</a
+          >
+          <a
+            class="of-navlink"
+            href="https://github.com/yashicon21/openfleet-tools/blob/main/docs/events.md"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >Events schema</a
+          >
+          <a
+            class="of-navlink"
+            href="https://github.com/yashicon21/openfleet-tools/blob/main/docs/design.md"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >Design notes</a
+          >
+          <a
+            class="of-navlink"
+            href="https://github.com/yashicon21/openfleet-tools/issues"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >Issues</a
+          >
+        </nav>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var live = document.getElementById("sr-announce");
+        function say(msg) {
+          live.textContent = "";
+          setTimeout(function () {
+            live.textContent = msg;
+          }, 50);
+        }
+        // Clipboard API first; fall back to a hidden textarea for older or locked-down browsers.
+        function copy(text, label) {
+          function ok() {
+            label.textContent = "COPIED";
+            say("Copied: " + text);
+            clearTimeout(label._t);
+            label._t = setTimeout(function () {
+              label.textContent = "COPY";
+            }, 1800);
+          }
+          function fallback() {
+            var ta = document.createElement("textarea");
+            ta.value = text;
+            ta.setAttribute("readonly", "");
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            var done = false;
+            try {
+              done = document.execCommand("copy");
+            } catch (e) {
+              done = false;
+            }
+            document.body.removeChild(ta);
+            if (done) ok();
+            else say("Copy didn't work here. Select the command and copy it yourself: " + text);
+          }
+          if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(ok, fallback);
+          else fallback();
+        }
+        document.querySelectorAll(".cmd-copy").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            copy(btn.getAttribute("data-copy"), btn);
+          });
+        });
+        // Phone menu: close on Escape (returning focus to the toggle) and after following a link.
+        var menu = document.querySelector(".of-menu");
+        if (menu) {
+          var toggle = menu.querySelector("summary");
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && menu.open) {
+              menu.open = false;
+              toggle.focus();
+            }
+          });
+          menu.addEventListener("click", function (e) {
+            if (e.target.closest("a")) menu.open = false;
+          });
+        }
+      })();
+    </script>
+    <script>
+      (function () {
+        var d = document.querySelector(".toc details");
+        if (d && window.matchMedia("(max-width: 719px)").matches) d.open = false;
+      })();
+    </script>
+  </body>
+</html>

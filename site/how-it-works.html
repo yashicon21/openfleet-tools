@@ -1,0 +1,4334 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>How it works · OpenFleet</title>
+    <meta
+      name="description"
+      content="An example OpenFleet run, event by event: one prompt renames a field across six repos. Plans are checked against each other before any code, a baseline test catches a break, web's three units merge into one branch, and the one call the spec didn't cover is logged for you to confirm."
+    />
+    <meta name="theme-color" content="#0E0E10" />
+    <link rel="canonical" href="https://openfleet.tools/how-it-works.html" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Ccircle cx='15' cy='15' r='12' fill='none' stroke='%2348A6EE' stroke-width='3'/%3E%3Ccircle cx='15' cy='15' r='5' fill='%23EE5AD6'/%3E%3Ccircle cx='15' cy='3' r='3' fill='%23EDEB3C'/%3E%3C/svg%3E"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How it works · OpenFleet" />
+    <meta
+      property="og:description"
+      content="An example OpenFleet run, event by event: one prompt renames a field across six repos. Plans are checked against each other before any code, a baseline test catches a break, web's three units merge into one branch, and the one call the spec didn't cover is logged for you to confirm."
+    />
+    <meta property="og:url" content="https://openfleet.tools/how-it-works.html" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Russo+One&amp;family=Saira+Semi+Condensed:wght@500;600;700&amp;family=Share+Tech+Mono&amp;display=swap"
+    />
+    <style>
+      [hidden] {
+        display: none !important;
+      }
+      html {
+        scroll-behavior: smooth;
+        scrollbar-color: #45434c #0e0e10;
+      }
+      body {
+        margin: 0;
+        background: #0e0e10;
+      }
+      ::selection {
+        background: #edeb3c;
+        color: #2b1e1b;
+      }
+      [id] {
+        scroll-margin-top: 104px;
+      }
+      h2,
+      h3 {
+        text-wrap: balance;
+      }
+      p {
+        text-wrap: pretty;
+      }
+      p code,
+      td code {
+        white-space: nowrap;
+      }
+      a {
+        color: #f4f4f6;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 2px;
+        text-decoration-color: #ee5ad6;
+      }
+      a:hover {
+        color: #48a6ee;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      li:focus-visible {
+        outline: 2px solid #48a6ee;
+        outline-offset: 3px;
+        border-radius: 8px;
+      }
+      @keyframes of-scroll {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+      /* Same header on every page: don't inherit this page's larger body text. */
+      header nav {
+        font-size: 16px;
+        line-height: 22px;
+      }
+      header .of-logo {
+        min-height: 44px;
+      }
+      .of-navlink:hover {
+        background: #2e2d35;
+        color: #f4f4f6;
+      }
+      .of-btn {
+        transition:
+          transform 80ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          box-shadow 80ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          background-color 120ms;
+      }
+      .of-btn:hover {
+        background: #6bb8f2;
+        color: #2b1e1b;
+      }
+      .of-btn:active {
+        transform: translateY(4px);
+        box-shadow: 0 0 0 0 #2b1e1b;
+      }
+      .of-copy:hover {
+        background: #45434c;
+      }
+      @keyframes of-work {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.45;
+        }
+      }
+      @keyframes of-evt-in {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .of-skip {
+        position: absolute;
+        left: 16px;
+        top: -80px;
+        z-index: 20;
+        padding: 12px 16px;
+        border-radius: 8px;
+        background: #edeb3c;
+        color: #2b1e1b;
+        font-family: "Russo One", "Arial Black", sans-serif;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .of-skip:focus,
+      .of-skip:hover {
+        top: 12px;
+        color: #2b1e1b;
+      }
+      .of-menu {
+        display: none;
+        position: relative;
+      }
+      .of-menu summary {
+        list-style: none;
+        cursor: pointer;
+      }
+      .of-menu summary::-webkit-details-marker {
+        display: none;
+      }
+      .of-menu[open] summary {
+        background: #2e2d35;
+      }
+      .of-gh:hover {
+        background: #2e2d35 !important;
+      }
+      .of-menu a[aria-current="page"] {
+        background: #2e2d35 !important;
+      }
+      .of-menu a:hover {
+        background: #2e2d35;
+        color: #f4f4f6;
+      }
+      @media (max-width: 719px) {
+        .of-navlinks {
+          display: none !important;
+        }
+        .of-menu {
+          display: block;
+        }
+      }
+      @media (max-width: 479px) {
+        .of-copy {
+          min-width: 44px !important;
+        }
+        .of-ghlabel {
+          display: none;
+        }
+        .of-gh {
+          padding: 0 13px !important;
+        }
+        .of-logo {
+          font-size: 20px !important;
+        }
+      }
+      @supports (animation-timeline: view()) {
+        @media (prefers-reduced-motion: no-preference) {
+          @keyframes of-rise {
+            from {
+              opacity: 0.3;
+              transform: translateY(40px) scale(0.92);
+            }
+            to {
+              opacity: 1;
+              transform: none;
+            }
+          }
+          @keyframes of-word {
+            from {
+              opacity: 0.14;
+            }
+            to {
+              opacity: 1;
+            }
+          }
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        .of-btn {
+          transition: none;
+        }
+      }
+    </style>
+    <style>
+      /* Layout: a single reading column on the dark ground; replay figures break wider as dark "screens", numbers on bright cards. Superluck tokens. */
+      :root {
+        --ground: #0e0e10;
+        --raised: #1c1b21;
+        --raised-2: #26252c;
+        --line: #45434c;
+        --fg: #f4f4f6;
+        --muted: #a8a6af;
+        --card: #eef0f2;
+        --card-sunk: #dfe2e6;
+        --ink: #2b1e1b;
+        --ink-muted: #5f5754;
+        --cyan: #48a6ee;
+        --magenta: #ee5ad6;
+        --yellow: #edeb3c;
+        --counter: #1632e6;
+        --success: #17703a;
+        --display: "Russo One", "Arial Black", Impact, sans-serif;
+        --sans: "Saira Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+        --mono: "Share Tech Mono", ui-monospace, "SF Mono", Menlo, monospace;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--ground);
+        color: var(--fg);
+        font-family: var(--sans);
+        font-size: 18px;
+        line-height: 30px;
+        font-weight: 500;
+      }
+      p,
+      h1,
+      h2,
+      h3,
+      ul,
+      ol,
+      figure {
+        margin: 0;
+      }
+      a {
+        color: var(--fg);
+        text-decoration-color: var(--magenta);
+        text-underline-offset: 3px;
+      }
+      code,
+      .mono {
+        font-family: var(--mono);
+      }
+      code {
+        font-size: 0.95em;
+        color: var(--fg);
+        background: var(--raised);
+        padding: 1px 6px;
+        border-radius: 3px;
+      }
+
+      /* marquee */
+      .marquee {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .band {
+        white-space: nowrap;
+        font-family: var(--display);
+        font-size: 14px;
+        line-height: 26px;
+        letter-spacing: 0.08em;
+        color: var(--ink);
+        overflow: hidden;
+      }
+      .band span {
+        display: inline-block;
+        padding-left: 100%;
+        animation: slide 14s linear infinite;
+      }
+      .band:nth-child(2) span {
+        animation-duration: 18s;
+        animation-direction: reverse;
+      }
+      .band.c {
+        background: var(--cyan);
+      }
+      .band.m {
+        background: var(--magenta);
+      }
+      .band.y {
+        background: var(--yellow);
+      }
+      @keyframes slide {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-100%);
+        }
+      }
+
+      .wrap {
+        padding-left: max(24px, env(safe-area-inset-left, 0px));
+        padding-right: max(24px, env(safe-area-inset-right, 0px));
+      }
+      /* One left edge for the whole page: reading columns hang from the same
+         line as the hero and the wide figures, instead of re-centring. */
+      .col {
+        width: 100%;
+        max-width: 720px;
+        margin-left: max(0px, calc((100% - 1120px) / 2));
+        margin-right: auto;
+      }
+      .wide {
+        width: 100%;
+        max-width: 1120px;
+        margin-inline: auto;
+      }
+
+      /* hero */
+      .hero {
+        padding-block: 72px 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .kicker {
+        font-family: var(--display);
+        font-size: 14px;
+        letter-spacing: 0.12em;
+        color: var(--cyan);
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .kicker::before {
+        content: "";
+        width: 36px;
+        height: 8px;
+        background: linear-gradient(90deg, var(--cyan) 0 33.3%, var(--magenta) 33.3% 66.6%, var(--yellow) 66.6%);
+        border-radius: 3px;
+      }
+      h1 {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: clamp(44px, 8vw, 88px);
+        line-height: 0.98;
+        letter-spacing: -0.01em;
+        text-wrap: balance;
+      }
+      .dek {
+        font-size: 20px;
+        line-height: 32px;
+        color: var(--muted);
+        max-width: 720px;
+      }
+      .byline {
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 16px;
+        padding-block: 8px 24px;
+      }
+      .stat {
+        background: var(--card);
+        color: var(--ink);
+        border-radius: 16px;
+        padding: 18px 20px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+      .stat b {
+        font-family: var(--mono);
+        font-weight: 400;
+        font-size: clamp(24px, 2.8vw, 40px);
+        line-height: 1;
+        color: var(--counter);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .stat span {
+        font-family: var(--display);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: var(--ink-muted);
+      }
+
+      /* article */
+      article {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        padding-block: 24px 96px;
+      }
+      article section {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding-top: 64px;
+      }
+      h2 {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 34px;
+        line-height: 40px;
+        text-wrap: balance;
+      }
+      h2 small {
+        display: block;
+        font-family: var(--mono);
+        font-size: 14px;
+        line-height: 22px;
+        color: var(--magenta);
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+      }
+      .toc {
+        margin-bottom: 8px;
+      }
+      .toc details {
+        background: var(--raised);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+      }
+      .toc summary {
+        list-style: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 44px;
+        padding: 0 20px;
+        border-radius: 16px;
+        font-family: var(--mono);
+        font-size: 14px;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+      }
+      .toc summary::-webkit-details-marker {
+        display: none;
+      }
+      .toc summary::after {
+        content: "";
+        width: 8px;
+        height: 8px;
+        margin-bottom: 4px;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(45deg);
+      }
+      .toc details[open] summary::after {
+        margin-bottom: -4px;
+        transform: rotate(-135deg);
+      }
+      .toc ol {
+        list-style: none;
+        margin: 0;
+        padding: 0 8px 8px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 8px;
+      }
+      .toc li::marker {
+        content: "";
+      }
+      .toc a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 44px;
+        padding: 0 12px;
+        border-radius: 8px;
+        color: var(--fg);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 22px;
+      }
+      .toc a:hover {
+        background: #2e2d35;
+      }
+      .toc a:focus-visible,
+      .toc summary:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: -2px;
+      }
+      .toc a span {
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 400;
+        color: var(--muted);
+      }
+      @media (max-width: 719px) {
+        .toc ol {
+          grid-template-columns: 1fr;
+        }
+      }
+      .prose p {
+        color: var(--fg);
+      }
+      .prose strong {
+        color: var(--fg);
+        font-weight: 700;
+      }
+
+      /* figures */
+      figure.fig {
+        background: var(--raised);
+        border: 2px solid var(--line);
+        border-radius: 28px;
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .fig-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 16px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .fig-title {
+        font-family: var(--display);
+        font-size: 13px;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .dot3 {
+        display: inline-flex;
+        gap: 4px;
+      }
+      .dot3 i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: block;
+      }
+      .dot3 i:nth-child(1) {
+        background: var(--cyan);
+      }
+      .dot3 i:nth-child(2) {
+        background: var(--magenta);
+      }
+      .dot3 i:nth-child(3) {
+        background: var(--yellow);
+      }
+      .key {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 18px;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--muted);
+        margin-top: -4px;
+      }
+      .key span {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .k {
+        width: 18px;
+        height: 12px;
+        border-radius: 3px;
+        display: inline-block;
+      }
+      .k-cyan {
+        background: var(--cyan);
+      }
+      .k-mag {
+        background: var(--magenta);
+      }
+      .k-yel {
+        background: var(--yellow);
+      }
+      .k-warn {
+        background: #fff1cc;
+        box-shadow: inset 0 0 0 2px #8a5300;
+      }
+      .k-you {
+        border: 2px dashed var(--fg);
+      }
+      .k-gate {
+        border: 2px solid var(--fg);
+      }
+      .k-done {
+        background: var(--card);
+      }
+      .k-tick {
+        width: 3px;
+        background: var(--fg);
+        border-radius: 3px;
+      }
+      .k-pass {
+        background: var(--success);
+        box-shadow: 0 0 0 2px var(--card);
+      }
+      .k-retried {
+        background: var(--success);
+        box-shadow:
+          inset 0 0 0 2px #fff1cc,
+          0 0 0 2px #8a5300;
+      }
+      .k-base {
+        box-shadow: inset 0 0 0 2px var(--yellow);
+      }
+      .k-int {
+        box-shadow: inset 0 0 0 2px var(--fg);
+      }
+      .k-protected {
+        background: repeating-linear-gradient(135deg, var(--success) 0 3px, var(--card) 3px 5px);
+        box-shadow: 0 0 0 2px var(--card);
+      }
+      .k-contract {
+        background: var(--counter);
+        box-shadow: 0 0 0 2px var(--card);
+      }
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        font-family: var(--display);
+        font-size: 14px;
+        letter-spacing: 0.04em;
+        color: var(--ink);
+        background: var(--cyan);
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        padding: 0 16px;
+        height: 44px;
+        box-shadow: 0 4px 0 0 var(--ink);
+        cursor: pointer;
+        transition:
+          transform 80ms,
+          box-shadow 80ms;
+        white-space: nowrap;
+      }
+      .btn:active {
+        transform: translateY(4px);
+        box-shadow: 0 0 0 0 var(--ink);
+      }
+      .btn.ghost {
+        background: var(--raised-2);
+        color: var(--fg);
+        border-color: var(--line);
+        box-shadow: none;
+      }
+      .btn.ghost[aria-pressed="true"] {
+        background: var(--card);
+        color: var(--ink);
+        border-color: var(--ink);
+      }
+      .btn:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: 2px;
+      }
+      .clock {
+        font-family: var(--mono);
+        font-size: 26px;
+        color: var(--yellow);
+        min-width: 92px;
+        font-variant-numeric: tabular-nums;
+      }
+      input[type="range"] {
+        accent-color: var(--cyan);
+        width: 160px;
+      }
+      .figcap {
+        max-width: 680px;
+        font-size: 14px;
+        line-height: 22px;
+        color: var(--muted);
+      }
+      .scroll-x {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        scrollbar-color: var(--line) transparent;
+      }
+      input[type="range"] {
+        height: 44px;
+      }
+      .scroll-hint {
+        display: none;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--muted);
+      }
+      svg {
+        display: block;
+      }
+      svg text {
+        font-family: var(--sans);
+      }
+      .t-fg {
+        fill: var(--fg);
+      }
+      .t-muted {
+        fill: var(--muted);
+      }
+      .t-ink {
+        fill: var(--ink);
+      }
+      .f-raised {
+        fill: var(--raised-2);
+      }
+      .f-line {
+        fill: var(--line);
+      }
+      .t-cyan {
+        fill: var(--cyan);
+      }
+      .t-mag {
+        fill: var(--magenta);
+      }
+      .t-yel {
+        fill: var(--yellow);
+      }
+      .f-cyan {
+        fill: var(--cyan);
+      }
+      .f-mag {
+        fill: var(--magenta);
+      }
+      .f-yel {
+        fill: var(--yellow);
+      }
+      .s-cyan {
+        stroke: var(--cyan);
+      }
+      .s-yel {
+        stroke: var(--yellow);
+      }
+      .phases td.cur.ph-planning {
+        background: var(--cyan);
+        color: var(--ink);
+        box-shadow: none;
+      }
+      .phases td.cur.ph-implementing {
+        background: var(--magenta);
+        color: var(--ink);
+        box-shadow: none;
+      }
+      .phases td.cur.ph-baseline {
+        box-shadow: inset 0 0 0 2px var(--yellow);
+      }
+      .phases td.cur.ph-testing {
+        background: var(--yellow);
+        color: var(--ink);
+        box-shadow: none;
+      }
+      .f-card {
+        fill: var(--card);
+      }
+      .f-fg {
+        fill: var(--fg);
+      }
+      .f-muted {
+        fill: var(--muted);
+      }
+      .f-none {
+        fill: none;
+      }
+      .f-warn {
+        fill: #fff1cc;
+      }
+      .s-warn {
+        stroke: #8a5300;
+      }
+      /* "You" is always a dashed white outline: the one human in the run. */
+      .s-dash {
+        stroke-dasharray: 6 4;
+      }
+      .f-ink {
+        fill: var(--ink);
+      }
+      .s-line {
+        stroke: var(--line);
+      }
+      .s-fg {
+        stroke: var(--fg);
+      }
+      .s-ink {
+        stroke: var(--ink);
+      }
+      .s-mag {
+        stroke: var(--magenta);
+      }
+      .s-muted {
+        stroke: var(--muted);
+      }
+      .mono-t {
+        font-family: var(--mono) !important;
+      }
+      .disp-t {
+        font-family: var(--display) !important;
+      }
+
+      /* swimlane log */
+      .split {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 16px;
+      }
+      .log {
+        background: var(--ground);
+        border: 2px solid var(--line);
+        border-radius: 16px;
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+        height: 100%;
+        min-height: 220px;
+        overflow: hidden;
+      }
+      .log h3 {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+      }
+      .log ol {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .log li {
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 17px;
+        color: var(--muted);
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr);
+        gap: 8px;
+        animation: pop 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .log li b {
+        font-weight: 400;
+        color: var(--fg);
+      }
+      .log li:first-child b {
+        color: var(--fg);
+        text-decoration: underline 2px var(--line);
+        text-underline-offset: 4px;
+      }
+      .log li em {
+        font-style: normal;
+        display: block;
+        color: var(--muted);
+        overflow-wrap: anywhere;
+      }
+      @keyframes pop {
+        from {
+          opacity: 0;
+          transform: translateY(-6px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      /* hub report */
+      .report {
+        background: var(--card);
+        color: var(--ink);
+        border-radius: 16px;
+        padding: 16px 20px;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 4px 16px;
+        align-items: baseline;
+        min-height: 96px;
+      }
+      .report .who {
+        font-family: var(--display);
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        color: var(--ink-muted);
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .report .who b {
+        font-family: var(--mono);
+        font-weight: 400;
+        color: var(--counter);
+        font-size: 14px;
+      }
+      .report p {
+        grid-column: 1 / -1;
+        font-size: 17px;
+        line-height: 25px;
+      }
+
+      /* diff */
+      .diffgrid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .repo {
+        background: var(--ground);
+        border: 2px solid var(--line);
+        border-radius: 16px;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+      }
+      .repo summary {
+        list-style: none;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        border-radius: 8px;
+      }
+      .repo summary::-webkit-details-marker {
+        display: none;
+      }
+      .repo summary:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: 4px;
+      }
+      .repo h3::after {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-right: 2px solid var(--muted);
+        border-bottom: 2px solid var(--muted);
+        transform: rotate(45deg) translateY(-3px);
+        flex: none;
+        transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .repo:not([open]) h3::after {
+        transform: rotate(-45deg);
+      }
+      .repo .frow {
+        margin-top: 8px;
+      }
+      .repo h3 {
+        flex: 1;
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .repo h3 .mono {
+        margin-left: auto;
+        font-size: 16px;
+        color: var(--muted);
+      }
+      .frow {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 120px 74px;
+        gap: 10px;
+        align-items: center;
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 18px;
+        transition: opacity 200ms;
+      }
+      .frow .path {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--fg);
+      }
+      .frow .bar {
+        height: 10px;
+        display: flex;
+        gap: 2px;
+      }
+      .frow .bar i {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
+        transition: width 300ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .frow .bar i.a {
+        background: var(--fg);
+      }
+      .frow .bar i.r {
+        background: transparent;
+        box-shadow: inset 0 0 0 2px var(--muted);
+      }
+      .frow .n {
+        text-align: right;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .fsub {
+        margin: 6px 0 2px;
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .frow.off {
+        opacity: 0.18;
+      }
+      .frow .nf {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        color: var(--ground);
+        background: var(--fg);
+        border-radius: 3px;
+        padding: 0 4px;
+        margin-right: 6px;
+      }
+      .totals {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: baseline;
+      }
+      .totals > div:not(.legend) {
+        display: flex;
+        flex-direction: column;
+      }
+      .totals b {
+        font-family: var(--mono);
+        font-weight: 400;
+        font-size: 40px;
+        line-height: 44px;
+        font-variant-numeric: tabular-nums;
+      }
+      .totals span {
+        font-family: var(--display);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .legend {
+        display: flex;
+        gap: 16px;
+        font-size: 14px;
+        color: var(--muted);
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .legend .legend-nf {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        color: var(--ground);
+        background: var(--fg);
+        border-radius: 3px;
+        padding: 0 4px;
+        margin-right: 6px;
+      }
+      .legend i {
+        display: inline-block;
+        width: 14px;
+        height: 10px;
+        border-radius: 3px;
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+
+      /* steps */
+      .steps {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .stepcap > * {
+        max-width: 680px;
+      }
+      .stepcap {
+        background: var(--card);
+        color: var(--ink);
+        border-radius: 16px;
+        padding: 16px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: 120px;
+      }
+      .stepcap h3 {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 18px;
+        line-height: 24px;
+      }
+      .stepcap p {
+        font-size: 17px;
+        line-height: 25px;
+      }
+      .stepcap q {
+        font-style: italic;
+        color: var(--ink-muted);
+      }
+      .fade {
+        transition: opacity 300ms;
+      }
+
+      /* playground */
+      .tally {
+        background: var(--card);
+        color: var(--ink);
+        border-radius: 16px;
+        padding: 14px 18px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 24px;
+      }
+      .tally > div {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+      }
+      .tally h3 {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        color: var(--ink-muted);
+        display: flex;
+        justify-content: space-between;
+      }
+      .tally h3 b {
+        font-family: var(--mono);
+        font-weight: 400;
+        font-size: 16px;
+        color: var(--success);
+      }
+      .cells {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+      .cells i {
+        width: 18px;
+        height: 18px;
+        border-radius: 3px;
+        background: var(--card-sunk);
+        transition: background 120ms;
+      }
+      .cells i.on {
+        background: var(--success);
+      }
+      .cells i.contract.on {
+        background: var(--counter);
+      }
+      /* Protected baseline tests: hatched, so they read as "pinned" next to plain passes. */
+      .cells i.base.on {
+        background: repeating-linear-gradient(135deg, var(--success) 0 3px, var(--card) 3px 5px);
+      }
+
+      /* end */
+      .cmds {
+        background: var(--card);
+        color: var(--ink);
+        border-radius: 28px;
+        padding: 22px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .cmd {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 12px;
+        align-items: baseline;
+      }
+      .cmd b {
+        font-family: var(--mono);
+        font-weight: 400;
+        font-size: 28px;
+        color: var(--counter);
+      }
+      .cmd h3 {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 16px;
+      }
+      .cmd > div {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .cmd-chip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 4px 4px 14px;
+        border-radius: 8px;
+        background: var(--card-sunk);
+      }
+      .cmd-chip code {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        white-space: nowrap;
+        background: none;
+        padding: 0;
+        color: var(--ink);
+        line-height: 44px;
+      }
+      .cmd-copy {
+        flex: none;
+        height: 44px;
+        min-width: 80px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 6px;
+        background: var(--ink);
+        color: var(--card);
+        cursor: pointer;
+        font-family: var(--display);
+        font-size: 12px;
+        letter-spacing: 0.06em;
+      }
+      .cmd-copy:hover {
+        background: #4a3934;
+      }
+      .cmd-copy:focus-visible {
+        outline: 2px solid var(--counter);
+        outline-offset: 2px;
+      }
+      .closer {
+        padding-top: 88px;
+      }
+      .closer-cmd {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 6px 6px 16px;
+        border-radius: 8px;
+        background: var(--raised);
+        border: 1px solid var(--line);
+        font-family: var(--mono);
+        font-size: 17px;
+      }
+      .closer-cmd > span {
+        color: var(--magenta);
+      }
+      .closer-cmd code {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        white-space: nowrap;
+        color: var(--fg);
+        background: none;
+        padding: 0;
+        line-height: 44px;
+      }
+      .closer-cmd .of-copy {
+        flex: none;
+        height: 44px;
+        min-width: 88px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 6px;
+        background: #2e2d35;
+        color: var(--fg);
+        cursor: pointer;
+        font-family: var(--display);
+        font-size: 12px;
+        letter-spacing: 0.06em;
+      }
+      .closer-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+      }
+      .closer-go {
+        display: inline-flex;
+        align-items: center;
+        height: 56px;
+        padding: 0 28px;
+        border-radius: 8px;
+        background: var(--cyan);
+        border: 2px solid var(--ink);
+        box-shadow: 0 4px 0 0 var(--ink);
+        color: var(--ink);
+        text-decoration: none;
+        font-family: var(--display);
+        font-size: 18px;
+        letter-spacing: 0.02em;
+      }
+      .closer-go:focus-visible,
+      .closer-cmd .of-copy:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: 3px;
+      }
+      .source {
+        border-top: 2px solid var(--line);
+        padding-top: 20px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 22px;
+      }
+
+      @media (max-width: 860px) {
+        .split {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .log {
+          min-height: 0;
+        }
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .stats .stat:last-child {
+          grid-column: 1 / -1;
+        }
+        .diffgrid,
+        .tally {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      @media (max-width: 640px) {
+        body {
+          font-size: 17px;
+          line-height: 28px;
+        }
+        .hero {
+          padding-block: 44px 24px;
+          gap: 18px;
+        }
+        .dek {
+          font-size: 18px;
+          line-height: 28px;
+        }
+        .byline {
+          font-size: 13px;
+          line-height: 20px;
+        }
+        .stats {
+          gap: 10px;
+        }
+        .stat {
+          padding: 14px 16px 12px;
+        }
+        article section {
+          padding-top: 44px;
+          gap: 16px;
+        }
+        h2 {
+          font-size: 26px;
+          line-height: 32px;
+        }
+        figure.fig {
+          padding: 14px;
+          border-radius: 16px;
+          gap: 14px;
+          margin-inline: -4px;
+        }
+        .fig-head {
+          gap: 10px;
+        }
+        .fig-title {
+          font-size: 12px;
+        }
+        .controls {
+          width: 100%;
+          gap: 10px;
+          flex-wrap: nowrap;
+        }
+        .controls input[type="range"] {
+          flex: 1;
+          width: auto;
+          min-width: 0;
+        }
+        .clock {
+          font-size: 22px;
+          min-width: 76px;
+          text-align: right;
+        }
+        #fig-fix .controls {
+          flex-wrap: wrap;
+        }
+        .steps {
+          flex: 1 1 100%;
+          display: grid;
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+        #fixplay {
+          flex: 1 1 100%;
+        }
+        .scroll-hint {
+          display: block;
+          margin-top: -8px;
+        }
+
+        .steps .btn {
+          flex: 1;
+          padding: 0;
+          min-width: 40px;
+        }
+        .btn {
+          height: 44px;
+        }
+        .log li {
+          font-size: 12px;
+        }
+        .report {
+          padding: 14px 16px;
+        }
+        .report .who {
+          flex-direction: column;
+          gap: 2px;
+        }
+        .report p {
+          font-size: 16px;
+          line-height: 24px;
+        }
+        .totals {
+          gap: 16px;
+        }
+        .totals b {
+          font-size: 28px;
+          line-height: 34px;
+        }
+        .legend {
+          width: 100%;
+          font-size: 13px;
+        }
+        .repo {
+          padding: 12px;
+        }
+        .frow {
+          grid-template-columns: minmax(0, 1fr) auto;
+          grid-template-areas: "path n" "bar bar";
+          gap: 4px 10px;
+        }
+        .frow .path {
+          grid-area: path;
+        }
+        .frow .n {
+          grid-area: n;
+        }
+        .frow .bar {
+          grid-area: bar;
+          height: 8px;
+        }
+        .stepcap > * {
+          max-width: 680px;
+        }
+        .stepcap {
+          padding: 14px 16px;
+        }
+        .stepcap h3 {
+          font-size: 16px;
+          line-height: 22px;
+        }
+        .stepcap p {
+          font-size: 16px;
+          line-height: 24px;
+        }
+        #runall {
+          flex-basis: 100%;
+        }
+        .cmds {
+          padding: 18px;
+          border-radius: 16px;
+        }
+        .cmd {
+          grid-template-columns: 26px minmax(0, 1fr);
+        }
+        .cmd b {
+          font-size: 24px;
+        }
+        .cmd-copy {
+          min-width: 64px;
+        }
+        .cmd-chip code,
+        .closer-cmd code {
+          white-space: normal;
+          overflow-wrap: anywhere;
+          line-height: 24px;
+          padding-block: 10px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .band span {
+          animation: none;
+          padding-left: 16px;
+        }
+        .frow .bar i,
+        .fade,
+        .log li {
+          transition: none;
+          animation: none;
+        }
+      }
+    </style>
+    <style>
+      .marquee-wrap {
+        position: relative;
+        margin-top: 20px;
+      }
+      .marquee.paused .band span {
+        animation-play-state: paused;
+      }
+      .marquee-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        background: var(--ground);
+        color: var(--fg);
+        cursor: pointer;
+      }
+      .marquee-toggle:hover {
+        background: var(--raised);
+      }
+      .marquee-toggle:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: 3px;
+      }
+      .marquee-toggle .i-play,
+      .marquee-toggle[aria-pressed="true"] .i-pause {
+        display: none;
+      }
+      .marquee-toggle[aria-pressed="true"] .i-play {
+        display: block;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .marquee-toggle {
+          display: none;
+        }
+      }
+    </style>
+    <style>
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+      .note-mock {
+        font-size: 16px;
+        line-height: 25px;
+        color: var(--muted);
+        max-width: 720px;
+        border-left: 0;
+        padding: 12px 16px;
+        background: var(--raised);
+        border-radius: 16px;
+      }
+      .phases {
+        width: 100%;
+        min-width: 760px;
+        border-collapse: separate;
+        border-spacing: 4px;
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+      .phases th {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        text-align: left;
+        padding: 4px 6px;
+      }
+      .phases tbody th {
+        font-family: var(--mono);
+        font-size: 14px;
+        letter-spacing: 0;
+        color: var(--fg);
+        white-space: nowrap;
+      }
+      .phases td {
+        height: 36px;
+        border-radius: 8px;
+        background: var(--raised-2);
+        color: var(--muted);
+        padding: 0 10px;
+        transition:
+          background 200ms,
+          color 200ms;
+      }
+      .phases td.on {
+        background: #2e2d35;
+        color: var(--fg);
+      }
+      .phases td.cur {
+        background: var(--ground);
+        color: var(--fg);
+        box-shadow: inset 0 0 0 2px var(--fg);
+      }
+      .phases th.gate {
+        width: 96px;
+      }
+      .phases td.ph-plan-review.on,
+      .phases td.ph-post-test.on {
+        text-align: center;
+      }
+      .phases td.done {
+        background: var(--card);
+        color: var(--success);
+        text-align: center;
+      }
+      .tally7 {
+        background: var(--card);
+        color: var(--ink);
+        border-radius: 16px;
+        padding: 16px 18px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 28px;
+      }
+      .trow {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+      }
+      .trow h3 {
+        margin: 0;
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        color: var(--ink-muted);
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .trow h3 .mono {
+        font-size: 14px;
+        letter-spacing: 0;
+        color: var(--ink);
+      }
+      .trow h3 b {
+        font-family: var(--mono);
+        font-weight: 400;
+        font-size: 14px;
+        color: var(--success);
+      }
+      .cells i.bad {
+        background: #fff1cc;
+        box-shadow: inset 0 0 0 2px #8a5300;
+      }
+      .cells i.retried {
+        background: var(--success);
+        box-shadow: inset 0 0 0 2px #fff1cc;
+        outline: 2px solid #8a5300;
+        outline-offset: -1px;
+      }
+      .trow h3 b.warn {
+        color: #8a5300;
+      }
+      @media (max-width: 860px) {
+        .tally7 {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .phases td {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sr-announce" class="sr-only" aria-live="polite"></div>
+    <a class="of-skip" href="#content">Skip to content</a>
+    <header style="position: sticky; top: 12px; z-index: 10; padding: 12px 16px 0">
+      <nav
+        aria-label="Main"
+        style="
+          max-width: 1168px;
+          margin: 0 auto;
+          padding: 8px 8px 8px 20px;
+          box-sizing: border-box;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          background: #1c1b21;
+          border: 1px solid #45434c;
+          border-radius: 999px;
+        "
+      >
+        <a
+          href="index.html"
+          class="of-logo"
+          aria-label="OpenFleet home"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #48a6ee;
+            font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+            font-size: 22px;
+            line-height: 24px;
+            letter-spacing: -0.01em;
+          "
+        >
+          <svg width="26" height="26" viewBox="0 0 30 30" aria-hidden="true">
+            <circle cx="15" cy="15" r="12" fill="none" stroke="#48A6EE" stroke-width="3"></circle>
+            <circle cx="15" cy="15" r="5" fill="#EE5AD6"></circle>
+            <circle cx="15" cy="3" r="3" fill="#EDEB3C"></circle>
+          </svg>
+          OPENFLEET
+        </a>
+        <div style="display: flex; align-items: center; gap: 2px">
+          <div class="of-navlinks" style="display: flex; align-items: center; gap: 2px">
+            <a
+              class="of-navlink"
+              aria-current="page"
+              href="how-it-works.html"
+              style="
+                padding: 11px 14px;
+                border-radius: 999px;
+                text-decoration: none;
+                color: #2b1e1b;
+                background: #eef0f2;
+                font-weight: 600;
+              "
+              >How it works</a
+            >
+            <a
+              class="of-navlink"
+              href="quickstart.html"
+              style="padding: 11px 14px; border-radius: 999px; text-decoration: none; color: #a8a6af; font-weight: 600"
+              >Quick start</a
+            >
+            <a
+              class="of-navlink"
+              href="extensions.html"
+              style="padding: 11px 14px; border-radius: 999px; text-decoration: none; color: #a8a6af; font-weight: 600"
+              >Extensions</a
+            >
+          </div>
+          <details class="of-menu">
+            <summary
+              aria-label="Menu"
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                height: 44px;
+                padding: 0 14px;
+                border-radius: 999px;
+                color: #f4f4f6;
+                font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                font-size: 13px;
+                letter-spacing: 0.04em;
+              "
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#F4F4F6"
+                stroke-width="2.25"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <path d="M4 7h16"></path>
+                <path d="M4 12h16"></path>
+                <path d="M4 17h16"></path></svg
+              >MENU
+            </summary>
+            <div
+              style="
+                position: absolute;
+                right: 0;
+                top: 52px;
+                min-width: 220px;
+                padding: 8px;
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+                background: #1c1b21;
+                border: 1px solid #45434c;
+                border-radius: 16px;
+              "
+            >
+              <a
+                href="how-it-works.html"
+                aria-current="page"
+                style="padding: 12px 14px; border-radius: 8px; text-decoration: none; color: #f4f4f6; font-weight: 600"
+                >How it works</a
+              >
+              <a
+                href="quickstart.html"
+                style="padding: 12px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+                >Quick start</a
+              >
+              <a
+                href="extensions.html"
+                style="padding: 12px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+                >Extensions</a
+              >
+            </div>
+          </details>
+          <a
+            href="https://github.com/yashicon21/openfleet-tools"
+            aria-label="OpenFleet on GitHub"
+            class="of-gh"
+            style="
+              margin-left: 6px;
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              height: 44px;
+              padding: 0 18px;
+              box-sizing: border-box;
+              border-radius: 999px;
+              background: transparent;
+              border: 2px solid #45434c;
+              color: #f4f4f6;
+              text-decoration: none;
+              font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+              font-size: 14px;
+              letter-spacing: 0.02em;
+            "
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#F4F4F6"
+              stroke-width="2.25"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="6" cy="6" r="2.5"></circle>
+              <circle cx="6" cy="18" r="2.5"></circle>
+              <circle cx="18" cy="9" r="2.5"></circle>
+              <path d="M6 8.5v7"></path>
+              <path d="M18 11.5c0 3-3 4-9 5"></path>
+            </svg>
+            <span class="of-ghlabel">GITHUB</span>
+          </a>
+        </div>
+      </nav>
+    </header>
+    <div class="marquee-wrap">
+      <div class="marquee" aria-hidden="true">
+        <div class="band c">
+          <span
+            >ACCOUNT-ID · 6 REPOS · 8 CHILDREN · 28 SUB-AGENTS · 254 EVENTS · ACCOUNT-ID · 6 REPOS · 8 CHILDREN · 28
+            SUB-AGENTS · 254 EVENTS ·</span
+          >
+        </div>
+        <div class="band m">
+          <span
+            >PLAN · GATE · BUILD · TEST · MERGE · PLAN · GATE · BUILD · TEST · MERGE · PLAN · GATE · BUILD · TEST ·
+            MERGE · PLAN · GATE · BUILD · TEST · MERGE ·</span
+          >
+        </div>
+        <div class="band y">
+          <span
+            >1 BASELINE TEST CAUGHT A BREAK · 1 RETRY · 1 ASSUMPTION FOR YOU · 6 DRAFT PRS · NOTHING MERGED WITHOUT YOU
+            · 1 BASELINE TEST CAUGHT A BREAK · 1 RETRY · 1 ASSUMPTION FOR YOU · 6 DRAFT PRS · NOTHING MERGED WITHOUT YOU
+            ·</span
+          >
+        </div>
+      </div>
+      <button class="marquee-toggle" type="button" aria-pressed="false" aria-label="Pause the scrolling banner">
+        <svg class="i-pause" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="3" y="2" width="3.5" height="12" rx="1" fill="currentColor" />
+          <rect x="9.5" y="2" width="3.5" height="12" rx="1" fill="currentColor" />
+        </svg>
+        <svg class="i-play" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M4 2.5v11a1 1 0 0 0 1.5.86l9-5.5a1 1 0 0 0 0-1.72l-9-5.5A1 1 0 0 0 4 2.5Z" fill="currentColor" />
+        </svg>
+      </button>
+    </div>
+
+    <section class="wrap intro" aria-labelledby="page-title">
+      <div class="wide hero">
+        <p class="kicker">HOW IT WORKS</p>
+        <h1 id="page-title">One prompt. Six repos. Every step on the record.</h1>
+        <p class="dek">
+          The prompt: rename <code>user_id</code> to <code>account_id</code> across six repos. Every plan was checked
+          against the others before any code was written, a baseline test caught a break, the web app’s three parts
+          merged into one branch, and the coordinator made one call the spec didn’t cover, then logged it for you to
+          confirm. Here is every step, straight from the event log.
+        </p>
+        <p class="note-mock">
+          This run is an example: its timings and events are mocked, but every event type is one OpenFleet really logs.
+          To replay a real run, run <code>pnpm demo</code> from a checkout of the repo.
+        </p>
+        <p class="byline">project account-id · 0:00 → 4:28</p>
+      </div>
+      <div class="wide stats" role="group" aria-label="The run at a glance">
+        <div class="stat"><b>4:28</b><span>START TO DONE</span></div>
+        <div class="stat"><b>1 + 28</b><span>COORDINATOR + SUB-AGENTS</span></div>
+        <div class="stat"><b>1</b><span>BROKEN BASELINE TEST, FIXED ON RETRY</span></div>
+        <div class="stat"><b>1</b><span>ASSUMPTION FOR YOU</span></div>
+        <div class="stat"><b>0</b><span>PRS MERGED WITHOUT YOU</span></div>
+      </div>
+    </section>
+
+    <main class="wrap" id="content">
+      <article>
+        <noscript
+          ><p class="col note-mock">
+            The figures on this page are drawn with JavaScript, which is turned off. The text still tells the whole
+            story of the run.
+          </p></noscript
+        >
+        <nav class="col toc" aria-label="On this page">
+          <details open>
+            <summary>ON THIS PAGE</summary>
+            <ol>
+              <li>
+                <a href="#whole-h"><span>01</span>One conversation, then hands-off</a>
+              </li>
+              <li>
+                <a href="#state-h"><span>02</span>Every child walks the same path</a>
+              </li>
+              <li>
+                <a href="#messages-h"><span>03</span>The coordinator talks, agents report back</a>
+              </li>
+              <li>
+                <a href="#code-h"><span>04</span>339 lines across 26 files</a>
+              </li>
+              <li>
+                <a href="#decisions-h"><span>05</span>Six moments the coordinators stepped in</a>
+              </li>
+              <li>
+                <a href="#verify-h"><span>06</span>188 tests, one retry</a>
+              </li>
+              <li>
+                <a href="#left-h"><span>07</span>Nothing merges without you</a>
+              </li>
+            </ol>
+          </details>
+        </nav>
+        <section class="col prose" aria-labelledby="whole-h">
+          <h2 id="whole-h"><small>01 · THE WHOLE RUN</small>One conversation, then hands-off</h2>
+          <p>
+            OpenFleet writes every step of a run to <code>events.jsonl</code>: who did what, to which repo, and when.
+            The <strong>coordinator</strong> is the agent you talk to. For the first forty seconds it
+            <strong>grills</strong> you: it asks every question it needs answered, then writes a spec. Once you approve
+            the spec, you are done talking. Each unit of work is a <strong>child</strong>: a whole repo, a monorepo
+            package or a path-scoped part of an app. Every child gets its own git worktree and short-lived sub-agents in
+            turn: a <strong>planner</strong>, an optional <strong>baseline</strong> tester, an
+            <strong>implementer</strong> and a <strong>tester</strong>.
+          </p>
+          <p>
+            Here <code>web</code> is split into three children, <code>web/setup</code>, <code>web/app</code> and
+            <code>web/ui</code>, run by their own <strong>repo coordinator</strong>. Press replay to watch all 254
+            events land. Every planner runs first; no code is written until the <strong>plans-ready gate</strong> opens
+            at 1:49. <code>mobile</code> then waits for <code>sdk-js</code>, because the spec ordered it that way.
+          </p>
+        </section>
+
+        <figure class="fig wide" id="fig-swim">
+          <div class="fig-head">
+            <span class="fig-title"
+              ><span class="dot3"><i></i><i></i><i></i></span>EVENTS.JSONL · REPLAY 4:28 IN 16S</span
+            >
+            <div class="controls">
+              <button class="btn ghost" data-play type="button">▶ REPLAY</button
+              ><input
+                type="range"
+                min="0"
+                max="1000"
+                value="1000"
+                data-scrub
+                aria-label="Scrub the run timeline"
+              /><span class="clock" data-clock>4:28.0</span>
+            </div>
+          </div>
+          <p class="key">
+            <span><i class="k k-cyan"></i>planner</span><span><i class="k k-mag"></i>implementer</span
+            ><span><i class="k k-yel"></i>tester</span><span><i class="k k-base"></i>baseline</span
+            ><span><i class="k k-warn"></i>failed</span><span><i class="k k-int"></i>integration build</span
+            ><span><i class="k k-you"></i>you</span><span><i class="k k-tick"></i>coordinator event</span>
+          </p>
+          <p class="sr-only" id="swim-sum">
+            Finished run, 4:28 in total. The grill and spec took 39 seconds and your approval 8 seconds. From about
+            0:50, all eight children planned. At 1:49 every plan agreed and the plans-ready gate opened. sdk-python
+            first ran a baseline tester; its first tester then broke a baseline test at 3:15, a new implementer fixed it
+            and the retry passed at 4:00. web’s repo coordinator merged setup, ui and app into one integration branch;
+            its full build and tests passed there at 4:00, and web was done at 4:05. mobile waited for sdk-js, started
+            implementing at 3:13 and was done at 4:16. All six repos finished, then the coordinator finalized the run.
+          </p>
+          <div class="split">
+            <div class="scroll-x" tabindex="0" role="region" aria-label="Run timeline, scrolls sideways">
+              <svg
+                id="swim"
+                viewBox="0 0 1000 480"
+                role="img"
+                aria-label="Swimlane timeline of the run, one lane per child, plus web's repo coordinator."
+                aria-describedby="swim-sum"
+              ></svg>
+            </div>
+            <p class="scroll-hint" aria-hidden="true">Swipe sideways to see the whole run →</p>
+            <div class="log" aria-live="off">
+              <h3>LATEST EVENTS</h3>
+              <ol id="log"></ol>
+            </div>
+          </div>
+          <p class="figcap">
+            Bars are sub-agents from spawn to stop; dots are file edits and test runs. Ticks on the web lane are its
+            repo coordinator checking plans and merging children. The dashed segment is the only time the run waited on
+            a person.
+          </p>
+        </figure>
+
+        <section class="col prose" aria-labelledby="state-h">
+          <h2 id="state-h"><small>02 · STATE</small>Every child walks the same path</h2>
+          <p>
+            Each child moves through the same phases: pending, planning, <strong>plan-review</strong> (its plan is
+            checked against the spec, then against every other plan), planned (waiting for the gate and for anything it
+            depends on), an optional <strong>baseline</strong>, implementing, testing, <strong>post-test</strong> (the
+            results are checked before the child is called done), and done. Almost always forwards: the one exception is
+            <code>sdk-python</code>, which goes back from testing to implementing (the ↺) with the tester’s findings
+            attached. <code>mobile</code>, <code>web/app</code> and <code>web/ui</code> spend a long time in planned,
+            waiting on the children they depend on.
+          </p>
+        </section>
+
+        <figure class="fig wide" id="fig-state">
+          <div class="fig-head">
+            <span class="fig-title"
+              ><span class="dot3"><i></i><i></i><i></i></span>PHASE.CHANGED · 8 CHILDREN</span
+            >
+            <div class="controls">
+              <button class="btn ghost" data-play type="button">▶ REPLAY</button
+              ><input
+                type="range"
+                min="0"
+                max="1000"
+                value="1000"
+                data-scrub
+                aria-label="Scrub the phase replay"
+              /><span class="clock" data-clock>4:28.0</span>
+            </div>
+          </div>
+          <p class="key">
+            <span><i class="k k-cyan"></i>planner</span><span><i class="k k-mag"></i>implementer</span
+            ><span><i class="k k-yel"></i>tester</span><span><i class="k k-gate"></i>coordinator check</span
+            ><span><i class="k k-done"></i>done</span>
+          </p>
+          <div class="scroll-x" tabindex="0" role="region" aria-label="Phase table, scrolls sideways">
+            <table class="phases">
+              <caption class="sr-only">
+                Time each child spent in each phase
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col"><span class="sr-only">Child</span></th>
+                  <th scope="col">pending</th>
+                  <th scope="col">planning</th>
+                  <th scope="col" class="gate">plan-review</th>
+                  <th scope="col">planned</th>
+                  <th scope="col">baseline</th>
+                  <th scope="col">implementing</th>
+                  <th scope="col">testing</th>
+                  <th scope="col" class="gate">post-test</th>
+                  <th scope="col">done</th>
+                </tr>
+              </thead>
+              <tbody id="phase-rows"></tbody>
+            </table>
+          </div>
+          <p class="scroll-hint" aria-hidden="true">Swipe sideways for every phase →</p>
+          <p class="figcap">
+            <b id="phase-now" class="mono"></b> Each cell shows how long that child spent in the phase; the highlighted
+            cell is where it is now.
+          </p>
+        </figure>
+
+        <section class="col prose" aria-labelledby="messages-h">
+          <h2 id="messages-h"><small>03 · MESSAGES</small>The coordinator talks, agents report back</h2>
+          <p>
+            Sub-agents never talk to each other. Each one gets a single instruction, does its job in its child’s git
+            worktree, and ends with a structured <code>openfleet-report</code>: a status, a summary and, if it has one,
+            a question. The coordinator runs the five single-child repos itself. For <code>web</code> it starts a repo
+            coordinator, which runs the three web children, merges them and reports back once. A question that would
+            change a cross-repo contract still comes up to the coordinator.
+          </p>
+        </section>
+
+        <figure class="fig wide" id="fig-hub">
+          <div class="fig-head">
+            <span class="fig-title"
+              ><span class="dot3"><i></i><i></i><i></i></span>MESSAGE.SENT · AGENT.STOPPED</span
+            >
+            <div class="controls">
+              <button class="btn ghost" data-play type="button">▶ REPLAY</button
+              ><input
+                type="range"
+                min="0"
+                max="1000"
+                value="1000"
+                data-scrub
+                aria-label="Scrub the message replay"
+              /><span class="clock" data-clock>4:28.0</span>
+            </div>
+          </div>
+          <p class="key">
+            <span><i class="k k-cyan"></i>planner</span><span><i class="k k-mag"></i>implementer</span
+            ><span><i class="k k-yel"></i>tester</span><span><i class="k k-warn"></i>failed</span
+            ><span><i class="k k-you"></i>you</span><span><i class="k k-done"></i>done</span>
+          </p>
+          <div class="scroll-x" tabindex="0" role="region" aria-label="Message hub, scrolls sideways">
+            <svg
+              id="hub"
+              viewBox="0 0 1000 500"
+              role="img"
+              aria-label="Message hub: you, the coordinator and the six repos, with web's three children inside it."
+              aria-describedby="hub-sum"
+            ></svg>
+          </div>
+          <p class="sr-only" id="hub-sum">
+            Finished run: the coordinator sent 19 instructions, 18 to the sub-agents of the five single-child repos and
+            one to web’s repo coordinator, which sent 9 more to the web children’s sub-agents. You answered the grill
+            and approved the spec at the start. All six repos are done.
+          </p>
+          <div class="report" id="report"></div>
+        </figure>
+
+        <section class="col prose" aria-labelledby="code-h">
+          <h2 id="code-h"><small>04 · THE CODE</small>339 lines across 26 files</h2>
+          <p>
+            Most of the diff is renames and tests. The api adds a migration and a contract test; the SDKs note the
+            breaking change in their changelogs. <code>sdk-python</code> starts with a baseline test file, and its
+            second implementer adds the deprecated alias and one test for it. In <code>web</code>, each child stays
+            inside its own paths: shared code in setup, pages in app, components in ui. A tester fails any child whose
+            diff leaves them.
+          </p>
+        </section>
+
+        <figure class="fig wide" id="fig-diff">
+          <div class="fig-head">
+            <span class="fig-title"
+              ><span class="dot3"><i></i><i></i><i></i></span>FILE.EDITED · FILE.ADDED</span
+            >
+            <div class="controls">
+              <button class="btn ghost" data-play type="button">▶ REPLAY</button
+              ><input type="range" min="0" max="1000" value="1000" data-scrub aria-label="Scrub the edit replay" /><span
+                class="clock"
+                data-clock
+                >4:28.0</span
+              >
+            </div>
+          </div>
+          <div class="totals">
+            <div><b style="color: var(--fg)" id="tot-add">+339</b><span>LINES ADDED</span></div>
+            <div><b style="color: var(--muted)" id="tot-rem">−109</b><span>LINES REMOVED</span></div>
+            <div><b id="tot-files">26</b><span>FILES TOUCHED</span></div>
+            <div class="legend">
+              <span><i style="background: var(--fg)"></i>added</span
+              ><span><i style="box-shadow: inset 0 0 0 2px var(--muted)"></i>removed</span
+              ><span><span class="legend-nf">NEW</span>new file</span>
+            </div>
+          </div>
+          <div class="diffgrid" id="diff"></div>
+          <p class="figcap">
+            A file appears when its first edit is logged. The two “(retry)” rows are sdk-python’s second implementer.
+          </p>
+        </figure>
+
+        <section class="col prose" aria-labelledby="decisions-h">
+          <h2 id="decisions-h"><small>05 · THE DECISIONS</small>Six moments the coordinators stepped in</h2>
+          <p>
+            Most of a run is agents working alone. These six moments are where the coordinators stepped in: pinning a
+            contract, checking every plan against the others, answering a question, sending a child back after a
+            baseline test broke, making a call the spec didn’t cover, and holding an ordering while web merged into one
+            branch. Watch step 5: the coordinator decided something on its own, and wrote it down for you to confirm
+            before anything merges.
+          </p>
+        </section>
+
+        <figure class="fig wide" id="fig-fix">
+          <div class="fig-head">
+            <span class="fig-title"
+              ><span class="dot3"><i></i><i></i><i></i></span>PLANS.CONSISTENT · ASSUMPTION · CHILD.MERGED</span
+            >
+            <div class="controls">
+              <div class="steps" id="fixsteps" role="group" aria-label="Decision steps"></div>
+              <button class="btn ghost" type="button" id="fixplay">▶ PLAY</button>
+            </div>
+          </div>
+          <p class="key">
+            <span><i class="k k-gate"></i>plan or contract checked</span
+            ><span><i class="k k-mag"></i>implementer asked</span><span><i class="k k-warn"></i>failed</span
+            ><span><i class="k k-you"></i>for you</span><span><i class="k k-done"></i>done</span>
+          </p>
+          <div class="scroll-x" tabindex="0" role="region" aria-label="Decisions diagram, scrolls sideways">
+            <svg
+              id="fix"
+              viewBox="0 0 1000 360"
+              role="img"
+              aria-label="Diagram: contracts/account.json above the six repos. Steps show the plans agreeing at the gate, the contract change reaching four repos, sdk-python's broken baseline test and retry, the assumption to keep a user_id alias, mobile waiting for sdk-js, and web merging into one branch."
+            ></svg>
+          </div>
+          <div class="stepcap" id="fixcap" aria-live="polite"></div>
+        </figure>
+
+        <section class="col prose" aria-labelledby="verify-h">
+          <h2 id="verify-h"><small>06 · VERIFY</small>188 tests, one retry</h2>
+          <p>
+            Each tester runs the child’s own test command. Contract tests, in blue, check every consuming repo against
+            the same rows in <code>account.json</code>. Hatched cells are <code>sdk-python</code>’s baseline: tests for
+            today’s behaviour, written and passed before the change, that the implementer may not weaken. Press run to
+            replay them: one baseline test breaks, a fresh implementer fixes the code, and the retry passes. Then web’s
+            repo coordinator runs all 46 web tests again on the merged branch.
+          </p>
+        </section>
+
+        <figure class="fig wide" id="fig-play">
+          <div class="fig-head">
+            <span class="fig-title"
+              ><span class="dot3"><i></i><i></i><i></i></span>TEST.RUN · 8 CHILDREN</span
+            >
+            <div class="controls">
+              <button class="btn ghost" type="button" id="runall">▶ RUN ALL TESTS</button
+              ><span class="clock" id="tests-total">188/188</span>
+            </div>
+          </div>
+          <p class="key">
+            <span><i class="k k-pass"></i>own tests</span><span><i class="k k-contract"></i>contract tests</span
+            ><span><i class="k k-protected"></i>baseline</span><span><i class="k k-warn"></i>failed</span
+            ><span><i class="k k-retried"></i>passed on retry</span>
+          </p>
+          <div class="tally7" id="tally"></div>
+          <p class="figcap">
+            One cell per test. The ringed cell in sdk-python is the baseline test that broke on the first run and passed
+            on the retry.
+          </p>
+        </figure>
+
+        <section class="col prose" aria-labelledby="left-h">
+          <h2 id="left-h"><small>07 · WHAT’S LEFT</small>Nothing merges without you</h2>
+          <p>
+            The run ends in <strong>draft PR</strong> mode, as agreed in the grill. The coordinator pushes each repo’s
+            <code>openfleet/account-id</code> branch and opens a draft PR: six in all, because web’s three children
+            arrive as one PR from their integration branch. Every PR links to the other five and carries the run
+            summary, which lists the one assumption for you to confirm. Nothing merges until you do.
+          </p>
+          <p>
+            Want to look before anything leaves your machine? Choose <strong>staged</strong> in the grill instead, and
+            the changes wait uncommitted in each worktree.
+          </p>
+        </section>
+
+        <div class="col cmds">
+          <div class="cmd">
+            <b>1</b>
+            <div>
+              <h3>REVIEW THE DRAFT PRS AND THE ASSUMPTION</h3>
+              <div class="cmd-chip">
+                <code>gh pr list --author @me --draft</code
+                ><button
+                  class="cmd-copy"
+                  type="button"
+                  data-copy="gh pr list --author @me --draft"
+                  aria-label="Copy: gh pr list --author @me --draft"
+                >
+                  COPY
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="cmd">
+            <b>2</b>
+            <div>
+              <h3>MERGE, THEN CLEAN UP</h3>
+              <div class="cmd-chip">
+                <code>npx openfleet clean account-id --branches</code
+                ><button
+                  class="cmd-copy"
+                  type="button"
+                  data-copy="npx openfleet clean account-id --branches"
+                  aria-label="Copy: npx openfleet clean account-id --branches"
+                >
+                  COPY
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="cmd">
+            <b>3</b>
+            <div>
+              <h3>FOUND A PROBLEM? PICK THE RUN BACK UP</h3>
+              <div class="cmd-chip">
+                <code>npx openfleet resume account-id</code
+                ><button
+                  class="cmd-copy"
+                  type="button"
+                  data-copy="npx openfleet resume account-id"
+                  aria-label="Copy: npx openfleet resume account-id"
+                >
+                  COPY
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="col prose closer" aria-labelledby="closer-h">
+          <h2 id="closer-h">Run it on your own repos</h2>
+          <p>
+            Three commands set up a workspace and open the grill for your change. You answer the questions once, then
+            come back to tested work in every repo.
+          </p>
+          <div class="closer-cmd">
+            <span aria-hidden="true">$</span><code>npm create @openfleet-tools@latest</code
+            ><button class="of-copy" type="button" id="closer-copy" aria-label="Copy setup command">
+              <span id="closer-copy-label">COPY</span>
+            </button>
+          </div>
+          <div class="closer-btns">
+            <a class="of-btn closer-go" href="quickstart.html">START YOUR OWN RUN</a>
+          </div>
+        </section>
+
+        <p class="col source">
+          The event types and fields follow the
+          <a href="https://github.com/yashicon21/openfleet-tools/blob/main/docs/events.md">event log schema</a>.
+        </p>
+      </article>
+    </main>
+
+    <footer>
+      <div aria-hidden="true" style="display: flex; height: 8px">
+        <span style="flex: 1; background: #48a6ee"></span><span style="flex: 1; background: #ee5ad6"></span
+        ><span style="flex: 1; background: #edeb3c"></span>
+      </div>
+      <div
+        style="
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 32px 24px 40px;
+          box-sizing: border-box;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 24px;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span
+            style="
+              font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+              font-size: 20px;
+              color: #48a6ee;
+            "
+            >OPENFLEET</span
+          >
+          <span style="font-size: 14px; color: #a8a6af">Open source · MIT licensed</span>
+        </div>
+        <nav aria-label="Footer" style="display: flex; flex-wrap: wrap; gap: 4px; margin: 0 -14px">
+          <a
+            class="of-navlink"
+            href="how-it-works.html"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >How it works</a
+          >
+          <a
+            class="of-navlink"
+            href="quickstart.html"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >Quick start</a
+          >
+          <a
+            class="of-navlink"
+            href="extensions.html"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >Extensions</a
+          >
+          <a
+            class="of-navlink"
+            href="https://github.com/yashicon21/openfleet-tools"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >GitHub</a
+          >
+          <a
+            class="of-navlink"
+            href="https://www.npmjs.com/package/@openfleet-tools/cli"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >npm</a
+          >
+          <a
+            class="of-navlink"
+            href="https://github.com/yashicon21/openfleet-tools/blob/main/docs/events.md"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >Events schema</a
+          >
+          <a
+            class="of-navlink"
+            href="https://github.com/yashicon21/openfleet-tools/blob/main/docs/design.md"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >Design notes</a
+          >
+          <a
+            class="of-navlink"
+            href="https://github.com/yashicon21/openfleet-tools/issues"
+            style="padding: 11px 14px; border-radius: 8px; text-decoration: none; color: #a8a6af; font-weight: 600"
+            >Issues</a
+          >
+        </nav>
+      </div>
+    </footer>
+    <script>
+      // Mocked account-id run (seconds from project.created). Six repos; web is grouped: its three
+      // path-scoped children run under a repo coordinator and merge into one integration branch.
+      var REPOS = ["api", "sdk-js", "sdk-python", "billing", "web", "mobile"];
+      var CHILDREN = ["api", "sdk-js", "sdk-python", "billing", "web/setup", "web/app", "web/ui", "mobile"];
+      var repoOf = function (c) {
+        return c.split("/")[0];
+      };
+      var WEB_KIDS = ["web/setup", "web/app", "web/ui"];
+      // p planner · b baseline · i implementer · t tester · f tester that found a failure
+      var SCHED = {
+        api: [
+          ["p", 50, 80],
+          ["i", 112, 160],
+          ["t", 162, 180],
+        ],
+        "sdk-js": [
+          ["p", 50.2, 82],
+          ["i", 112.2, 165],
+          ["t", 167, 190],
+        ],
+        "sdk-python": [
+          ["p", 50.6, 84],
+          ["b", 112.4, 135],
+          ["i", 137, 175],
+          ["f", 177, 195],
+          ["i", 198, 220],
+          ["t", 222, 240],
+        ],
+        billing: [
+          ["p", 50.8, 86],
+          ["i", 112.6, 170],
+          ["t", 172, 196],
+        ],
+        "web/setup": [
+          ["p", 51.6, 78],
+          ["i", 112.8, 140],
+          ["t", 142, 152],
+        ],
+        "web/app": [
+          ["p", 79.5, 104],
+          ["i", 157, 200],
+          ["t", 202, 222],
+        ],
+        "web/ui": [
+          ["p", 81.5, 106],
+          ["i", 157.2, 195],
+          ["t", 197, 215],
+        ],
+        mobile: [
+          ["p", 51.8, 80],
+          ["i", 194, 235],
+          ["t", 237, 255],
+        ],
+      };
+      var GATE = 109; // plans.consistent: every plan agrees, the plans-ready gate opens
+      var WEB_CHECK = 107.4; // web's repo coordinator checks its three plans against each other
+      var MERGES = [
+        ["web/setup", 155],
+        ["web/ui", 218],
+        ["web/app", 225],
+      ];
+      var INTEGRATE = [226, 244]; // full build and tests on openfleet/account-id
+      // child, path, added, removed, new file
+      var FILES = [
+        ["api", "src/routes/accounts.ts", 18, 11, false],
+        ["api", "src/models/account.ts", 6, 4, false],
+        ["api", "migrations/0042_rename_user_id.sql", 14, 0, true],
+        ["api", "test/accounts.test.ts", 41, 9, false],
+        ["api", "test/contract.test.ts", 36, 0, true],
+        ["api", "README.md", 4, 2, false],
+        ["sdk-js", "src/client.ts", 12, 8, false],
+        ["sdk-js", "src/types.ts", 5, 3, false],
+        ["sdk-js", "test/client.test.ts", 24, 6, false],
+        ["sdk-js", "CHANGELOG.md", 6, 0, false],
+        ["sdk-python", "tests/test_baseline_user_id.py", 22, 0, true],
+        ["sdk-python", "account_client/models.py", 16, 5, false],
+        ["sdk-python", "account_client/client.py", 7, 4, false],
+        ["sdk-python", "tests/test_models.py", 31, 3, false],
+        ["sdk-python", "CHANGELOG.md", 5, 0, false],
+        ["billing", "invoice/invoice.go", 9, 9, false],
+        ["billing", "invoice/invoice_test.go", 14, 6, false],
+        ["web/setup", "src/api/account.ts", 4, 4, false],
+        ["web/setup", "src/types/account.ts", 3, 3, false],
+        ["web/app", "src/pages/Account.tsx", 6, 6, false],
+        ["web/app", "src/pages/Account.test.tsx", 12, 5, false],
+        ["web/ui", "src/components/AccountBadge.tsx", 3, 3, false],
+        ["web/ui", "src/components/AccountBadge.test.tsx", 8, 2, false],
+        ["mobile", "lib/models/account.dart", 7, 7, false],
+        ["mobile", "lib/account_repository.dart", 5, 5, false],
+        ["mobile", "test/account_test.dart", 10, 4, false],
+      ];
+      // tests per child: [own, contract, baseline]. sdk-python's retry adds one test for the alias.
+      var TESTS = {
+        api: [43, 5, 0],
+        "sdk-js": [26, 5, 0],
+        "sdk-python": [19, 5, 3],
+        billing: [17, 0, 0],
+        "web/setup": [8, 0, 0],
+        "web/app": [21, 5, 0],
+        "web/ui": [12, 0, 0],
+        mobile: [14, 5, 0],
+      };
+      var testsOf = function (c) {
+        return TESTS[c][0] + TESTS[c][1] + TESTS[c][2];
+      };
+      var WEB_TESTS = WEB_KIDS.reduce(function (s, c) {
+        return s + testsOf(c);
+      }, 0);
+      var TOTAL_TESTS = CHILDREN.reduce(function (s, c) {
+        return s + testsOf(c);
+      }, 0);
+      var REPORTS = {
+        "api/planner":
+          "Plan: rename the column with a migration, return account_id from /accounts, keep the route shape. Contract tests over contracts/account.json.",
+        "sdk-js/planner":
+          "Plan: rename the field in types.ts and the client mapper, update tests, note the breaking change in the changelog.",
+        "sdk-python/planner":
+          "Plan: rename the model field, update the client, tests and changelog. The baseline protects callers that read .user_id today.",
+        "billing/planner": "Plan: invoices read account_id from the API response; update the struct tag and tests.",
+        "web/setup/planner":
+          "Plan: rename the field in the shared API helper and the Account type. Nothing outside src/api and src/types.",
+        "web/app/planner": "Plan: the account page reads accountId from the shared helper. Only files under src/pages.",
+        "web/ui/planner": "Plan: AccountBadge takes accountId instead of userId. Only files under src/components.",
+        "mobile/planner": "Plan: rename the model field and repository mapping, after sdk-js as the spec orders.",
+        "sdk-python/baseline":
+          "Baseline: 3 tests for today’s behaviour, including test_user_id_read. All pass on the unchanged code and are now protected.",
+        "api/implementer":
+          "Migration and route updated; contract tests pass against the updated account.json. Asked whether user_id should be marked deprecated.",
+        "sdk-js/implementer": "Client and types renamed; 31 tests pass locally. Changelog notes the breaking change.",
+        "sdk-python/implementer":
+          "Retry: added a read-only user_id alias that warns, per the coordinator’s decision. The baseline passes again.",
+        "billing/implementer": "Struct tag renamed; invoice tests updated. No deviations.",
+        "web/setup/implementer": "Shared helper and Account type renamed. No deviations.",
+        "web/app/implementer": "Account page uses accountId from the shared helper. Diff stays inside src/pages.",
+        "web/ui/implementer": "AccountBadge prop renamed; snapshot updated. Diff stays inside src/components.",
+        "mobile/implementer": "Model and repository renamed against the finished sdk-js types. No deviations.",
+        "api/tester": "48/48 pass, including 5 contract rows. All acceptance criteria met.",
+        "sdk-js/tester": "31/31 pass, including contract rows. All acceptance criteria met.",
+        "sdk-python/tester": "28/28 pass on the retry, including the 3 baseline tests. All acceptance criteria met.",
+        "billing/tester": "17/17 pass. All acceptance criteria met.",
+        "web/setup/tester": "8/8 pass. Scope check: only shared files changed.",
+        "web/app/tester": "26/26 pass, including contract rows. Scope check passed.",
+        "web/ui/tester": "12/12 pass. Scope check passed.",
+        "mobile/tester": "19/19 pass, including contract rows. All acceptance criteria met.",
+        "web/repo-coordinator":
+          "web: 3 children merged into openfleet/account-id. Full build and " +
+          WEB_TESTS +
+          "/" +
+          WEB_TESTS +
+          " tests pass there. One PR.",
+      };
+      var CMD = {
+        api: "npm test",
+        "sdk-js": "npm test",
+        "sdk-python": "pytest",
+        billing: "go test",
+        "web/setup": "npm test",
+        "web/app": "npm test",
+        "web/ui": "npm test",
+        mobile: "flutter test",
+      };
+      var ROLE = { p: "planner", b: "baseline", i: "implementer", t: "tester", f: "tester" };
+      var PHASE_OF = { p: "planning", b: "baseline", i: "implementing", t: "testing", f: "testing" };
+      var bossOf = function (c) {
+        return WEB_KIDS.indexOf(c) >= 0 ? "web/repo-coordinator" : "coordinator";
+      };
+
+      function buildEvents() {
+        var E = [];
+        var add = function (t, actor, type, target, detail) {
+          E.push({ t: Math.round(t * 1000) / 1000, actor: actor, type: type, target: target, detail: detail });
+        };
+        add(0, "cli", "project.created", null, "project account-id");
+        add(6.2, "coordinator", "session.started", null, "new session");
+        add(38.4, "coordinator", "spec.written", null, "spec.md · 6 repos · 8 children");
+        add(39.0, "coordinator", "phase.changed", null, "specifying → awaiting-approval");
+        CHILDREN.forEach(function (c, k) {
+          add(39.1 + k * 0.01, "coordinator", "phase.changed", c, "→ pending");
+        });
+        add(46.3, "coordinator", "spec.approved", null, "you approved the spec");
+        add(46.8, "coordinator", "phase.changed", null, "awaiting-approval → running");
+        REPOS.forEach(function (r, k) {
+          add(
+            47.0 + k * 0.1,
+            "coordinator",
+            "worktree.created",
+            r === "web" ? "web" : r,
+            "branch openfleet/account-id",
+          );
+        });
+        add(47.7, "coordinator", "message.sent", "web", "→ web/repo-coordinator");
+        add(47.9, "web/repo-coordinator", "agent.spawned", "web", "openfleet-repo-coordinator");
+        WEB_KIDS.forEach(function (c, k) {
+          add(
+            48.2 + k * 0.2,
+            "web/repo-coordinator",
+            "worktree.created",
+            c,
+            "branch openfleet/account-id--" + c.split("/")[1],
+          );
+        });
+        CHILDREN.forEach(function (c) {
+          var boss = bossOf(c);
+          var phase = "pending";
+          var retried = false;
+          var cut = function (to, t, note) {
+            add(t, boss, "phase.changed", c, phase + " → " + to + (note || ""));
+            phase = to;
+          };
+          SCHED[c].forEach(function (s) {
+            var kind = s[0],
+              a = s[1],
+              b = s[2];
+            var role = ROLE[kind];
+            var to = PHASE_OF[kind];
+            if (kind === "i" && phase === "testing") {
+              cut("implementing", a - 1.2, " (retry 1/3)");
+              retried = true;
+            } else if (kind === "p") cut("planning", a - 0.4);
+            else if (kind === "b") cut("baseline", a - 0.6);
+            else if (kind === "i") cut("implementing", a - 0.6);
+            else cut("testing", a - 1.5);
+            if (kind === "i" && !retried && boss !== "coordinator" && c !== "web/setup")
+              add(a - 0.5, boss, "worktree.synced", c, "onto openfleet/account-id");
+            var lead = kind === "p" ? 0.2 : kind === "i" && !retried ? 0.4 : 1;
+            add(
+              a - lead,
+              boss,
+              "message.sent",
+              c,
+              "→ " + c + "/" + role + (retried && kind === "i" ? " + findings" : ""),
+            );
+            add(a, c + "/" + role, "agent.spawned", c, "openfleet-" + role);
+            var span = b - a;
+            if (kind === "b") {
+              add(a + span * 0.6, c + "/baseline", "file.added", c, "tests/test_baseline_user_id.py +22");
+              add(b - 1.5, c + "/baseline", "test.run", c, "pytest tests/test_baseline_user_id.py 3/3");
+            }
+            if (kind === "i") {
+              if (retried) {
+                add(a + span * 0.55, c + "/implementer", "file.edited", c, "account_client/models.py +6 −0");
+                add(a + span * 0.62, c + "/implementer", "file.edited", c, "tests/test_models.py +5 −0");
+              } else {
+                var files = FILES.filter(function (f) {
+                  return f[0] === c && !/baseline/.test(f[1]);
+                });
+                files.forEach(function (f, j) {
+                  add(
+                    a + span * (0.45 + (0.4 * j) / Math.max(1, files.length)),
+                    c + "/implementer",
+                    f[4] ? "file.added" : "file.edited",
+                    c,
+                    f[1] + " +" + f[2] + (f[3] ? " −" + f[3] : ""),
+                  );
+                });
+              }
+            }
+            var n = testsOf(c);
+            if (kind === "t") add(b - 3, c + "/tester", "test.run", c, CMD[c] + " " + n + "/" + n);
+            if (kind === "f")
+              add(b - 3, c + "/tester", "test.run", c, "pytest " + (n - 2) + "/" + (n - 1) + " · 1 failing");
+            var stopDetail = {
+              p: "plan ready",
+              b: "baseline passes on unchanged code",
+              i: "done, tests pass locally",
+              f: "1 failing: test_user_id_read (baseline)",
+              t: "all ACs met",
+            }[kind];
+            add(b, c + "/" + role, "agent.stopped", c, stopDetail);
+            if (kind !== "t" && kind !== "f")
+              add(b + 0.01, c + "/" + role, "worktree.snapshot", c, kind === "p" ? "0 files changed" : "diff snapshot");
+            if (kind === "p") {
+              add(b + 0.3, boss, "plan.submitted", c, "plans/" + c.replace("/", "-") + ".md");
+              add(b + 0.5, boss, "plan.validated", c, "plans/" + c.replace("/", "-") + ".md");
+              cut("plan-review", b + 0.7);
+              // The gate: no child leaves plan-review until every plan agrees.
+              cut("planned", GATE + 0.2 + CHILDREN.indexOf(c) * 0.02);
+            }
+            if (kind === "b") add(b + 0.3, c + "/baseline", "baseline.passed", c, "3 tests protected");
+            if (kind === "t") {
+              cut("post-test", b + 1.0);
+              cut("done", b + 1.5);
+            }
+          });
+        });
+        add(WEB_CHECK, "web/repo-coordinator", "plans.consistent", "web", "web/setup, web/app, web/ui agree");
+        add(GATE, "coordinator", "plans.consistent", null, "8 plans agree · plans-ready gate open");
+        add(117.5, "api/implementer", "question.asked", "api", "mark user_id deprecated in the contract?");
+        add(119.2, "coordinator", "question.answered", "api", "yes: answered by spec");
+        add(120.0, "coordinator", "contract.changed", null, "contracts/account.json → 4 repos");
+        add(196.4, "coordinator", "assumption", "sdk-python", "keep user_id as a read-only alias that warns");
+        MERGES.forEach(function (m) {
+          add(m[1], "web/repo-coordinator", "child.merged", m[0], "into openfleet/account-id");
+        });
+        add(
+          INTEGRATE[1] - 4,
+          "web/repo-coordinator",
+          "test.run",
+          "web",
+          "npm run build && npm test " + WEB_TESTS + "/" + WEB_TESTS,
+        );
+        add(INTEGRATE[1] + 1, "web/repo-coordinator", "agent.stopped", "web", "web done · 1 integration branch");
+        add(258.0, "coordinator", "phase.changed", null, "running → finalizing");
+        add(264.0, "coordinator", "run.completed", null, "mode draft-pr · 6 PRs");
+        add(268.0, "coordinator", "phase.changed", null, "finalizing → done");
+        E.sort(function (x, y) {
+          return x.t - y.t;
+        });
+        E.forEach(function (e, i) {
+          e.seq = i + 1;
+        });
+        return E;
+      }
+
+      (function () {
+        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var E = buildEvents();
+        var END = E[E.length - 1].t;
+        var ROLE_FILL = { planner: "#48A6EE", implementer: "#EE5AD6", tester: "#EDEB3C", baseline: "none" };
+        var RC_STOP = E.find(function (e) {
+          return e.actor === "web/repo-coordinator" && e.type === "agent.stopped";
+        }).t;
+        var fmt = function (t) {
+          t = Math.max(0, t);
+          var m = Math.floor(t / 60);
+          var s = t - m * 60;
+          return m + ":" + (s < 10 ? "0" : "") + s.toFixed(1);
+        };
+        var fmtS = function (t) {
+          t = Math.max(0, Math.round(t));
+          var s = t % 60;
+          return Math.floor(t / 60) + ":" + (s < 10 ? "0" : "") + s;
+        };
+        var esc = function (s) {
+          return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        };
+        var clamp = function (v, a, b) {
+          return Math.max(a, Math.min(b, v));
+        };
+        var MQ = window.matchMedia ? window.matchMedia("(max-width: 640px)") : { matches: false };
+        var isNarrow = function () {
+          return MQ.matches;
+        };
+        var onMode = function (fn) {
+          if (MQ.addEventListener) MQ.addEventListener("change", fn);
+          else if (MQ.addListener) MQ.addListener(fn);
+        };
+        var announcer = document.getElementById("sr-announce");
+        var announce = function (msg) {
+          announcer.textContent = "";
+          setTimeout(function () {
+            announcer.textContent = msg;
+          }, 50);
+        };
+        function player(root, opts) {
+          var btn = root.querySelector("[data-play]");
+          var range = root.querySelector("[data-scrub]");
+          var clock = root.querySelector("[data-clock]");
+          var span = opts.to - opts.from;
+          var title = (root.querySelector(".fig-title") || {}).textContent || "Figure";
+          var t = opts.to,
+            playing = false,
+            raf = 0,
+            last = 0,
+            stepTimer = 0;
+          // One slider step is one second of the run, so arrow keys move in readable increments.
+          range.max = String(Math.round(span));
+          function set(v) {
+            t = clamp(v, opts.from, opts.to);
+            range.value = String(Math.round(t - opts.from));
+            range.setAttribute("aria-valuetext", fmt(t) + " of " + fmt(opts.to));
+            clock.textContent = fmt(t);
+            opts.frame(t);
+          }
+          function finished() {
+            announce(title.trim() + ": replay finished at " + fmt(opts.to) + ".");
+          }
+          function label() {
+            btn.textContent = playing ? "❚❚ PAUSE" : t >= opts.to ? "↺ REPLAY" : "▶ PLAY";
+          }
+          function tick(now) {
+            var dt = now - last;
+            last = now;
+            set(t + (dt / opts.ms) * span);
+            if (t >= opts.to) {
+              playing = false;
+              label();
+              finished();
+              return;
+            }
+            raf = requestAnimationFrame(tick);
+          }
+          // Reduced motion: the replay still runs, but in eight still frames instead of continuous movement.
+          function stepTick() {
+            set(t + span / 8);
+            if (t >= opts.to) {
+              playing = false;
+              label();
+              finished();
+              return;
+            }
+            stepTimer = setTimeout(stepTick, 900);
+          }
+          function play() {
+            if (t >= opts.to) set(opts.from);
+            playing = true;
+            label();
+            if (reduce) {
+              stepTimer = setTimeout(stepTick, 900);
+              return;
+            }
+            last = performance.now();
+            raf = requestAnimationFrame(tick);
+          }
+          function pause() {
+            playing = false;
+            cancelAnimationFrame(raf);
+            clearTimeout(stepTimer);
+            label();
+          }
+          btn.addEventListener("click", function () {
+            if (playing) pause();
+            else play();
+          });
+          range.addEventListener("input", function () {
+            pause();
+            set(opts.from + Number(range.value));
+            label();
+          });
+          // Every figure arrives showing the finished run; it only moves when the reader asks.
+          set(opts.to);
+          label();
+          if ("IntersectionObserver" in window) {
+            new IntersectionObserver(function (es) {
+              es.forEach(function (e) {
+                if (!e.isIntersecting && playing) pause();
+              });
+            }).observe(root);
+          }
+          return {
+            redraw: function () {
+              opts.frame(t);
+            },
+          };
+        }
+        function responsive(build, root, opts) {
+          var frame = build();
+          var p = player(
+            root,
+            Object.assign({}, opts, {
+              frame: function (t) {
+                frame(t);
+              },
+            }),
+          );
+          onMode(function () {
+            frame = build();
+            p.redraw();
+          });
+        }
+        function setBox(svg, w, h, minW) {
+          svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+          svg.style.width = "100%";
+          svg.style.minWidth = minW ? minW + "px" : "0";
+        }
+
+        // agent runs: one entry per spawn → stop, in order
+        var RUNS = [];
+        E.forEach(function (e) {
+          if (e.type === "agent.spawned" && !/repo-coordinator$/.test(e.actor))
+            RUNS.push({ actor: e.actor, repo: e.target, role: e.actor.split("/").pop(), s: e.t, f: null });
+          if (e.type === "agent.stopped") {
+            for (var i = 0; i < RUNS.length; i++) {
+              if (RUNS[i].actor === e.actor && RUNS[i].f === null) {
+                RUNS[i].f = e.t;
+                RUNS[i].stop = e.detail;
+                break;
+              }
+            }
+          }
+        });
+        RUNS.forEach(function (r) {
+          r.failed = /failing/.test(r.stop);
+        });
+        var projT = function (detail) {
+          var e = E.find(function (x) {
+            return x.type === "phase.changed" && x.target === null && x.detail.indexOf(detail) >= 0;
+          });
+          return e ? e.t : 0;
+        };
+
+        // ---------- 1. swimlane ----------
+        (function () {
+          var svg = document.getElementById("swim"),
+            log = document.getElementById("log");
+          var PH = [
+            ["specifying", 0, projT("→ awaiting-approval")],
+            ["you", projT("→ awaiting-approval"), projT("→ running")],
+            ["running", projT("→ running"), projT("→ finalizing")],
+            ["finalizing", projT("→ finalizing"), END],
+          ];
+          var LANES = [
+            "coordinator",
+            "api",
+            "sdk-js",
+            "sdk-python",
+            "billing",
+            "web",
+            "web/setup",
+            "web/app",
+            "web/ui",
+            "mobile",
+          ];
+          function build() {
+            var N = isNarrow();
+            var W = N ? 640 : 1000,
+              X0 = N ? 4 : 120,
+              X1 = N ? 628 : 985;
+            var x = function (t) {
+              return X0 + (t / END) * (X1 - X0);
+            };
+            var BY = N ? 22 : 14,
+              LY = N ? 72 : 62,
+              LH = N ? 44 : 38;
+            var h = "";
+            h += N ? "" : '<text x="0" y="31" class="t-muted disp-t" font-size="12" letter-spacing="1">PROJECT</text>';
+            PH.forEach(function (p) {
+              var you = p[0] === "you",
+                w = x(p[2]) - x(p[1]);
+              h +=
+                '<rect x="' +
+                x(p[1]) +
+                '" y="' +
+                BY +
+                '" width="' +
+                Math.max(2, w - 2) +
+                '" height="26" rx="6" stroke-width="2" class="' +
+                (you ? "f-none s-fg s-dash" : "f-raised") +
+                ' ph" data-a="' +
+                p[1] +
+                '"/>';
+              var name = {
+                specifying: "GRILL",
+                you: "YOU",
+                running: "6 REPOS · 8 CHILDREN",
+                finalizing: "FINALIZE",
+              }[p[0]];
+              var label = name + " · " + (p[2] - p[1]).toFixed(0) + "s";
+              if (!you && w > label.length * 8 + 16)
+                h +=
+                  '<text x="' +
+                  (x(p[1]) + 8) +
+                  '" y="' +
+                  (BY + 18) +
+                  '" font-size="12" letter-spacing="0.5" class="t-muted disp-t">' +
+                  label +
+                  "</text>";
+              else {
+                var last = p[0] === "finalizing";
+                h +=
+                  '<text x="' +
+                  (last ? x(p[2]) : you ? x(p[1]) + w / 2 : x(p[1])) +
+                  '" y="' +
+                  (you && N ? BY - 7 : BY + 42) +
+                  '" font-size="12" letter-spacing="0.5" text-anchor="' +
+                  (last ? "end" : you ? "middle" : "start") +
+                  '" class="' +
+                  (you ? "t-fg" : "t-muted") +
+                  ' disp-t">' +
+                  label +
+                  "</text>";
+              }
+            });
+            LANES.forEach(function (lane, i) {
+              var y = LY + i * LH;
+              var coord = lane === "coordinator";
+              var rc = lane === "web";
+              var kid = WEB_KIDS.indexOf(lane) >= 0;
+              var lab = N ? { x: X0, y: y + 11 } : { x: kid ? 12 : 0, y: y + 23 };
+              var bar = N ? { y: y + 16, h: 18, c: y + 25 } : { y: y + 8, h: 20, c: y + 18 };
+              h +=
+                '<line x1="' +
+                X0 +
+                '" x2="' +
+                X1 +
+                '" y1="' +
+                bar.c +
+                '" y2="' +
+                bar.c +
+                '" class="s-line" stroke-width="1" stroke-dasharray="2 6"/>';
+              h +=
+                '<text x="' +
+                lab.x +
+                '" y="' +
+                lab.y +
+                '" font-size="' +
+                (coord ? 12 : N ? 14 : 15) +
+                '" ' +
+                (coord ? 'letter-spacing="1" class="t-fg disp-t"' : 'class="t-fg mono-t"') +
+                ">" +
+                (coord ? "COORDINATOR" : N && kid ? lane : kid ? lane.replace("web", "") : lane) +
+                (rc
+                  ? '<tspan class="t-muted disp-t" font-size="12" letter-spacing="1"> · REPO COORDINATOR</tspan>'
+                  : "") +
+                "</text>";
+              if (rc) {
+                h +=
+                  '<rect class="lane-bar" fill="none" stroke="#F4F4F6" stroke-width="2" data-s="' +
+                  INTEGRATE[0] +
+                  '" data-f="' +
+                  INTEGRATE[1] +
+                  '" x="' +
+                  x(INTEGRATE[0]) +
+                  '" y="' +
+                  (bar.y + 1) +
+                  '" height="' +
+                  (bar.h - 2) +
+                  '" rx="5" width="' +
+                  (x(INTEGRATE[1]) - x(INTEGRATE[0])) +
+                  '"/>';
+                E.filter(function (e) {
+                  return e.actor === "web/repo-coordinator" && e.type !== "test.run";
+                }).forEach(function (e) {
+                  h +=
+                    '<rect class="f-fg ev" data-t="' +
+                    e.t +
+                    '" x="' +
+                    (x(e.t) - 1) +
+                    '" y="' +
+                    bar.y +
+                    '" width="2" height="' +
+                    bar.h +
+                    '"/>';
+                });
+              }
+              if (coord) {
+                E.filter(function (e) {
+                  return e.actor === "coordinator" || e.actor === "cli";
+                }).forEach(function (e) {
+                  h +=
+                    '<rect class="f-fg ev" data-t="' +
+                    e.t +
+                    '" x="' +
+                    (x(e.t) - 1) +
+                    '" y="' +
+                    bar.y +
+                    '" width="2" height="' +
+                    bar.h +
+                    '"/>';
+                });
+                return;
+              }
+              RUNS.filter(function (r) {
+                return r.repo === lane;
+              }).forEach(function (r) {
+                var fill = r.failed ? "#FFF1CC" : ROLE_FILL[r.role];
+                var base = r.role === "baseline";
+                h +=
+                  '<rect class="lane-bar" fill="' +
+                  fill +
+                  '"' +
+                  (r.failed ? ' stroke="#8A5300" stroke-width="2"' : base ? ' stroke="#EDEB3C" stroke-width="2"' : "") +
+                  ' data-s="' +
+                  r.s +
+                  '" data-f="' +
+                  r.f +
+                  '" x="' +
+                  x(r.s) +
+                  '" y="' +
+                  bar.y +
+                  '" height="' +
+                  bar.h +
+                  '" rx="5" width="' +
+                  (x(r.f) - x(r.s)) +
+                  '"/>';
+              });
+              E.filter(function (e) {
+                return e.target === lane && /^(file\.|test\.run)/.test(e.type);
+              }).forEach(function (e) {
+                h +=
+                  '<circle class="f-ink ev" data-t="' +
+                  e.t +
+                  '" cx="' +
+                  x(e.t) +
+                  '" cy="' +
+                  bar.c +
+                  '" r="' +
+                  (N ? 2.5 : 3) +
+                  '"/>';
+              });
+            });
+            // The plans-ready gate: no code is written until every plan agrees.
+            var gx = x(GATE),
+              gTop = LY + LH - 4,
+              gBot = LY + LANES.length * LH;
+            h +=
+              '<line class="ev" data-t="' +
+              GATE +
+              '" x1="' +
+              gx +
+              '" x2="' +
+              gx +
+              '" y1="' +
+              gTop +
+              '" y2="' +
+              gBot +
+              '" stroke="#F4F4F6" stroke-width="2" stroke-dasharray="3 5"/>';
+            h +=
+              '<text class="ev t-fg disp-t" data-t="' +
+              GATE +
+              '" x="' +
+              (gx + 6) +
+              '" y="' +
+              (gTop + 10) +
+              '" font-size="12" letter-spacing="1">PLANS-READY GATE</text>';
+            var AY = LY + LANES.length * LH + 8;
+            h +=
+              '<line x1="' + X0 + '" x2="' + X1 + '" y1="' + AY + '" y2="' + AY + '" class="s-line" stroke-width="2"/>';
+            for (var s = 0; s <= END; s += 60) {
+              h +=
+                '<line x1="' +
+                x(s) +
+                '" x2="' +
+                x(s) +
+                '" y1="' +
+                AY +
+                '" y2="' +
+                (AY + 6) +
+                '" class="s-line" stroke-width="2"/><text x="' +
+                x(s) +
+                '" y="' +
+                (AY + 22) +
+                '" font-size="13" text-anchor="' +
+                (s === 0 ? "start" : "middle") +
+                '" class="t-muted mono-t">' +
+                fmtS(s) +
+                "</text>";
+            }
+            var B = 10,
+              NB = Math.ceil(END / B) + 1,
+              counts = [];
+            for (var k = 0; k < NB; k++) counts.push(0);
+            E.forEach(function (e) {
+              counts[Math.floor(e.t / B)]++;
+            });
+            var maxC = Math.max.apply(null, counts),
+              HH = 44;
+            var HY = N ? AY + 100 : AY + 82;
+            h += N
+              ? '<text x="' +
+                X0 +
+                '" y="' +
+                (AY + 46) +
+                '" class="t-muted disp-t" font-size="12" letter-spacing="1">EVENTS / 10S <tspan class="mono-t" font-size="12" letter-spacing="0">· peak ' +
+                maxC +
+                "</tspan></text>"
+              : '<text x="0" y="' +
+                (HY - 14) +
+                '" class="t-muted disp-t" font-size="12" letter-spacing="1">EVENTS / 10S</text><text x="0" y="' +
+                (HY + 2) +
+                '" class="t-muted mono-t" font-size="13">peak ' +
+                maxC +
+                "</text>";
+            counts.forEach(function (c, i) {
+              if (!c) return;
+              var bh = Math.max(3, (c / maxC) * HH);
+              h +=
+                '<rect class="f-line hist" data-t="' +
+                i * B +
+                '" x="' +
+                (x(i * B) + 0.5) +
+                '" y="' +
+                (HY - bh) +
+                '" width="' +
+                Math.max(1, x(B) - x(0) - 1.5) +
+                '" height="' +
+                bh +
+                '" rx="1.5"/>';
+            });
+            h +=
+              '<line id="swim-head" x1="' +
+              x(END) +
+              '" x2="' +
+              x(END) +
+              '" y1="' +
+              (BY - 6) +
+              '" y2="' +
+              HY +
+              '" class="s-fg" stroke-width="2"/>';
+            setBox(svg, W, HY + 6, N ? 640 : 720);
+            svg.innerHTML = h;
+            var bars = [].slice.call(svg.querySelectorAll(".lane-bar")),
+              evs = [].slice.call(svg.querySelectorAll(".ev")),
+              hist = [].slice.call(svg.querySelectorAll(".hist")),
+              phs = [].slice.call(svg.querySelectorAll(".ph"));
+            var head = svg.querySelector("#swim-head");
+            var keep = N ? 4 : 7;
+            var lastShown = -1;
+            return function (t) {
+              bars.forEach(function (b) {
+                var s = +b.dataset.s,
+                  f = +b.dataset.f;
+                var w = clamp(Math.min(t, f) - s, 0, f - s);
+                b.setAttribute("width", Math.max(0, x(s + w) - x(s)));
+              });
+              evs.forEach(function (e) {
+                e.style.opacity = +e.dataset.t <= t ? 1 : 0;
+              });
+              hist.forEach(function (r) {
+                r.setAttribute("class", (+r.dataset.t <= t ? "f-muted" : "f-line") + " hist");
+              });
+              phs.forEach(function (r) {
+                r.style.opacity = +r.dataset.a <= t ? 1 : 0.25;
+              });
+              head.setAttribute("x1", x(t));
+              head.setAttribute("x2", x(t));
+              var n = 0;
+              while (n < E.length && E[n].t <= t) n++;
+              if (n !== lastShown) {
+                lastShown = n;
+                log.innerHTML = E.slice(Math.max(0, n - keep), n)
+                  .reverse()
+                  .map(function (e) {
+                    return (
+                      "<li><span>" +
+                      e.seq +
+                      "</span><span><b>" +
+                      esc(e.type) +
+                      "</b><em>" +
+                      esc(e.actor) +
+                      (e.target && e.actor.indexOf(e.target) !== 0 ? " · " + esc(e.target) : "") +
+                      " · " +
+                      esc(e.detail) +
+                      "</em></span></li>"
+                    );
+                  })
+                  .join("");
+              }
+            };
+          }
+          responsive(build, document.getElementById("fig-swim"), { from: 0, to: END, ms: 16000 });
+        })();
+
+        // ---------- 2. phases ----------
+        (function () {
+          var CP = [
+            "pending",
+            "planning",
+            "plan-review",
+            "planned",
+            "baseline",
+            "implementing",
+            "testing",
+            "post-test",
+            "done",
+          ];
+          var tbody = document.getElementById("phase-rows");
+          var trans = {};
+          CHILDREN.forEach(function (r) {
+            trans[r] = [];
+          });
+          E.forEach(function (e) {
+            if (e.type === "phase.changed" && trans[e.target])
+              trans[e.target].push({
+                t: e.t,
+                to: e.detail.split("→").pop().trim().split(" ")[0],
+                retry: /retry/.test(e.detail),
+              });
+          });
+          tbody.innerHTML = CHILDREN.map(function (r) {
+            return (
+              '<tr><th scope="row">' +
+              r +
+              "</th>" +
+              CP.map(function (p) {
+                return '<td data-r="' + r + '" data-p="' + p + '"><span></span></td>';
+              }).join("") +
+              "</tr>"
+            );
+          }).join("");
+          var cells = [].slice.call(tbody.querySelectorAll("td"));
+          var now = document.getElementById("phase-now");
+          function frame(t) {
+            var current = {};
+            CHILDREN.forEach(function (r) {
+              var cur = null,
+                retry = false;
+              trans[r].forEach(function (x) {
+                if (x.t <= t) {
+                  cur = x.to;
+                  if (x.retry) retry = true;
+                }
+              });
+              current[r] = { p: cur, retry: retry };
+            });
+            cells.forEach(function (td) {
+              var r = td.dataset.r,
+                p = td.dataset.p;
+              var list = trans[r];
+              var spent = 0,
+                reached = false;
+              list.forEach(function (x, i) {
+                if (x.to !== p || x.t > t) return;
+                reached = true;
+                var end = list[i + 1] && list[i + 1].t <= t ? list[i + 1].t : x.to === "done" ? x.t : t;
+                spent += end - x.t;
+              });
+              var isCur = current[r].p === p && p !== "done";
+              td.className =
+                "ph-" + p + (reached ? " on" : "") + (isCur ? " cur" : "") + (p === "done" && reached ? " done" : "");
+              var txt = "";
+              var gate = p === "plan-review" || p === "post-test";
+              if (reached && p !== "done") txt = gate ? (isCur ? "checking" : "✓") : Math.round(spent) + "s";
+              if (reached && p === "done") txt = "✓";
+              if (p === "implementing" && current[r].retry) txt += " ↺";
+              td.firstChild.textContent = txt;
+            });
+            var doneN = CHILDREN.filter(function (r) {
+              return current[r].p === "done";
+            }).length;
+            now.textContent = doneN + " of 8 children done.";
+          }
+          player(document.getElementById("fig-state"), { from: 0, to: END, ms: 14000, frame: frame });
+        })();
+
+        // ---------- 3. hub ----------
+        (function () {
+          var svg = document.getElementById("hub");
+          var rep = document.getElementById("report");
+          var LAYOUT = {
+            wide: {
+              w: 1000,
+              h: 500,
+              minW: 680,
+              C: { x: 500, y: 270, r: 70 },
+              nodeW: 210,
+              youW: 120,
+              P: {
+                you: [500, 50],
+                api: [150, 150],
+                "sdk-js": [150, 270],
+                "sdk-python": [150, 390],
+                billing: [850, 150],
+                web: [850, 280],
+                mobile: [850, 410],
+              },
+            },
+            narrow: {
+              w: 400,
+              h: 610,
+              minW: 0,
+              C: { x: 200, y: 180, r: 56 },
+              nodeW: 180,
+              youW: 140,
+              P: {
+                you: [200, 40],
+                api: [100, 340],
+                "sdk-js": [300, 340],
+                "sdk-python": [100, 420],
+                billing: [300, 420],
+                web: [100, 528],
+                mobile: [300, 520],
+              },
+            },
+          };
+          var KID_LABEL = { "web/setup": "setup", "web/app": "app", "web/ui": "ui" };
+          // Only the top coordinator's traffic travels the hub. web's three children talk to their repo
+          // coordinator, which reports to the top coordinator once.
+          var packets = [];
+          E.forEach(function (e) {
+            if (e.type === "message.sent" && e.actor === "coordinator")
+              packets.push({ t: e.t, from: "c", to: repoOf(e.target), cls: "fg" });
+            if (e.type === "agent.stopped" && bossOf(e.target) === "coordinator" && e.target !== "web")
+              packets.push({
+                t: e.t,
+                from: repoOf(e.target),
+                to: "c",
+                cls: /failing/.test(e.detail)
+                  ? "warn"
+                  : e.actor.split("/").pop() === "planner"
+                    ? "cyan"
+                    : e.actor.split("/").pop() === "implementer"
+                      ? "mag"
+                      : "yel",
+              });
+            if (e.type === "agent.stopped" && e.actor === "web/repo-coordinator")
+              packets.push({ t: e.t, from: "web", to: "c", cls: "card" });
+            if (e.type === "spec.written") packets.push({ t: e.t, from: "c", to: "you", cls: "fg" });
+            if (e.type === "spec.approved") packets.push({ t: e.t - 3, from: "you", to: "c", cls: "fg" });
+          });
+          var runAt = function (child, t) {
+            var run = null,
+              last = null;
+            RUNS.forEach(function (r) {
+              if (r.repo !== child) return;
+              if (r.s <= t && t < r.f) run = r;
+              if (r.f <= t) last = r;
+            });
+            return { run: run, last: last };
+          };
+          var doneAt = function (child) {
+            var fin = E.find(function (e) {
+              return e.target === child && e.detail === "post-test → done";
+            });
+            return fin ? fin.t : Infinity;
+          };
+          var mergedAt = {};
+          MERGES.forEach(function (m) {
+            mergedAt[m[0]] = m[1];
+          });
+          var ROLE_CLS = { planner: "cyan", baseline: "yel", implementer: "mag", tester: "yel" };
+          var lastRep;
+          function build() {
+            var N = isNarrow(),
+              L = N ? LAYOUT.narrow : LAYOUT.wide,
+              C = L.C;
+            var pos = function (k) {
+              return k === "c" ? C : { x: L.P[k][0], y: L.P[k][1] };
+            };
+            var keys = ["you"].concat(REPOS);
+            var h = "";
+            keys.forEach(function (k) {
+              var n = pos(k);
+              h +=
+                '<line x1="' +
+                C.x +
+                '" y1="' +
+                C.y +
+                '" x2="' +
+                n.x +
+                '" y2="' +
+                n.y +
+                '" class="s-line" stroke-width="2" stroke-dasharray="' +
+                (k === "you" ? "4 6" : "0") +
+                '"/>';
+            });
+            keys.forEach(function (k) {
+              var n = pos(k),
+                w = k === "you" ? L.youW : L.nodeW,
+                web = k === "web",
+                hh = web ? 96 : 52,
+                top = n.y - (web ? 34 : 26);
+              h +=
+                '<g class="node" data-k="' +
+                k +
+                '"><rect x="' +
+                (n.x - w / 2) +
+                '" y="' +
+                top +
+                '" width="' +
+                w +
+                '" height="' +
+                hh +
+                '" rx="16" class="f-raised s-line nb" stroke-width="2"/>';
+              h +=
+                '<text x="' +
+                n.x +
+                '" y="' +
+                (n.y - 2 - (web ? 6 : 0)) +
+                '" text-anchor="middle" font-size="' +
+                (k === "you" ? 14 : N ? 15 : 17) +
+                '" class="' +
+                (k === "you" ? "t-fg disp-t" : "t-fg mono-t") +
+                ' nl">' +
+                (k === "you" ? "YOU" : k) +
+                "</text>";
+              h +=
+                '<text x="' +
+                n.x +
+                '" y="' +
+                (n.y + 17 - (web ? 6 : 0)) +
+                '" text-anchor="middle" font-size="12" class="t-muted mono-t ns">idle</text>';
+              if (web) {
+                var cw = (w - 36) / 3;
+                WEB_KIDS.forEach(function (c, i) {
+                  var cx = n.x - w / 2 + 12 + i * (cw + 6);
+                  h +=
+                    '<rect class="kid f-raised s-line" data-c="' +
+                    c +
+                    '" x="' +
+                    cx +
+                    '" y="' +
+                    (n.y + 24) +
+                    '" width="' +
+                    cw +
+                    '" height="26" rx="6" stroke-width="2"/><text class="kidl t-muted mono-t" data-c="' +
+                    c +
+                    '" x="' +
+                    (cx + cw / 2) +
+                    '" y="' +
+                    (n.y + 41) +
+                    '" text-anchor="middle" font-size="12">' +
+                    KID_LABEL[c] +
+                    "</text>";
+                });
+              }
+              h += "</g>";
+            });
+            h += '<circle cx="' + C.x + '" cy="' + C.y + '" r="' + C.r + '" class="f-card s-ink" stroke-width="3"/>';
+            h +=
+              '<text x="' +
+              C.x +
+              '" y="' +
+              (C.y - 6) +
+              '" text-anchor="middle" font-size="' +
+              (N ? 12 : 15) +
+              '" class="t-ink disp-t">COORDINATOR</text>';
+            h +=
+              '<text id="hub-count" x="' +
+              C.x +
+              '" y="' +
+              (C.y + 20) +
+              '" text-anchor="middle" font-size="18" class="mono-t" style="fill:#1632E6">6 / 6</text>';
+            h +=
+              '<text x="' +
+              C.x +
+              '" y="' +
+              (C.y + 38) +
+              '" text-anchor="middle" font-size="12" class="disp-t" style="fill:#5F5754">REPOS DONE</text>';
+            packets.forEach(function (p, i) {
+              h +=
+                '<circle class="f-' +
+                p.cls +
+                ' s-ink pk" stroke-width="2" r="' +
+                (N ? 6 : 7) +
+                '" data-i="' +
+                i +
+                '" style="opacity:0"/>';
+            });
+            setBox(svg, L.w, L.h, L.minW);
+            svg.innerHTML = h;
+            var pk = [].slice.call(svg.querySelectorAll(".pk")),
+              nodes = [].slice.call(svg.querySelectorAll(".node")),
+              kids = [].slice.call(svg.querySelectorAll(".kid")),
+              kidls = [].slice.call(svg.querySelectorAll(".kidl")),
+              count = svg.querySelector("#hub-count");
+            var FLY = 5;
+            lastRep = undefined;
+            return function (t) {
+              packets.forEach(function (p, i) {
+                var k = (t - p.t) / FLY;
+                if (k < 0 || k > 1) {
+                  pk[i].style.opacity = 0;
+                  return;
+                }
+                var a = pos(p.from),
+                  b = pos(p.to),
+                  e = 1 - Math.pow(1 - k, 3);
+                pk[i].setAttribute("cx", a.x + (b.x - a.x) * e);
+                pk[i].setAttribute("cy", a.y + (b.y - a.y) * e);
+                pk[i].style.opacity = 1;
+              });
+              kids.forEach(function (rect, i) {
+                var c = rect.dataset.c,
+                  st = runAt(c, t),
+                  merged = mergedAt[c] <= t;
+                var cls = merged
+                  ? "f-card s-ink"
+                  : st.run
+                    ? "f-" + ROLE_CLS[st.run.role] + " s-ink"
+                    : doneAt(c) <= t
+                      ? "f-raised s-fg"
+                      : "f-raised s-line";
+                rect.setAttribute("class", "kid " + cls);
+                kidls[i].setAttribute("class", "kidl mono-t " + (merged || st.run ? "t-ink" : "t-muted"));
+              });
+              var doneN = 0;
+              nodes.forEach(function (g) {
+                var k = g.dataset.k,
+                  rect = g.querySelector(".nb"),
+                  lab = g.querySelector(".nl"),
+                  st = g.querySelector(".ns");
+                var setNode = function (r, l, s, text) {
+                  rect.setAttribute("class", r + " nb");
+                  lab.setAttribute("class", l + " nl");
+                  st.setAttribute("class", s + " ns");
+                  st.textContent = text;
+                };
+                if (k === "you") {
+                  var a1 = projT("→ awaiting-approval"),
+                    a2 = projT("→ running");
+                  var busy = t >= a1 && t < a2;
+                  setNode(
+                    "f-raised " + (busy ? "s-fg" : "s-line") + " s-dash",
+                    "t-fg disp-t",
+                    (busy ? "t-fg" : "t-muted") + " mono-t",
+                    t < a1 ? "answering questions" : busy ? "reviewing spec…" : "approved",
+                  );
+                  return;
+                }
+                if (k === "web") {
+                  if (t >= RC_STOP) {
+                    doneN++;
+                    setNode("f-card s-ink", "t-ink mono-t", "t-ink mono-t", "done · 1 PR");
+                    return;
+                  }
+                  var start = E.find(function (e) {
+                    return e.actor === "web/repo-coordinator" && e.type === "agent.spawned";
+                  }).t;
+                  var working = WEB_KIDS.filter(function (c) {
+                    return runAt(c, t).run;
+                  }).length;
+                  var merging = MERGES.filter(function (m) {
+                    return m[1] <= t && t < m[1] + 4;
+                  })[0];
+                  var text =
+                    t < start
+                      ? "not started"
+                      : t >= INTEGRATE[0]
+                        ? "integration build + tests"
+                        : merging
+                          ? "merged " + merging[0]
+                          : working
+                            ? "repo coordinator · " + working + " working"
+                            : "repo coordinator";
+                  setNode(t < start ? "f-raised s-line" : "f-raised s-fg", "t-fg mono-t", "t-fg mono-t", text);
+                  return;
+                }
+                var s2 = runAt(k, t);
+                if (doneAt(k) <= t) {
+                  doneN++;
+                  setNode("f-card s-ink", "t-ink mono-t", "t-ink mono-t", "done");
+                } else if (s2.run) {
+                  var cls = ROLE_CLS[s2.run.role];
+                  setNode(
+                    "f-raised s-" + cls,
+                    "t-fg mono-t",
+                    "t-" + cls + " mono-t",
+                    s2.run.role + " · " + (t - s2.run.s).toFixed(0) + "s",
+                  );
+                } else {
+                  var waiting = k === "mobile" && t > GATE && t < 193 ? "waits on sdk-js" : null;
+                  var gated = t > 80 && t < GATE ? "waiting for the gate" : null;
+                  setNode(
+                    "f-raised s-line",
+                    "t-muted mono-t",
+                    "t-muted mono-t",
+                    waiting || gated || (s2.last ? "between agents" : "not started"),
+                  );
+                }
+              });
+              count.textContent = doneN + " / 6";
+              var latest = null;
+              RUNS.concat([
+                { actor: "web/repo-coordinator", repo: "web", role: "repo coordinator", f: RC_STOP },
+              ]).forEach(function (r) {
+                if (r.f <= t && (!latest || r.f > latest.f)) latest = r;
+              });
+              var key = latest ? latest.actor + latest.f : null;
+              if (key !== lastRep) {
+                lastRep = key;
+                var text = latest
+                  ? latest.failed
+                    ? "pytest 25/26. One failure: test_user_id_read, a protected baseline test. Existing callers still read .user_id from the model."
+                    : REPORTS[latest.actor]
+                  : "";
+                rep.innerHTML = latest
+                  ? '<div class="who">' +
+                    esc(latest.repo.toUpperCase() + " · " + latest.role.toUpperCase()) +
+                    " · OPENFLEET-REPORT <b>status: " +
+                    (latest.failed ? "failed" : "done") +
+                    "</b></div><p>" +
+                    esc(text) +
+                    "</p>"
+                  : '<div class="who">WAITING FOR THE FIRST REPORT <b>—</b></div><p>Reports appear here as each sub-agent finishes.</p>';
+              }
+            };
+          }
+          responsive(build, document.getElementById("fig-hub"), { from: 0, to: END, ms: 16000 });
+        })();
+
+        // ---------- 4. diff ----------
+        (function () {
+          var rows0 = FILES.map(function (f) {
+            var ev = E.find(function (e) {
+              return e.target === f[0] && /^file\./.test(e.type) && e.detail.indexOf(f[1] + " ") === 0;
+            });
+            return { child: f[0], path: f[1], a: f[2], r: f[3], isNew: f[4], t: ev ? ev.t : 0 };
+          });
+          // sdk-python's second implementer: its rows sit after the first run's files.
+          E.filter(function (e) {
+            return e.target === "sdk-python" && e.type === "file.edited" && / −0$/.test(e.detail);
+          }).forEach(function (e) {
+            var m = e.detail.match(/^(\S+) \+(\d+)/);
+            rows0.push({ child: "sdk-python", path: m[1] + " (retry)", a: +m[2], r: 0, isNew: false, t: e.t });
+          });
+          var MAX = 45;
+          var box = document.getElementById("diff");
+          var row = function (f) {
+            return (
+              '<div class="frow ' +
+              (f.isNew ? "new" : "") +
+              '" data-i="' +
+              rows0.indexOf(f) +
+              '"><span class="path" title="' +
+              esc(f.path) +
+              '">' +
+              (f.isNew ? '<b class="nf">NEW</b>' : "") +
+              esc(f.path) +
+              '</span><span class="bar"><i class="a" style="width:' +
+              (f.a / MAX) * 100 +
+              '%"></i><i class="r" style="width:' +
+              (f.r / MAX) * 100 +
+              '%"></i></span><span class="n">+' +
+              f.a +
+              " −" +
+              f.r +
+              "</span></div>"
+            );
+          };
+          box.innerHTML = REPOS.map(function (repo) {
+            var fs = rows0.filter(function (f) {
+              return repoOf(f.child) === repo;
+            });
+            var A = fs.reduce(function (s, f) {
+                return s + f.a;
+              }, 0),
+              R = fs.reduce(function (s, f) {
+                return s + f.r;
+              }, 0);
+            var body =
+              repo === "web"
+                ? WEB_KIDS.map(function (c) {
+                    return (
+                      '<p class="fsub">' +
+                      c +
+                      "</p>" +
+                      fs
+                        .filter(function (f) {
+                          return f.child === c;
+                        })
+                        .map(row)
+                        .join("")
+                    );
+                  }).join("")
+                : fs.map(row).join("");
+            return (
+              '<details class="repo" open><summary><h3>' +
+              repo.toUpperCase() +
+              '<span class="mono">+' +
+              A +
+              " −" +
+              R +
+              "</span></h3></summary>" +
+              body +
+              "</details>"
+            );
+          }).join("");
+          // On phones the file lists start folded: six repo totals fit on one screen.
+          if (isNarrow())
+            [].slice.call(box.querySelectorAll("details.repo")).forEach(function (d) {
+              d.open = false;
+            });
+          var rows = [].slice.call(box.querySelectorAll(".frow"));
+          var ta = document.getElementById("tot-add"),
+            tr = document.getElementById("tot-rem"),
+            tf = document.getElementById("tot-files");
+          var first =
+            Math.min.apply(
+              null,
+              rows0.map(function (f) {
+                return f.t;
+              }),
+            ) - 5;
+          var lastT =
+            Math.max.apply(
+              null,
+              rows0.map(function (f) {
+                return f.t;
+              }),
+            ) + 5;
+          function frame(t) {
+            var A = 0,
+              R = 0,
+              seen = {};
+            rows.forEach(function (row) {
+              var f = rows0[+row.dataset.i],
+                on = f.t <= t;
+              row.classList.toggle("off", !on);
+              var bars = row.querySelectorAll("i");
+              bars[0].style.width = (on ? (f.a / MAX) * 100 : 0) + "%";
+              bars[1].style.width = (on ? (f.r / MAX) * 100 : 0) + "%";
+              if (on) {
+                A += f.a;
+                R += f.r;
+                seen[f.child + "/" + f.path.replace(" (retry)", "")] = 1;
+              }
+            });
+            ta.textContent = "+" + A;
+            tr.textContent = "−" + R;
+            tf.textContent = Object.keys(seen).length;
+          }
+          player(document.getElementById("fig-diff"), { from: first, to: lastT, ms: 10000, frame: frame });
+        })();
+
+        // ---------- 5. decisions ----------
+        (function () {
+          var svg = document.getElementById("fix");
+          var STEPS = [
+            {
+              title: "The spec pins a contract and a shared approach",
+              text: "During the grill you agreed on contracts/account.json, with account_id instead of user_id, and on one shared approach for every repo. The coordinator split web into three path-scoped children (setup, app and ui) under a repo coordinator, and ordered mobile after sdk-js.",
+            },
+            {
+              title: "Every plan agrees before any code",
+              text: "Every planner ran first. web’s repo coordinator checked its three plans against each other; then the coordinator checked all eight against the shared approach. At 1:49 they agreed, and the plans-ready gate opened.",
+            },
+            {
+              title: "A question becomes a contract change",
+              text: "The api implementer asked whether user_id should be marked deprecated. The spec already said so, so the coordinator answered, updated account.json and broadcast the change to the four repos that consume it.",
+            },
+            {
+              title: "A baseline test catches a break",
+              text: "Before sdk-python changed anything, a baseline tester wrote three tests for today’s behaviour, passed them on the unchanged code and protected them. The first tester run broke one: existing callers read .user_id. sdk-python went back to implementing, retry 1 of 3, with the findings.",
+            },
+            {
+              title: "The coordinator decides, and logs it",
+              text: "The spec said old callers must keep working, but not how. The coordinator decided: keep user_id as a read-only alias that warns. It logged that as an assumption, which the final summary lists for you to review.",
+            },
+            {
+              title: "Ordering holds, web merges into one branch",
+              text: "mobile waited for sdk-js to be done before implementing. In web, setup went first; app and ui started from it, and each merged into openfleet/account-id as it finished. The repo coordinator ran the full build and tests there: one PR for web.",
+            },
+          ];
+          var stepsEl = document.getElementById("fixsteps"),
+            cap = document.getElementById("fixcap");
+          stepsEl.innerHTML = STEPS.map(function (s, i) {
+            return (
+              '<button class="btn ghost" type="button" data-step="' +
+              i +
+              '" aria-pressed="false" aria-label="Step ' +
+              (i + 1) +
+              ": " +
+              esc(s.title) +
+              '">' +
+              (i + 1) +
+              "</button>"
+            );
+          }).join("");
+          var btns = [].slice.call(stepsEl.querySelectorAll("button"));
+          var cur = STEPS.length - 1;
+          var CONSUMERS = ["sdk-js", "sdk-python", "web", "mobile"];
+          function layout() {
+            var N = isNarrow();
+            if (!N) {
+              var pos = {};
+              REPOS.forEach(function (r, i) {
+                pos[r] = { x: 24 + i * 160, y: 250, w: 148, h: 70 };
+              });
+              return { w: 1000, h: 360, minW: 720, c: { x: 330, y: 24, w: 340, h: 86 }, pos: pos, N: false };
+            }
+            var pos2 = {};
+            REPOS.forEach(function (r, i) {
+              pos2[r] = { x: 16 + (i % 2) * 190, y: 200 + Math.floor(i / 2) * 92, w: 178, h: 70 };
+            });
+            return { w: 400, h: 480, minW: 0, c: { x: 40, y: 20, w: 320, h: 86 }, pos: pos2, N: true };
+          }
+          var L;
+          function build() {
+            L = layout();
+            var h = "";
+            var c = L.c;
+            REPOS.forEach(function (r) {
+              var p = L.pos[r];
+              h +=
+                '<path class="fade link link-' +
+                r +
+                '" d="M' +
+                (c.x + c.w / 2) +
+                " " +
+                (c.y + c.h) +
+                " C" +
+                (c.x + c.w / 2) +
+                " " +
+                (c.y + c.h + 60) +
+                " " +
+                (p.x + p.w / 2) +
+                " " +
+                (p.y - 60) +
+                " " +
+                (p.x + p.w / 2) +
+                " " +
+                p.y +
+                '" fill="none" stroke-width="2"/>';
+            });
+            h +=
+              '<rect x="' +
+              c.x +
+              '" y="' +
+              c.y +
+              '" width="' +
+              c.w +
+              '" height="' +
+              c.h +
+              '" rx="16" class="f-raised s-fg cbox" stroke-width="2"/>';
+            h +=
+              '<text x="' +
+              (c.x + 18) +
+              '" y="' +
+              (c.y + 30) +
+              '" font-size="14" class="t-fg mono-t">contracts/account.json</text>';
+            h +=
+              '<text x="' +
+              (c.x + 18) +
+              '" y="' +
+              (c.y + 56) +
+              '" font-size="14" class="t-fg mono-t ctext">{ "account_id": 42, … }</text>';
+            h +=
+              '<text x="' +
+              (c.x + 18) +
+              '" y="' +
+              (c.y + 76) +
+              '" font-size="12" class="t-muted mono-t fade cdep">user_id: deprecated</text>';
+            REPOS.forEach(function (r) {
+              var p = L.pos[r];
+              h +=
+                '<g class="chipbox" data-r="' +
+                r +
+                '"><rect x="' +
+                p.x +
+                '" y="' +
+                p.y +
+                '" width="' +
+                p.w +
+                '" height="' +
+                p.h +
+                '" rx="14" class="f-raised s-line cb" stroke-width="2"/>';
+              h +=
+                '<text x="' +
+                (p.x + 14) +
+                '" y="' +
+                (p.y + 28) +
+                '" font-size="15" class="t-fg mono-t cn-' +
+                r +
+                '">' +
+                r +
+                (r === "web" ? '<tspan font-size="12" class="t-muted"> · 3 children</tspan>' : "") +
+                "</text>";
+              h +=
+                '<text x="' +
+                (p.x + 14) +
+                '" y="' +
+                (p.y + 52) +
+                '" font-size="12" class="t-muted mono-t cs cs-' +
+                r +
+                '"></text></g>';
+            });
+            var sj = L.pos["sdk-js"],
+              mb = L.pos.mobile;
+            var ord = L.N
+              ? "M" +
+                (sj.x + sj.w / 2) +
+                " " +
+                (sj.y + sj.h) +
+                " C" +
+                (sj.x + sj.w / 2) +
+                " " +
+                (sj.y + sj.h + 120) +
+                " " +
+                (mb.x + mb.w / 2) +
+                " " +
+                (mb.y - 120) +
+                " " +
+                (mb.x + mb.w / 2) +
+                " " +
+                mb.y
+              : "M" +
+                (sj.x + sj.w / 2) +
+                " " +
+                (sj.y + sj.h) +
+                " C" +
+                (sj.x + sj.w / 2) +
+                " " +
+                (sj.y + sj.h + 40) +
+                " " +
+                (mb.x + mb.w / 2) +
+                " " +
+                (mb.y + mb.h + 40) +
+                " " +
+                (mb.x + mb.w / 2) +
+                " " +
+                (mb.y + mb.h);
+            h +=
+              '<path class="fade ord" d="' +
+              ord +
+              '" fill="none" stroke="#A8A6AF" stroke-width="2" stroke-dasharray="6 6" style="opacity:0"/>';
+            setBox(svg, L.w, L.h, L.minW);
+            svg.innerHTML = h;
+            show(cur);
+          }
+          function show(i) {
+            cur = i;
+            btns.forEach(function (b, k) {
+              b.setAttribute("aria-pressed", k === i ? "true" : "false");
+            });
+            cap.innerHTML =
+              "<h3>" + (i + 1) + " · " + esc(STEPS[i].title.toUpperCase()) + "</h3><p>" + esc(STEPS[i].text) + "</p>";
+            var q = function (s) {
+              return svg.querySelector(s);
+            };
+            REPOS.forEach(function (r) {
+              var link = q(".link-" + r);
+              var consumer = CONSUMERS.indexOf(r) >= 0;
+              var lit = i === 0 || i === 1 || (i === 2 && consumer);
+              link.setAttribute("stroke", (i === 2 && consumer) || i === 1 ? "#F4F4F6" : "#45434C");
+              link.style.opacity = lit || i >= 3 ? 1 : 0.4;
+              var box = svg.querySelector('.chipbox[data-r="' + r + '"] .cb');
+              var cs = q(".cs-" + r);
+              var cls = "f-raised s-line cb",
+                status = "";
+              if (i === 0 && r === "mobile") status = "after sdk-js";
+              if (i === 0 && r === "web") status = "setup · app · ui";
+              if (i === 1) {
+                cls = "f-raised s-fg cb";
+                status = r === "web" ? "3 plans agree" : "plan agrees";
+              }
+              if (i === 2 && consumer) {
+                cls = "f-raised s-fg cb";
+                status = "contract updated";
+              }
+              if (i === 2 && r === "api") {
+                cls = "f-raised s-mag cb";
+                status = "asked a question";
+              }
+              if (i === 3 && r === "sdk-python") {
+                cls = "f-warn s-warn cb";
+                status = "baseline test failed";
+              }
+              if (i === 4 && r === "sdk-python") {
+                cls = "f-raised s-fg s-dash cb";
+                status = "assumption";
+              }
+              if (i === 5 && r === "sdk-js") {
+                cls = "f-card s-ink cb";
+                status = "done";
+              }
+              if (i === 5 && r === "mobile") {
+                cls = "f-raised s-fg cb";
+                status = "after sdk-js";
+              }
+              if (i === 5 && r === "web") {
+                cls = "f-card s-ink cb";
+                status = "3 merged · 1 PR";
+              }
+              box.setAttribute("class", cls);
+              cs.textContent = status;
+              var ink = cls.indexOf("f-warn") === 0 || cls.indexOf("f-card") === 0;
+              q(".cn-" + r).setAttribute("class", "mono-t cn-" + r + (ink ? " t-ink" : " t-fg"));
+              cs.setAttribute(
+                "class",
+                "mono-t cs cs-" + r + (ink ? " t-ink" : cls.indexOf("s-dash") > 0 ? " t-fg" : " t-muted"),
+              );
+            });
+            q(".cdep").style.opacity = i >= 2 ? 1 : 0;
+            q(".ord").style.opacity = i === 0 || i === 5 ? 1 : 0;
+          }
+          btns.forEach(function (b, i) {
+            b.addEventListener("click", function () {
+              stopAuto();
+              show(i);
+            });
+          });
+          var timer = 0;
+          var playBtn = document.getElementById("fixplay");
+          function stopAuto() {
+            clearInterval(timer);
+            timer = 0;
+            playBtn.textContent = "▶ PLAY";
+          }
+          playBtn.addEventListener("click", function () {
+            if (timer) {
+              stopAuto();
+              return;
+            }
+            show(0);
+            playBtn.textContent = "❚❚ PAUSE";
+            timer = setInterval(
+              function () {
+                if (cur + 1 >= STEPS.length) {
+                  stopAuto();
+                  return;
+                }
+                show(cur + 1);
+              },
+              reduce ? 4500 : 3000,
+            );
+          });
+          build();
+          onMode(build);
+        })();
+
+        // ---------- 6. tests ----------
+        (function () {
+          var box = document.getElementById("tally");
+          // Cells per child: contract tests, then its own tests, then protected baseline tests.
+          var PY = "sdk-python";
+          var ALIAS = TESTS[PY][1] + TESTS[PY][0] - 1; // the test the retry adds
+          var BROKE = TESTS[PY][1] + TESTS[PY][0]; // test_user_id_read, the first baseline test
+          var kind = function (c, i) {
+            var t = TESTS[c];
+            return i < t[1] ? "contract " : i >= t[0] + t[1] ? "base " : "";
+          };
+          box.innerHTML = CHILDREN.map(function (r) {
+            var n = testsOf(r);
+            return (
+              '<div class="trow"><h3><span class="mono">' +
+              r +
+              '</span><b data-score="' +
+              r +
+              '">' +
+              (r === PY ? "RETRY · " : "") +
+              n +
+              "/" +
+              n +
+              ' PASS</b></h3><div class="cells" data-cells="' +
+              r +
+              '">' +
+              Array.from({ length: n }, function (_, i) {
+                return '<i class="' + kind(r, i) + "on" + (r === PY && i === BROKE ? " retried" : "") + '"></i>';
+              }).join("") +
+              "</div></div>"
+            );
+          }).join("");
+          var timers = [];
+          var total = document.getElementById("tests-total");
+          document.getElementById("runall").addEventListener("click", function () {
+            timers.forEach(clearTimeout);
+            timers = [];
+            var step = reduce ? 0 : 1;
+            var passed = 0;
+            var tick = function () {
+              total.textContent = passed + "/" + TOTAL_TESTS;
+            };
+            CHILDREN.forEach(function (r, ri) {
+              var cells = [].slice.call(box.querySelectorAll('[data-cells="' + r + '"] i'));
+              var score = box.querySelector('[data-score="' + r + '"]');
+              cells.forEach(function (c) {
+                c.classList.remove("on", "bad", "retried");
+              });
+              score.textContent = "";
+              var n = cells.length;
+              var python = r === PY;
+              var seen = 0;
+              cells.forEach(function (c, i) {
+                timers.push(
+                  setTimeout(
+                    function () {
+                      if (python && i === ALIAS) return;
+                      if (python && i === BROKE) {
+                        c.classList.add("bad");
+                        return;
+                      }
+                      c.classList.add("on");
+                      passed++;
+                      seen++;
+                      tick();
+                      score.textContent = seen + "/" + (python ? n - 1 : n);
+                      if (!python && i === n - 1) score.textContent = n + "/" + n + " PASS";
+                      if (python && i === n - 1) {
+                        score.textContent = n - 2 + "/" + (n - 1) + " · 1 FAILING";
+                        score.classList.add("warn");
+                        timers.push(
+                          setTimeout(
+                            function () {
+                              cells[ALIAS].classList.add("on");
+                              cells[BROKE].classList.remove("bad");
+                              cells[BROKE].classList.add("on", "retried");
+                              score.classList.remove("warn");
+                              score.textContent = "RETRY · " + n + "/" + n + " PASS";
+                              passed += 2;
+                              tick();
+                              announce(
+                                "All " +
+                                  TOTAL_TESTS +
+                                  " tests pass. sdk-python broke one baseline test, then passed on retry.",
+                              );
+                            },
+                            reduce ? 2400 : 1400,
+                          ),
+                        );
+                      }
+                    },
+                    step * (ri * 120 + i * 45),
+                  ),
+                );
+              });
+            });
+            tick();
+            announce("Running " + TOTAL_TESTS + " tests across 8 children.");
+          });
+        })();
+      })();
+    </script>
+    <script>
+      (function () {
+        var live = document.getElementById("sr-announce");
+        function say(msg) {
+          live.textContent = "";
+          setTimeout(function () {
+            live.textContent = msg;
+          }, 50);
+        }
+        // Clipboard API first; fall back to a hidden textarea for older or locked-down browsers.
+        function copy(text, label) {
+          function ok() {
+            label.textContent = "COPIED";
+            say("Copied: " + text);
+            clearTimeout(label._t);
+            label._t = setTimeout(function () {
+              label.textContent = "COPY";
+            }, 1800);
+          }
+          function fallback() {
+            var ta = document.createElement("textarea");
+            ta.value = text;
+            ta.setAttribute("readonly", "");
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            var done = false;
+            try {
+              done = document.execCommand("copy");
+            } catch (e) {
+              done = false;
+            }
+            document.body.removeChild(ta);
+            if (done) ok();
+            else say("Copy didn't work here. Select the command and copy it yourself: " + text);
+          }
+          if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(ok, fallback);
+          else fallback();
+        }
+        document.querySelectorAll(".cmd-copy").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            copy(btn.getAttribute("data-copy"), btn);
+          });
+        });
+        var b = document.getElementById("closer-copy");
+        if (b)
+          b.addEventListener("click", function () {
+            copy("npm create @openfleet-tools@latest", document.getElementById("closer-copy-label"));
+          });
+        var mt = document.querySelector(".marquee-toggle");
+        var mq = document.querySelector(".marquee");
+        if (mt && mq)
+          mt.addEventListener("click", function () {
+            var paused = mt.getAttribute("aria-pressed") !== "true";
+            mt.setAttribute("aria-pressed", String(paused));
+            mt.setAttribute("aria-label", paused ? "Play the scrolling banner" : "Pause the scrolling banner");
+            mq.classList.toggle("paused", paused);
+          });
+      })();
+    </script>
+    <script>
+      (function () {
+        var d = document.querySelector(".toc details");
+        if (d && window.matchMedia("(max-width: 719px)").matches) d.open = false;
+      })();
+    </script>
+  </body>
+</html>

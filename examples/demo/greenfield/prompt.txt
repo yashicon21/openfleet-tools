@@ -1,0 +1,1 @@
+Create an invoice and payment tracking website with microservices and a frontend. Users create invoices for customers, record payments against them, and see each invoice's status (open, partly paid, paid). Keep payments behind a mock provider.
