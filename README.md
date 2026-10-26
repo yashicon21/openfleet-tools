@@ -33,7 +33,7 @@ See the [flow diagram](docs/flow.png) for the details.
 
 ## Quick start
 
-Requirements: Node.js 20+, git, a signed-in agent host ([Copilot CLI](https://github.com/github/copilot-cli), or [Claude Code](https://code.claude.com) 2.1.219 or later), and optionally `gh` for draft PRs.
+Requirements: Node.js 22+, git, a signed-in agent host ([Copilot CLI](https://github.com/github/copilot-cli), or [Claude Code](https://code.claude.com) 2.1.219 or later), and optionally `gh` for draft PRs. Runs on macOS and Linux; on Windows, use WSL2 (native Windows is not supported).
 
 ```sh
 mkdir my-fleet && cd my-fleet
