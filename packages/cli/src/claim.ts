@@ -3,12 +3,22 @@
 // role. The claim enforces the workspace-wide `maxParallel` (openfleet.json) and keeps at most
 // one fresh claim per role, so the subagentStart hook attributes the spawn exactly.
 import path from "node:path";
+import { budgetStatus } from "./budget.js";
 import { readConfig } from "./config.js";
 import { appendEvent } from "./events.js";
 import { headSha, tryGit } from "./git.js";
 import { groupOf } from "./groups.js";
+import { haltRun } from "./halt.js";
 import { withLock } from "./lock.js";
-import { isFinal, readState, updateState, type ChildPhase, type ProjectState, type Role } from "./state.js";
+import {
+  isFinal,
+  readState,
+  updateState,
+  type ChildPhase,
+  type HaltReason,
+  type ProjectState,
+  type Role,
+} from "./state.js";
 import { listProjectNames, projectPaths, UserError, type Workspace } from "./workspace.js";
 
 export const ROLES: readonly Role[] = ["planner", "baseline", "implementer", "tester", "repo-coordinator"];
@@ -33,7 +43,9 @@ export type ClaimResult =
       maxParallel: number;
       synced?: string;
     }
-  | { result: "wait"; child: string; role: Role; reason: string; retryAfterSeconds: number };
+  | { result: "wait"; child: string; role: Role; reason: string; retryAfterSeconds: number }
+  /** The run is halted (spending limit, `pause` or `cancel`): spawn nothing more for this project. */
+  | { result: "stop"; child: string; role: Role; reason: HaltReason; detail: string | null };
 
 function fresh(claimedAt: string | undefined, now: number): boolean {
   return !claimedAt || now - Date.parse(claimedAt) < CLAIM_TTL_MS;
@@ -99,12 +111,37 @@ export function claim(ws: Workspace, project: string, childId: string, roleArg: 
         `Only a repo's integration child (the repo key) gets a repo coordinator; "${childId}" is not one.`,
       );
     }
+    const stop = (s: ProjectState): ClaimResult => ({
+      result: "stop",
+      child: childId,
+      role,
+      reason: s.halt!.reason,
+      detail: s.halt!.detail ?? null,
+    });
+    if (state.halt) return stop(state);
     const pf = state.preflight;
     if (pf && (!pf.ok || pf.stale)) {
       throw new UserError(
         `Preflight ${pf.stale ? "has not run since resume" : "failed"} for project ${project}. ` +
           `Run \`npx openfleet preflight ${project}\` and fix any failure before spawning agents.`,
       );
+    }
+    const budget = budgetStatus(ws, p, state);
+    if (budget.over) return stop(haltRun(p, "budget", budget.over, "cli"));
+    if (budget.near && !state.budgetWarned) {
+      updateState(
+        p,
+        (s) => {
+          s.budgetWarned = true;
+        },
+        "cli",
+      );
+      appendEvent(p, {
+        actor: "cli",
+        type: "budget.warning",
+        target: null,
+        payload: { used: budget.near, limits: budget.limits },
+      });
     }
     if ((role === "planner" || role === "baseline") && c.integration) {
       throw new UserError(`Integration child ${childId} has no ${role}.`);

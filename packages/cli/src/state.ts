@@ -45,6 +45,19 @@ export const PORT_BASE = 4100;
 export const PORT_STEP = 10;
 
 /** `main`: greenfield repos only, commit the result on the new repo's `main` (no remote). */
+/** Why a run stopped spawning agents: a spending limit was reached, or the user ran `pause` or `cancel`. */
+export const HALT_REASONS = ["budget", "paused", "cancelled"] as const;
+export type HaltReason = (typeof HALT_REASONS)[number];
+
+export interface Halt {
+  reason: HaltReason;
+  at: string;
+  /** What happened, for example "1.2M of 1M tokens used" or the user's `--reason`. */
+  detail?: string;
+  /** Project status before `cancel`; `resume --reopen` restores it. */
+  from?: ProjectStatus;
+}
+
 export type CompletionMode = "staged" | "draft-pr" | "main";
 
 /**
@@ -173,6 +186,12 @@ export interface ProjectState {
   toolchains?: string[];
   /** Project this one continues (`npx openfleet continue`): its Follow-ups seeded this spec, its repos and stack are reused. */
   continuedFrom?: string;
+  /** Set while the run must not spawn agents (`claim` returns `stop`, `next` returns `halt`); cleared by `resume`. */
+  halt?: Halt;
+  /** Spending limits for this project, over the workspace `budget` (set in the grill). */
+  budget?: { maxTokens?: number; maxCost?: number };
+  /** `budget.warning` was logged (80% of a limit), so it is logged once. */
+  budgetWarned?: boolean;
   /** Last `npx openfleet preflight` result. `stale` is set by `resume`, until preflight runs again. */
   preflight?: { ok: boolean; at: string; stale?: boolean };
 }
