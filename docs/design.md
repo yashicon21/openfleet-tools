@@ -2,8 +2,8 @@
 
 ## Positioning
 
-- Open-source (MIT) framework that coordinates one change across many repos using GitHub Copilot CLI. Claude Code support later.
-- Layers on existing Copilot primitives (custom agents, subagents, hooks, write_agent). Not a new runtime.
+- Open-source (MIT) framework that coordinates one change across many repos (or a new system built from scratch) using GitHub Copilot CLI or Claude Code.
+- Layers on each host's own primitives (custom agents, subagents, hooks, skills; `write_agent` on Copilot, `SendMessage` on Claude Code). Not a new runtime.
 - README contrasts with built-in `/fleet` (cross-repo vs in-session).
 
 ## Terminology

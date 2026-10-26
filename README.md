@@ -5,11 +5,13 @@
   </picture>
 </h1>
 
-Coordinate **one change across many repos** with [GitHub Copilot CLI](https://github.com/github/copilot-cli) or [Claude Code](https://code.claude.com).
+Coordinate **one change across many repos**, or build **a new system from scratch**, with [GitHub Copilot CLI](https://github.com/github/copilot-cli) or [Claude Code](https://code.claude.com).
 
 Website: [openfleet.tools](https://openfleet.tools) · Repository: [github.com/yashicon21/openfleet-tools](https://github.com/yashicon21/openfleet-tools)
 
 You describe the change once. A **coordinator** agent turns it into a spec with you, then runs a **planner → implementer → tester** pipeline for each repo, monorepo package or path-scoped unit (such as one page of an app), in parallel, each in its own git worktree. A repo with several children gets its own **repo coordinator**, which merges them into one integration branch and one PR. Every agent action is recorded in an append-only event log.
+
+No repos yet? Describe the system instead: OpenFleet proposes the services, contracts and stack, creates the repos and builds an MVP slice that one end-to-end test proves (see [Greenfield projects](#greenfield-projects)).
 
 OpenFleet is built from the host's own primitives (custom agents, subagents, hooks, skills). It is not a new agent runtime.
 
@@ -38,13 +40,15 @@ See the [flow diagram](docs/flow.png) for the details.
 
 ## Quick start
 
-Requirements: Node.js 20+, git, a signed-in agent host ([Copilot CLI](https://github.com/github/copilot-cli), or [Claude Code](https://code.claude.com) 2.1.219 or later), and optionally `gh` for draft PRs.
+Requirements: Node.js 22+, git, a signed-in agent host ([Copilot CLI](https://github.com/github/copilot-cli), or [Claude Code](https://code.claude.com) 2.1.219 or later), and optionally `gh` for draft PRs. Runs on macOS and Linux; on Windows, use WSL2 (native Windows is not supported).
 
 ```sh
 mkdir my-fleet && cd my-fleet
 npm create @openfleet-tools@latest   # or: npx @openfleet-tools/create; asks Copilot CLI or Claude Code
 npx openfleet new better-auth "Move every service to better-auth"
 ```
+
+> **Run `npx openfleet` inside your workspace folder** (the one `npm create` set up). There, npx runs the OpenFleet CLI installed in it. Outside it, npx would offer to download a different, unrelated npm package that is also named `openfleet`. To run OpenFleet from anywhere, use the scoped name: `npx @openfleet-tools/cli <command>`.
 
 To try it on a toy example first, run `pnpm demo` from a checkout of this repo. See [examples/demo](examples/demo/README.md).
 
@@ -78,6 +82,19 @@ A repo with more than one child is run by its own **repo coordinator** (`openfle
 When a merge conflicts, it rebases the child onto the integration branch and has that child's implementer resolve the conflict. A question that changes a cross-repo contract or the shared approach is escalated to the top coordinator, and only those children wait. The repo gets one PR, from its integration branch. Single-child repos run directly under the top coordinator.
 
 Every spawn first takes a slot with `npx openfleet claim`. It allows at most `maxParallel` working agents across the workspace (`npx openfleet config set maxParallel <n>`; the grill shows the current value and offers to change it) and keeps attribution exact when several coordinators spawn agents at once.
+
+## What a run takes
+
+Every child runs at least a planner, an implementer and a tester (plus a baseline tester if it has one), and each failed test adds an implementer and a tester again, up to 3 retries and one guided attempt. Agent count, time and tokens grow with the number of children, the retries and the size of each change.
+
+For scale, the run on [openfleet.tools/how-it-works](https://openfleet.tools/how-it-works.html) moved one app to a new component library page by page: 10 children, 83 agent spawns, at most 7 agents at once, 3 retries and about 1.6 hours of active time (6 hours on the clock, including pauses).
+
+Start with a small project to see what your host and models cost, then:
+
+- set a spending limit (`npx openfleet config set budget.maxTokens <n>`, or `budget.maxCost` with `pricing`), so a run halts instead of overspending;
+- lower `maxParallel` on a small machine or a tight plan;
+- pick cheaper models for some roles (see [Models](#models));
+- read `npx openfleet report <name>` afterwards for tokens, cost and the models each role used.
 
 ## Greenfield projects
 
@@ -226,6 +243,17 @@ OpenFleet runs on [GitHub Copilot CLI](https://github.com/github/copilot-cli) an
 - Agents, skills, events, worktrees and extensions work the same way. OpenFleet still manages worktrees (Claude Code's own worktree isolation is not used). Subagents run in the background and report back through completion notifications, and coordinators reply with `SendMessage`.
 - Extensions can limit phases and augments to some hosts with [`hosts`](docs/extensions.md#phase-entries).
 
+## Limitations and known issues
+
+- **Hosts and models:** GitHub Copilot CLI and Claude Code only. Ollama, other providers and local models are not supported in v1. Models per role are workspace-wide and apply from the next `new` or `resume`; whether Copilot honours a model for a subagent depends on Copilot.
+- **Platforms:** macOS and Linux. Windows only through WSL2.
+- **Pull requests:** GitHub only (`gh`). Stacked PRs need the `gh stack` extension and stay within one repo. No GitLab or Bitbucket.
+- **Spending limits** are checked when an agent is about to start, so agents already running can take a run past a limit. There is no per-child limit, and usage is only known when the host transcripts are on the machine that runs OpenFleet.
+- **`pause` and `cancel`** stop new agents at once; agents already running finish their current step first.
+- **Hands-off after the grill:** questions that come up during the run are decided by the coordinator and logged as assumptions, not asked. Review them in `summary.md` and the report.
+- **Greenfield** runs build an MVP slice under fixed caps, need network access for the generators, and need Docker for the end-to-end flow.
+- **Copilot agent prompts** have a size limit; many role-augmenting extensions on one role can be truncated (OpenFleet warns when that happens).
+
 ## Troubleshooting
 
 ### Sandbox
@@ -285,6 +313,8 @@ Extensions are **instruction-only**: a folder with `openfleet.extension.json` an
 See [docs/extensions.md](docs/extensions.md).
 
 ## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to contribute (tests with fake host binaries, changesets, commit style) and [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 
 ```sh
 pnpm install

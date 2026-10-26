@@ -111,6 +111,10 @@ export function main(argv = process.argv.slice(2)): number {
   } catch {
     return 1;
   }
+  // `npx openfleet` only finds this install from inside the workspace folder.
+  if (path.resolve(process.cwd()) !== dir) {
+    process.stdout.write(`\nFirst: cd ${path.relative(process.cwd(), dir) || dir}\n`);
+  }
   return 0;
 }
 

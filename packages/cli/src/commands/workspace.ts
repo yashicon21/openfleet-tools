@@ -171,8 +171,13 @@ export function cmdInit(opts: InitOptions = {}): number {
     for (const line of missing) out(`  ${line}`);
   }
   out("");
-  out("Next:");
+  out("Next, from this folder:");
   out('  npx openfleet new <project-name> "<what you want to change>"');
+  out("");
+  out(
+    "Run `npx openfleet` only inside this folder: elsewhere npx would fetch an unrelated npm package named `openfleet`. " +
+      "From anywhere else, use `npx @openfleet-tools/cli <command>`.",
+  );
   return 0;
 }
 
