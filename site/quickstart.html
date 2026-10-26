@@ -21,7 +21,16 @@
       content="Install OpenFleet in three commands: make a workspace, install it, and describe the change. What you need, how repos.json works, what a run does and which commands to use."
     />
     <meta property="og:url" content="https://openfleet.tools/quickstart.html" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:site_name" content="OpenFleet" />
+    <meta property="og:image" content="https://openfleet.tools/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="OpenFleet: one change, every repo. Agents that plan, build and test one change across many repos, or a new system from scratch."
+    />
+    <meta name="twitter:image" content="https://openfleet.tools/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
     <link
@@ -1257,13 +1266,10 @@
         <section class="col prose" aria-labelledby="new-h">
           <h2 id="new-h"><small>05 · FROM SCRATCH</small>No repos yet? Describe the system</h2>
           <p>
-            Ask for something new, such as
-            <code
-              >npx openfleet new invoices "Create an invoice and payment tracking website with microservices and a
-              frontend"</code
-            >, and the grill builds it from nothing. It proposes the services and their contracts, recommends one
-            monorepo, asks about the stack once (with a recommendation for each answer), and offers a private GitHub
-            repo.
+            Ask for something new with <code>npx openfleet new invoices "…"</code>, for example “create an invoice and
+            payment tracking website with microservices and a frontend”, and the grill builds it from nothing. It
+            proposes the services and their contracts, recommends one monorepo, asks about the stack once (with a
+            recommendation for each answer), and offers a private GitHub repo.
           </p>
           <p>
             A run builds an <strong>MVP slice</strong>: the core flows plus one end-to-end flow that proves them, such
