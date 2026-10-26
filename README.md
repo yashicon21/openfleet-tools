@@ -1,4 +1,9 @@
-# OpenFleet
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo-horizontal-dark.png" />
+    <img src="docs/brand/logo-horizontal-light.png" alt="OpenFleet" height="56" />
+  </picture>
+</h1>
 
 Coordinate **one change across many repos** with [GitHub Copilot CLI](https://github.com/github/copilot-cli) or [Claude Code](https://code.claude.com).
 
