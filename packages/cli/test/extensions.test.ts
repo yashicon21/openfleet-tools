@@ -23,7 +23,7 @@ import {
 import { writeJson } from "../src/fsutil.js";
 import { gitRepo, publishFixture, sh, tmpDir, workspace, writeExtension } from "./helpers.js";
 
-const base = { manifest: 2, version: "1.0.0", core: ">=0.0.0 <1.0.0" };
+const base = { manifest: 2, version: "1.0.0", core: ">=0.0.0" };
 const phase = (slot: string, extra: Record<string, unknown> = {}) => ({
   phases: [{ slot, instructions: "instructions.md", ...extra }],
 });

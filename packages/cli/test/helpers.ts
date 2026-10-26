@@ -80,7 +80,7 @@ export function publishFixture(dir: string, overrides: Record<string, unknown> =
       manifest: 2,
       name: "publish",
       version: "1.0.0",
-      core: ">=0.0.0 <1.0.0",
+      core: ">=0.0.0",
       description: "Publish a preview build after tests pass",
       permissions: ["shell"],
       phases: [

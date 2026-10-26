@@ -637,7 +637,7 @@ describe("openfleet CLI", () => {
       manifest: 2,
       name: "gate",
       version: "1.0.0",
-      core: ">=0.0.0 <1.0.0",
+      core: ">=0.0.0",
       description: "Gate checks",
       phases: [
         { slot: "plans-ready", instructions: "a.md", blocking: true },
@@ -660,7 +660,7 @@ describe("openfleet CLI", () => {
       manifest: 2,
       name: "bad",
       version: "1.0.0",
-      core: ">=0.0.0 <1.0.0",
+      core: ">=0.0.0",
       description: "Bad",
       phases: [{ slot: "post-run", instructions: "a.md", blocking: true }],
     });

@@ -18,7 +18,7 @@ my-extension/
   "name": "publish",
   "version": "1.0.0",
   "description": "Publish a preview build after tests pass",
-  "core": ">=0.2.0 <1.0.0",
+  "core": "^1.0.0",
   "permissions": ["shell"],
   "phases": [
     {
