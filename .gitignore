@@ -5,6 +5,6 @@ dist/
 coverage/
 
 # Private design context (kept locally, not published)
-PRODUCT.md
-DESIGN.md
+/PRODUCT.md
+/DESIGN.md
 .impeccable/
