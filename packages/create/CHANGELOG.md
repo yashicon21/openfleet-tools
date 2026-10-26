@@ -1,5 +1,30 @@
 # @openfleet-tools/create
 
+## 1.0.0
+
+### Major Changes
+
+- [#5](https://github.com/yashicon21/openfleet-tools/pull/5) [`26144fc`](https://github.com/yashicon21/openfleet-tools/commit/26144fc2dc78277762f4c7bed9ec176aece3af3e) Thanks [@yashicon21](https://github.com/yashicon21)! - Node.js 22 or later is now required (Node 20 reached end of life in April 2026), and the supported platforms are documented: macOS and Linux, and Windows through WSL2 (native Windows is not supported). CI tests Linux and macOS on Node 22 and 24.
+
+- [#7](https://github.com/yashicon21/openfleet-tools/pull/7) [`4347049`](https://github.com/yashicon21/openfleet-tools/commit/434704900e5c62ce6cf34c335892c4681948c5fc) Thanks [@yashicon21](https://github.com/yashicon21)! - **OpenFleet 1.0.** One coordinator agent drives a change across many repos, monorepo packages or parts of an app, on GitHub Copilot CLI or Claude Code. It interviews you once, writes a spec, plans every part at once, checks that the plans agree, then runs a planner → implementer → tester pipeline per part in its own git worktree, hands-off, and ends with staged changes, draft PRs or GitHub stacked PRs, a run summary and an HTML report.
+  
+  What 1.0 covers:
+  
+  - **Changes to existing repos:** repos, monorepo packages and path-scoped units (such as one page of an app), with repo coordinators that merge a repo's parts into one integration branch, contract tests over shared fixtures, optional baseline tests, retries with one guided attempt, and assumptions logged instead of questions mid-run.
+  - **New systems from scratch (greenfield):** the grill proposes services, contracts, a monorepo and the stack, cuts the request to an MVP slice with one end-to-end flow, and OpenFleet creates the repos and builds setup → contracts → services and frontend → system. `npx openfleet continue` builds the next slice from the Follow-ups.
+  - **Control and cost:** spending limits (`budget.maxTokens`, `budget.maxCost`), `pause` and `cancel`, a model per agent role (`models.<host>.<role>`), and a run report with tokens, cost and the models each role used.
+  - **Stable workspaces:** schema checks on every workspace file, and `npx openfleet update` migrates them, so a 1.x workspace keeps working across upgrades.
+  
+  Breaking changes since 0.8: Node.js 22 or later is required, and native Windows is not supported (use WSL2).
+
+### Patch Changes
+
+- [#6](https://github.com/yashicon21/openfleet-tools/pull/6) [`3a66c0d`](https://github.com/yashicon21/openfleet-tools/commit/3a66c0dcad2c2b75b4f1eb88ae6f95f312297c60) Thanks [@yashicon21](https://github.com/yashicon21)! - Warn that `npx openfleet` must run inside the workspace folder: elsewhere npx would fetch an unrelated npm package that is also named `openfleet`. `init` says so after setup, `npm create @openfleet-tools <dir>` prints the `cd` to run first, and the README and site show `npx @openfleet-tools/cli <command>` for running OpenFleet from anywhere.
+
+- [#8](https://github.com/yashicon21/openfleet-tools/pull/8) [`3bfb11a`](https://github.com/yashicon21/openfleet-tools/commit/3bfb11aa25b72b580ec667e4e67ab547761743da) Thanks [@yashicon21](https://github.com/yashicon21)! - Package descriptions and npm keywords mention Claude Code next to GitHub Copilot CLI; `@openfleet-tools/create` gets keywords.
+
+- [#13](https://github.com/yashicon21/openfleet-tools/pull/13) [`c626f1f`](https://github.com/yashicon21/openfleet-tools/commit/c626f1fcb4a1079b1a20dc8b1cdc5523e5b6dacb) Thanks [@yashicon21](https://github.com/yashicon21)! - Both packages now ship the MIT `LICENSE` file.
+
 ## 0.8.0
 
 No changes in this release.
