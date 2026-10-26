@@ -5,7 +5,7 @@ Thanks for helping. Bug reports, docs fixes, extensions and code are all welcome
 ## Before you start
 
 - **Bugs and features:** open an issue with the matching template first, so we can agree on the change before you write it. Small fixes (typos, broken links) can go straight to a PR.
-- **Questions:** open an issue labelled `question`.
+- **Questions and ideas:** use [Discussions](https://github.com/yashicon21/openfleet-tools/discussions), so issues stay for bugs and agreed features.
 - **Security issues:** never in a public issue. See [SECURITY.md](SECURITY.md).
 
 ## Setup
