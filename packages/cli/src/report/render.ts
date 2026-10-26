@@ -462,6 +462,50 @@ function usageRow(label: string, u: Usage, cost?: number, showCost = false): str
   return `<tr><td>${esc(label)}</td><td class="n">${num(u.calls)}</td><td class="n">${num(u.output)}</td><td class="n">${num(u.input)}</td><td class="n">${num(writes)}</td><td class="n">${num(u.cacheRead)}</td><td class="n">${num(totalTokens(u))}</td>${showCost ? `<td class="n">${cost === undefined ? "no price" : usd(cost)}</td>` : ""}</tr>`;
 }
 
+const HALT_LABEL: Record<string, string> = {
+  budget: "spending limit reached",
+  paused: "paused",
+  cancelled: "cancelled",
+};
+
+/** Spending limits against usage, and the run's halts, resumes and budget warnings. */
+function limitsHtml(m: ReportModel): string {
+  const parts: string[] = [];
+  const b = m.budget;
+  if (b && (b.maxTokens !== undefined || b.maxCost !== undefined)) {
+    const used = m.tokens ? totalTokens(m.tokens.total) : undefined;
+    const cost = m.tokens?.cost?.total;
+    const pct = (v: number, max: number) => `${Math.round((v / max) * 100)}%`;
+    const rows: string[] = [];
+    if (b.maxTokens !== undefined) {
+      rows.push(
+        `<tr><td>Tokens</td><td class="n">${used === undefined ? "unknown" : fmtTokens(used)}</td><td class="n">${fmtTokens(b.maxTokens)}</td><td class="n">${used === undefined ? "" : pct(used, b.maxTokens)}</td></tr>`,
+      );
+    }
+    if (b.maxCost !== undefined) {
+      rows.push(
+        `<tr><td>Cost</td><td class="n">${cost === undefined ? "unknown" : usd(cost)}</td><td class="n">${usd(b.maxCost)}</td><td class="n">${cost === undefined ? "" : pct(cost, b.maxCost)}</td></tr>`,
+      );
+    }
+    parts.push(
+      `<h3>Spending limits</h3><div class="card tbl"><table><thead><tr><th></th><th class="n">Used</th><th class="n">Limit</th><th class="n">Share</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>`,
+    );
+  }
+  if (m.halts.length) {
+    const what = (h: ReportModel["halts"][number]) =>
+      h.type === "budget.warning"
+        ? "Spending warning (80% of a limit)"
+        : h.type === "run.halted"
+          ? `Halted: ${HALT_LABEL[h.reason] ?? h.reason}`
+          : `Resumed after ${HALT_LABEL[h.reason] ?? h.reason}`;
+    const items = m.halts.map(
+      (h) => `<li><span class="mono">${clock(h.ts)}</span> ${esc(what(h))}${h.detail ? `: ${esc(h.detail)}` : ""}</li>`,
+    );
+    parts.push(`<h3>Halts and warnings</h3><ul>${items.join("")}</ul>`);
+  }
+  return parts.join("");
+}
+
 function tokensSection(m: ReportModel): Section {
   const t = m.tokens;
   if (!t) {
@@ -471,7 +515,7 @@ function tokensSection(m: ReportModel): Section {
       eyebrow: "Tokens and cost",
       title: "Token usage: not available.",
       lead: `No ${m.host === "claude" ? "Claude Code" : "Copilot CLI"} transcripts for this run's sessions were found on this machine.`,
-      body: "",
+      body: limitsHtml(m),
     };
   }
   const showCost = t.cost !== undefined;
@@ -506,7 +550,7 @@ function tokensSection(m: ReportModel): Section {
       ? `${fmtTokens(totalTokens(t.total))} tokens, about ${usd(t.cost!.total)}.`
       : `${fmtTokens(totalTokens(t.total))} tokens across ${plural(t.total.calls, "API call")}.`,
     lead: notes.join(" "),
-    body: `<h3>By role</h3><div class="card tbl"><table>${head}<tbody>${byRole}${total}</tbody></table></div><h3>By model</h3><div class="card tbl"><table>${head}<tbody>${byModel}</tbody></table></div>`,
+    body: `<h3>By role</h3><div class="card tbl"><table>${head}<tbody>${byRole}${total}</tbody></table></div><h3>By model</h3><div class="card tbl"><table>${head}<tbody>${byModel}</tbody></table></div>${limitsHtml(m)}`,
   };
 }
 
@@ -563,7 +607,7 @@ function topSection(m: ReportModel): string {
   if (m.tokens) k.push(kpi(fmtTokens(totalTokens(m.tokens.total)), "tokens", "c"));
   if (m.tokens?.cost) k.push(kpi(usd(m.tokens.cost.total), "cost", "c"));
   const meta = [
-    m.status,
+    m.halt ? `${m.status}, halted (${HALT_LABEL[m.halt.reason] ?? m.halt.reason})` : m.status,
     m.host === "claude" ? "Claude Code" : "Copilot CLI",
     m.origin,
     m.completionMode,

@@ -49,6 +49,9 @@ export const EVENT_TYPES = [
   "repo.created",
   "project.continued",
   "stack.created",
+  "run.halted",
+  "run.resumed",
+  "budget.warning",
 ] as const;
 
 export type KnownEventType = (typeof EVENT_TYPES)[number];

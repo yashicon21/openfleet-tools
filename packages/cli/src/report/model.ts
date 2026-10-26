@@ -1,12 +1,12 @@
 // The data behind `openfleet report`, derived from events.jsonl, state.json, spec.md, summary.md,
 // git (when a child has no snapshot) and host transcripts.
 import fs from "node:fs";
-import { readConfig } from "../config.js";
+import { readConfig, type BudgetLimits } from "../config.js";
 import { readEvents, type OpenFleetEvent } from "../events.js";
 import { tryGit } from "../git.js";
 import { isDir } from "../fsutil.js";
 import { DEFAULT_HOST, type Host } from "../hosts.js";
-import { readState, type ChildState, type ProjectState } from "../state.js";
+import { readState, type ChildState, type ProjectState, type Halt } from "../state.js";
 import { projectPaths, type Workspace } from "../workspace.js";
 import { specAsk, summarySections, type SummaryKey } from "./markdown.js";
 import {
@@ -95,6 +95,12 @@ export interface ReportModel {
   questions: { asked: number; escalated: number };
   summary: Partial<Record<SummaryKey, string>>;
   tokens?: TokenReport;
+  /** Spending limits in force (workspace `budget` with the project's override). */
+  budget?: Partial<BudgetLimits>;
+  /** The run's halt, if it is halted now. */
+  halt?: Halt;
+  /** Halts, resumes and budget warnings, in order. */
+  halts: HaltEntry[];
   eventCount: number;
   inProgress: boolean;
 }
@@ -143,7 +149,8 @@ function gitDiff(c: ChildState): ChildReport["diff"] {
   };
 }
 
-function sessionIds(events: OpenFleetEvent[], state: ProjectState): string[] {
+/** Every host session id the run used (replaced and fresh sessions included). */
+export function sessionIds(events: OpenFleetEvent[], state: ProjectState): string[] {
   const ids: string[] = [];
   for (const e of events) {
     for (const key of ["sessionId", "previous"]) {
@@ -174,8 +181,16 @@ export function buildModel(ws: Workspace, name: string, opts: ReportOptions = {}
     spec: readText(p.spec),
     summary: readText(`${p.dir}/summary.md`),
     tokens,
+    budget: { ...readConfig(ws).budget, ...state.budget },
     opts,
   });
+}
+
+export interface HaltEntry {
+  ts: number;
+  type: "run.halted" | "run.resumed" | "budget.warning";
+  reason: string;
+  detail: string;
 }
 
 export interface ModelInput {
@@ -185,6 +200,7 @@ export interface ModelInput {
   spec: string;
   summary: string;
   tokens?: TokenReport;
+  budget?: Partial<BudgetLimits>;
   opts?: ReportOptions;
 }
 
@@ -326,6 +342,16 @@ export function deriveModel(input: ModelInput): ReportModel {
     status: state.status,
     host: state.host ?? DEFAULT_HOST,
     completionMode: state.completionMode,
+    ...(input.budget && Object.keys(input.budget).length ? { budget: input.budget } : {}),
+    ...(state.halt ? { halt: state.halt } : {}),
+    halts: events
+      .filter((e) => e.type === "run.halted" || e.type === "run.resumed" || e.type === "budget.warning")
+      .map((e) => ({
+        ts: Date.parse(e.ts),
+        type: e.type as HaltEntry["type"],
+        reason: str(e.payload.reason),
+        detail: str(e.payload.detail ?? e.payload.used),
+      })),
     ...(state.continuedFrom
       ? { origin: `continues ${state.continuedFrom}` }
       : state.greenfield

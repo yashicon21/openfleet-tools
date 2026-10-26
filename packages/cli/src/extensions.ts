@@ -6,6 +6,7 @@ import path from "node:path";
 import semver from "semver";
 import { copyDir, isDir, isFile, isInside, readJson, readJsonOr, writeJson } from "./fsutil.js";
 import { headSha, isGitRepo } from "./git.js";
+import { checkSchema } from "./migrate.js";
 import { UserError, type Workspace } from "./workspace.js";
 import { HOSTS, isHost, type Host } from "./hosts.js";
 
@@ -141,7 +142,9 @@ export function emptyLock(): LockFile {
 }
 
 export function readLock(ws: Workspace): LockFile {
-  return readJsonOr<LockFile>(ws.lockFile, emptyLock());
+  const lock = readJsonOr<LockFile>(ws.lockFile, emptyLock());
+  checkSchema("lock", ws.lockFile, lock);
+  return lock;
 }
 
 export function writeLock(ws: Workspace, lock: LockFile): void {

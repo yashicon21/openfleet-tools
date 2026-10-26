@@ -17,6 +17,8 @@ export interface WorkspaceConfig {
   pricing?: Pricing;
   /** Scope caps for greenfield projects, checked before the spec is approved (`config set greenfield.<key> <n>`). */
   greenfield?: Partial<GreenfieldLimits>;
+  /** Spending limits for every run (`config set budget.<key> <n>`); a project can override them. */
+  budget?: Partial<BudgetLimits>;
 }
 
 /** USD per million tokens. Cache writes: `cacheWrite5m`/`cacheWrite1h` where the host tells them apart, else `cacheWrite`. */
@@ -33,8 +35,16 @@ export type Pricing = Record<string, ModelPrice>;
 export const DEFAULT_MAX_PARALLEL = 6;
 export const DEFAULT_CONFIG: WorkspaceConfig = { maxParallel: DEFAULT_MAX_PARALLEL, host: DEFAULT_HOST };
 const KEYS = Object.keys(DEFAULT_CONFIG) as (keyof WorkspaceConfig)[];
-/** Settings with no default: `pricing` is set by editing openfleet.json, `greenfield` with `config set greenfield.<key>`. */
-const OPTIONAL_KEYS = ["pricing", "greenfield"];
+/** Settings with no default: `pricing` is set by editing openfleet.json, `greenfield` and `budget` with `config set <group>.<key>`. */
+const OPTIONAL_KEYS = ["pricing", "greenfield", "budget"];
+
+export interface BudgetLimits {
+  /** Tokens (input, output and cache) the run may use in total, read from the host transcripts. */
+  maxTokens: number;
+  /** USD the run may cost, priced with `pricing`. */
+  maxCost: number;
+}
+export const BUDGET_KEYS: (keyof BudgetLimits)[] = ["maxTokens", "maxCost"];
 const PRICE_FIELDS = ["input", "output", "cacheRead", "cacheWrite", "cacheWrite5m", "cacheWrite1h"];
 const REQUIRED_PRICE_FIELDS = ["input", "output", "cacheRead"];
 
@@ -99,6 +109,25 @@ export function parseGreenfield(value: unknown): Partial<GreenfieldLimits> {
   return out;
 }
 
+export function parseBudget(value: unknown): Partial<BudgetLimits> {
+  if (!isPlainObject(value)) throw new UserError("budget must be an object of limits.");
+  const out: Partial<BudgetLimits> = {};
+  for (const [k, v] of Object.entries(value)) {
+    if (!(BUDGET_KEYS as string[]).includes(k)) {
+      throw new UserError(`Unknown budget setting "${k}". Known: ${BUDGET_KEYS.join(", ")}.`);
+    }
+    const n = typeof v === "string" && /^\d+(\.\d+)?$/.test(v.trim()) ? Number(v) : v;
+    const ok = typeof n === "number" && Number.isFinite(n) && n > 0 && (k === "maxCost" || Number.isInteger(n));
+    if (!ok) {
+      throw new UserError(
+        `budget.${k} must be a positive ${k === "maxCost" ? "number (USD)" : "integer"} (got ${JSON.stringify(v)}).`,
+      );
+    }
+    out[k as keyof BudgetLimits] = n;
+  }
+  return out;
+}
+
 /** Effective greenfield caps: openfleet.json `greenfield` over the defaults. */
 export function greenfieldLimits(config: WorkspaceConfig): GreenfieldLimits {
   return { ...DEFAULT_GREENFIELD_LIMITS, ...config.greenfield };
@@ -109,6 +138,7 @@ const PARSERS: { [K in keyof WorkspaceConfig]-?: (value: unknown) => WorkspaceCo
   host: parseHost,
   pricing: parsePricing,
   greenfield: parseGreenfield,
+  budget: parseBudget,
 };
 
 function validate(raw: unknown, file: string): Partial<WorkspaceConfig> {
@@ -127,7 +157,7 @@ function validate(raw: unknown, file: string): Partial<WorkspaceConfig> {
     try {
       out[key] = PARSERS[key](raw[key]);
     } catch (err) {
-      if (err instanceof UserError && (key === "pricing" || key === "greenfield"))
+      if (err instanceof UserError && (key === "pricing" || key === "greenfield" || key === "budget"))
         throw new UserError(`${file}: ${err.message}`);
       throw err;
     }
@@ -144,12 +174,13 @@ export function readConfig(ws: Workspace): WorkspaceConfig {
 
 /** Validate and write one key under a workspace lock. Returns the new effective config. */
 export function setConfig(ws: Workspace, key: string, value: string): WorkspaceConfig {
-  if (key.startsWith("greenfield.")) {
-    const sub = key.slice("greenfield.".length);
-    const parsed = parseGreenfield({ [sub]: value });
+  const group = (["greenfield", "budget"] as const).find((g) => key.startsWith(`${g}.`));
+  if (group) {
+    const sub = key.slice(group.length + 1);
+    const parsed = PARSERS[group]({ [sub]: value });
     const next = updateMarker(ws, (current) => ({
       ...current,
-      greenfield: { ...(isPlainObject(current.greenfield) ? current.greenfield : {}), ...parsed },
+      [group]: { ...(isPlainObject(current[group]) ? current[group] : {}), ...parsed },
     }));
     return { ...DEFAULT_CONFIG, ...validate(next, configFile(ws)) };
   }
@@ -157,7 +188,9 @@ export function setConfig(ws: Workspace, key: string, value: string): WorkspaceC
     throw new UserError(
       key === "greenfield"
         ? `Set one greenfield limit at a time: npx openfleet config set greenfield.<${GREENFIELD_LIMIT_KEYS.join("|")}> <n>`
-        : `Set "${key}" by editing ${configFile(ws)} (see the CLI README).`,
+        : key === "budget"
+          ? `Set one budget limit at a time: npx openfleet config set budget.<${BUDGET_KEYS.join("|")}> <n>`
+          : `Set "${key}" by editing ${configFile(ws)} (see the CLI README).`,
     );
   }
   if (!(KEYS as string[]).includes(key)) {

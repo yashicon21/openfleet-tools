@@ -3,7 +3,9 @@ import fs from "node:fs";
 import { appendEvent, readEvents } from "../events.js";
 import { deleteBranch, removeWorktree, tryGit } from "../git.js";
 import { syncExtensions } from "../core.js";
+import { budgetStatus } from "../budget.js";
 import { groupOf, membersOf } from "../groups.js";
+import { clearHalt, HALT_HINT, haltRun } from "../halt.js";
 import { parseHost, readConfig } from "../config.js";
 import { DEFAULT_HOST, HOST_LABEL, type Host } from "../hosts.js";
 import { launch, sessionExists } from "../launcher.js";
@@ -119,13 +121,30 @@ export function resumeHost(ws: Workspace, state: ProjectState, flag?: string): H
 export function cmdResume(
   args: string[],
   passthrough: string[],
-  opts: { fresh?: boolean; ask?: boolean; host?: string } = {},
+  opts: { fresh?: boolean; ask?: boolean; host?: string; reopen?: boolean } = {},
 ): number {
   const ws = requireWorkspace();
   const name = validateProjectName(args[0]);
   const p = projectPaths(ws, name);
   let state = readState(p);
+  if (state.status === "cancelled" && !opts.reopen) {
+    throw new UserError(
+      `Project "${name}" was cancelled${state.halt?.detail ? ` (${state.halt.detail})` : ""}. ` +
+        `Resume it anyway with \`npx openfleet resume ${name} --reopen\`, or start a new project.`,
+    );
+  }
   const host = resumeHost(ws, state, opts.host);
+  const halted = state.halt;
+  if (halted) state = clearHalt(p);
+  if (halted?.reason === "budget") {
+    const budget = budgetStatus(ws, p, state);
+    if (budget.over) {
+      warn(
+        `${budget.over}: the spending limit is still reached, so the run halts again at the next spawn. ` +
+          "Raise it first with `npx openfleet config set budget.<maxTokens|maxCost> <n>`.",
+      );
+    }
+  }
   syncExtensions(ws, warn);
   const previous = state.sessionId;
   const missing = !opts.fresh && previous !== undefined && sessionExists(host, previous) === false;
@@ -168,6 +187,9 @@ export function cmdResume(
     prompt: [
       `Resume OpenFleet project \`${name}\`. Read projects/${name}/state.json and continue from where it left off.`,
       `First run \`npx openfleet preflight ${name}\`; spawn nothing until it passes.`,
+      halted
+        ? `The run was halted (${halted.reason}${halted.detail ? `: ${halted.detail}` : ""}) and is resumed now; continue it.`
+        : "",
       repoCoordinators.length
         ? `Start the repo coordinators again (\`npx openfleet next ${name}\` lists them): ${repoCoordinators.join(", ")}.`
         : "",
@@ -282,6 +304,37 @@ export function cmdContinue(
   });
 }
 
+/**
+ * `npx openfleet pause <name>` / `cancel <name>`: halt a run from outside its host session. The
+ * coordinators see it at their next `claim` or `next`, spawn nothing more and end once their
+ * running agents have finished. Worktrees and branches are kept. `cancel` also sets the
+ * project `cancelled`, so it no longer counts as active.
+ */
+export function cmdHalt(kind: "paused" | "cancelled", args: string[], opts: { reason?: string } = {}): number {
+  const ws = requireWorkspace();
+  const name = validateProjectName(args[0]);
+  const p = projectPaths(ws, name);
+  const state = readState(p);
+  if (state.status === "done" || state.status === "cancelled") {
+    throw new UserError(`Project "${name}" is already ${state.status}.`);
+  }
+  if (kind === "paused" && state.halt) {
+    throw new UserError(`Project "${name}" is already halted (${state.halt.reason}).`);
+  }
+  const next = haltRun(p, kind, opts.reason, "user", (s) => {
+    if (kind === "cancelled") s.status = "cancelled";
+  });
+  const running = Object.entries(next.children)
+    .filter(([, c]) => ["planning", "baseline", "implementing", "testing"].includes(c.phase))
+    .map(([id]) => id);
+  out(
+    `${kind === "paused" ? "Paused" : "Cancelled"} project ${name}. Nothing new will be spawned` +
+      (running.length ? `; agents still running for ${running.join(", ")} finish their current step.` : "."),
+  );
+  out(HALT_HINT[kind].replace(/<name>/g, name));
+  return 0;
+}
+
 function pad(s: string, n: number): string {
   return s.length >= n ? s : s + " ".repeat(n - s.length);
 }
@@ -331,6 +384,20 @@ export function cmdStatus(args: string[], opts: { json?: boolean } = {}): number
     return 0;
   }
   out(`Project ${name}: ${s.status}${s.completionMode ? ` (completion: ${s.completionMode})` : ""}`);
+  if (s.halt) {
+    out(`Halted (${s.halt.reason})${s.halt.detail ? `: ${s.halt.detail}` : ""}.`);
+    out(HALT_HINT[s.halt.reason].replace(/<name>/g, name));
+  }
+  const budget = budgetStatus(ws, p, s);
+  if (budget.limits.maxTokens !== undefined || budget.limits.maxCost !== undefined) {
+    const parts = [
+      budget.limits.maxTokens !== undefined ? `${budget.tokens} of ${budget.limits.maxTokens} tokens` : "",
+      budget.limits.maxCost !== undefined
+        ? `${budget.cost !== undefined ? `$${budget.cost.toFixed(2)}` : "cost unknown (no pricing)"} of $${budget.limits.maxCost}`
+        : "",
+    ].filter(Boolean);
+    out(`Budget: ${parts.join(", ")}.`);
+  }
   const children = Object.entries(s.children);
   if (children.length) {
     out("");

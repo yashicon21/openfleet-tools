@@ -3,7 +3,7 @@
 // run by a repo coordinator, which merges them into an integration branch.
 // `npx openfleet next` prints this.
 import { groupOf, isSetup, membersOf } from "./groups.js";
-import { activeChildren, isEscalated, isFinal, type ChildPhase, type ProjectState } from "./state.js";
+import { activeChildren, isEscalated, isFinal, type ChildPhase, type HaltReason, type ProjectState } from "./state.js";
 
 /** `top` for the top coordinator, otherwise the repo key of the repo coordinator that acts on it. */
 export type Owner = string;
@@ -22,6 +22,7 @@ export type Action = { owner: Owner } & (
   | { action: "block"; child: string; dependency: string }
   | { action: "finalize" }
   | { action: "preflight"; reason: "failed" | "stale" }
+  | { action: "halt"; reason: HaltReason; detail: string | null }
 );
 
 export interface Waiting {
@@ -53,6 +54,12 @@ export function nextMerge(state: ProjectState, repo: string): string | undefined
 
 /** What the coordinators should do next. Only meaningful while the project is `running`. */
 export function schedule(state: ProjectState): Schedule {
+  if (state.halt) {
+    // Halted (spending limit, `pause` or `cancel`): spawn nothing; let running agents finish, then stop.
+    const gate: GateState = state.plansReady ? "open" : "planning";
+    const halt = { action: "halt" as const, reason: state.halt.reason, detail: state.halt.detail ?? null };
+    return { gate, actions: [{ owner: TOP, ...halt }], waiting: [] };
+  }
   const pf = state.preflight;
   if (pf && (!pf.ok || pf.stale)) {
     // Nothing may spawn until git can write in every repo (see `npx openfleet preflight`).
@@ -195,7 +202,8 @@ export function schedule(state: ProjectState): Schedule {
 /** The part of the schedule one coordinator acts on: `top`, or a repo key for a repo coordinator. */
 export function scheduleFor(state: ProjectState, owner: Owner = TOP): Schedule & { delegated?: Action[] } {
   const s = schedule(state);
-  const mine = s.actions.filter((a) => a.owner === owner);
+  // Every coordinator sees a halt, not only the top one.
+  const mine = s.actions.filter((a) => a.owner === owner || a.action === "halt");
   if (owner !== TOP) return { gate: s.gate, actions: mine, waiting: s.waiting.filter((w) => w.owner === owner) };
   return { ...s, actions: mine, delegated: s.actions.filter((a) => a.owner !== TOP) };
 }

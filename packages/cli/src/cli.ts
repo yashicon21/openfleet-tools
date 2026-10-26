@@ -9,7 +9,7 @@ import { cmdRepo } from "./commands/repos.js";
 import { cmdReport } from "./commands/report.js";
 import { cmdStack } from "./commands/stack.js";
 import { cmdBaseline, cmdGate, cmdNext, cmdPreflight } from "./commands/run.js";
-import { cmdClean, cmdContinue, cmdList, cmdNew, cmdResume, cmdStatus } from "./commands/project.js";
+import { cmdClean, cmdContinue, cmdHalt, cmdList, cmdNew, cmdResume, cmdStatus } from "./commands/project.js";
 import { cmdConfig, cmdInit, cmdUpdate } from "./commands/workspace.js";
 import { hintFor } from "./sandbox.js";
 import { UserError } from "./workspace.js";
@@ -28,14 +28,20 @@ Workspace
                                baseline testers, implementers and testers running at once, across all projects;
                                host (copilot | claude, default copilot) picks the agent host for new projects;
                                greenfield.maxServices (default 5), greenfield.maxChildren (12) and
-                               greenfield.maxCriteriaPerChild (8) cap a greenfield spec before it can be approved
+                               greenfield.maxCriteriaPerChild (8) cap a greenfield spec before it can be approved;
+                               budget.maxTokens and budget.maxCost (USD, needs pricing) halt a run that reaches them
 
 Projects
   new <name> ["<request>"] [--ask] [--host copilot|claude]
                                Create a project and launch the coordinator (--host overrides config host)
-  resume <name> [--fresh] [--ask] [--host <host>]
+  resume <name> [--fresh] [--ask] [--host <host>] [--reopen]
                                Continue a project in its host session (--fresh starts a new one).
-                               A project keeps the host it was created with
+                               A project keeps the host it was created with. Clears a halt (pause, spending
+                               limit); a cancelled project needs --reopen
+  pause <name> [--reason <text>]
+                               Stop spawning agents; running ones finish their step. resume continues
+  cancel <name> [--reason <text>]
+                               Stop the run for good (status cancelled); worktrees and branches are kept
   continue <project> [name] [--ask] [--host <host>]
                                Start the next slice of a finished greenfield project (default name <project>-2):
                                its spec draft holds the previous Follow-ups, Layout and Stack; repos are reused
@@ -142,12 +148,23 @@ export function run(argv: string[]): number {
         fresh: { type: "boolean" },
         ask: { type: "boolean" },
         host: { type: "string" },
+        reopen: { type: "boolean" },
       });
-      return cmdResume(positionals, passthrough, { fresh: values.fresh, ask: values.ask, host: values.host });
+      return cmdResume(positionals, passthrough, {
+        fresh: values.fresh,
+        ask: values.ask,
+        host: values.host,
+        reopen: values.reopen,
+      });
     }
     case "continue": {
       const { values, positionals } = parse(rest, { ask: { type: "boolean" }, host: { type: "string" } });
       return cmdContinue(positionals, passthrough, { ask: values.ask, host: values.host });
+    }
+    case "pause":
+    case "cancel": {
+      const { values, positionals } = parse(rest, { reason: { type: "string" } });
+      return cmdHalt(command === "pause" ? "paused" : "cancelled", positionals, values);
     }
     case "status": {
       const { values, positionals } = parse(rest, { json: { type: "boolean" } });

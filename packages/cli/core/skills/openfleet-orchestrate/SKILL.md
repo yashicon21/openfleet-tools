@@ -66,6 +66,7 @@ Every action has an `owner`: `top` (you) or a repo key. `next <project>` returns
 | `{"action":"block","child":id,"dependency":d}` | A dependency failed: patch the child `{"phase":"blocked","notes":"dependency <d> failed"}`. |
 | `{"action":"finalize"}`                        | Every child is finished: go to section 5.                                                   |
 | `{"action":"preflight","reason":…}`            | Run `npx openfleet preflight <project>` (section 0b); stop and report if it fails.          |
+| `{"action":"halt","reason":r}`                 | The run is halted (spending limit, `pause` or `cancel`): section 2b. Spawn nothing.         |
 
 Repo coordinators also get `check-repo-consistency`, `merge`, `resolve-conflict` and `integrate` (section 2a).
 
@@ -75,6 +76,7 @@ Repo coordinators also get `check-repo-consistency`, `merge`, `resolve-conflict`
 
 - `{"result":"claimed",…}`: spawn that agent **now**, before any other claim. The `subagentStart` hook records its agent id on the child (`agentIds.<role>`); you do not patch it.
 - `{"result":"wait","reason":…,"retryAfterSeconds":5}`: do not spawn. Either another claim for the same role is not consumed yet (spawn that one first), or `maxParallel` agents are already running across the workspace (workspace setting, `npx openfleet config`; default 6). <!--host:copilot-->Do other work or wait for a running agent with `read_agent`, then claim again.<!--host:claude-->Do other work, or end your turn and claim again after the next completion notification.<!--/host-->
+- `{"result":"stop","reason":…}`: the run is halted. Do not spawn this or anything else; go to section 2b.
 
 ## 2a. Repo coordinators
 
@@ -86,6 +88,15 @@ A repo with more than one child (path-scoped children such as pages or modules, 
 4. **Dependencies.** `dependsOn: ["<repo>"]` waits for the whole repo (its integration child); `dependsOn: ["<repo>/<unit>"]` waits for one child. A failed or blocked integration child blocks its dependents.
 5. **Escalations.** A repo coordinator decides questions inside its repo itself. A question that changes a cross-repo contract or the Shared approach is escalated: the child is `blocked` with `blockedReason: "needs-escalation"` (`question.escalated`) and the coordinator lists it under `escalated` in its report. Decide it as in section 4, change the contract if needed (`openfleet-contracts`), then run `npx openfleet escalate <project> <child> --resolve --decision '<decision>'` for each child and resume the repo coordinator with <!--host:copilot-->`write_agent`<!--host:claude-->`SendMessage`<!--/host--> ("Escalations decided: … Continue."). Escalated children are not final: the run does not finalize while any is open.
 6. **Its report.** When it reports `done` or `failed`, the integration child already has that phase. If it stopped while work remains (for example after `resume`), `next` returns `repo-coordinator` for it again.
+
+## 2b. Halted runs
+
+A run halts when a spending limit (`budget` in `openfleet.json`, or the project's `budget`) is reached, or when the user runs `npx openfleet pause` or `npx openfleet cancel`. Then `claim` returns `{"result":"stop"}` and `next` returns only `{"action":"halt"}`, for you and for every repo coordinator.
+
+1. Spawn nothing more, and start no extension slot.
+2. Let agents that are already running finish their current step: act on each report as usual (save plans, record test results and phases), but do not spawn the next step. For `cancelled`, also tell each running agent to stop and report (<!--host:copilot-->`write_agent`<!--host:claude-->`SendMessage`<!--/host-->).
+3. When no agent is running, write `projects/<project>/summary.md` as `openfleet-finalize` section 2 describes, starting with **Halted:** the reason and detail from `next`, what is done, what is still open, and how to continue (`npx openfleet resume <project>` after raising the limit or pausing; `resume --reopen` after a cancel). Do not stage changes or open PRs.
+4. End your turn and stop. Do not set the project status: `cancel` already set it, and a paused or budget-halted run stays `running` until `resume`.
 
 ## 3. Per-child pipeline
 
