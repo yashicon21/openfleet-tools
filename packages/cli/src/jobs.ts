@@ -30,10 +30,24 @@ import {
   type JobState,
   type Report,
 } from "./jobstore.js";
-import { readState, updateState, type WorkRole } from "./state.js";
+import { groupOf } from "./groups.js";
+import { TOP } from "./schedule.js";
+import { readState, updateState, type ProjectState, type WorkRole } from "./state.js";
 import { projectPaths, UserError, type ProjectPaths, type Workspace } from "./workspace.js";
 
 export * from "./jobstore.js";
+
+/** The coordinator that owns a child's turns, as `next` assigns actions: a repo coordinator for its repo, else `top`. */
+export function ownerOf(state: ProjectState, child: string | null): string {
+  const c = child ? state.children[child] : undefined;
+  if (!c) return TOP;
+  return c.integration ? c.repo : (groupOf(state, child!) ?? TOP);
+}
+
+/** Final text without its report block, for saving a plan (`agent result --out`). */
+export function withoutReport(text: string): string {
+  return text.replace(/````?\n?```openfleet-report[\s\S]*$|```openfleet-report[\s\S]*$/, "").trimEnd() + "\n";
+}
 
 function slug(s: string): string {
   return (
@@ -184,6 +198,7 @@ export function startJob(opts: StartOptions): StartResult {
   }
   if (opts.message?.trim()) prompt += `\n\n## From the coordinator\n\n${opts.message.trim()}`;
   const id = newJobId(p, role, child);
+  const owner = ownerOf(readState(p), child);
   const sessionId = crypto.randomUUID();
   const job: Job = {
     id,
@@ -195,6 +210,7 @@ export function startJob(opts: StartOptions): StartResult {
     host: target.host,
     ...(target.model ? { model: target.model } : {}),
     ...(target.endpoint ? { endpoint: target.endpoint.name } : {}),
+    owner,
     sessionId,
     state: "running",
     createdAt: new Date().toISOString(),
@@ -343,7 +359,7 @@ export function turnText(host: Host, stdout: string): { text: string; error?: st
 
 const NUDGE =
   "Your last turn ended without an `openfleet-report` block. Reply with only that block now (status, child, summary and the other fields your instructions list).";
-const TEXT_LIMIT = 20_000;
+const TEXT_LIMIT = 200_000;
 
 function runTurn(ws: Workspace, job: Job, prompt: string, first: boolean, env: NodeJS.ProcessEnv) {
   const p = projectPaths(ws, job.project);
@@ -514,6 +530,7 @@ export function sweepLost(p: ProjectPaths): Job[] {
 
 export interface JobView {
   job: string;
+  owner: string;
   state: JobState;
   child: string | null;
   role: JobRole;
@@ -534,6 +551,7 @@ export function view(job: Job): JobView {
   const last = job.turns.at(-1);
   return {
     job: job.id,
+    owner: job.owner ?? TOP,
     state: job.state,
     child: job.child,
     role: job.role,
@@ -565,12 +583,18 @@ export type WaitResult =
 /** Wait for the next unread finished job (or `jobId`), up to `timeoutMs`. */
 export async function waitJobs(
   p: ProjectPaths,
-  { jobId, timeoutMs = 540_000, pollMs = 1000 }: { jobId?: string; timeoutMs?: number; pollMs?: number } = {},
+  {
+    jobId,
+    owner = TOP,
+    timeoutMs = 540_000,
+    pollMs = 1000,
+  }: { jobId?: string; owner?: string; timeoutMs?: number; pollMs?: number } = {},
 ): Promise<WaitResult> {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     sweepLost(p);
-    const jobs = listJobs(p).filter((j) => !jobId || j.id === jobId);
+    // Each coordinator waits only for its own jobs (or the one it names).
+    const jobs = listJobs(p).filter((j) => (jobId ? j.id === jobId : (j.owner ?? TOP) === owner));
     if (jobId && !jobs.length) throw new UserError(`Unknown job "${jobId}" in project ${p.name}.`);
     const done = jobs.find((j) => j.unread && j.state !== "running");
     if (done) return { result: "turn", ...jobResult(p, done.id) };

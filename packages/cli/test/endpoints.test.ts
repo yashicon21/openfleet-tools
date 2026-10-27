@@ -86,6 +86,11 @@ describe("endpoints config", () => {
 
   it("defaults to subagent mode and requires session mode for endpoints and role hosts", () => {
     const ws = workspace();
+    // New workspaces get session mode; one that never set it (created before) uses subagents.
+    expect(agentModeOf(readConfig(ws))).toBe("session");
+    const marker = readJson<Record<string, unknown>>(ws.marker);
+    delete marker.agentMode;
+    fs.writeFileSync(ws.marker, JSON.stringify(marker));
     expect(agentModeOf(readConfig(ws))).toBe("subagent");
     setConfig(ws, "endpoints.ollama.baseUrl", OLLAMA);
     expect(() => setConfig(ws, "models.claude.implementer", "ollama:qwen3-coder:30b")).toThrow(

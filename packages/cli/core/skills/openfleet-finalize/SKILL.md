@@ -9,7 +9,7 @@ Use this skill when the project `status` is `finalizing`. Finalizing is still ha
 
 ## 1. Post-run extensions
 
-Run `npx openfleet ext plan <project> post-run` and spawn each entry under `run` in order (for example, an audit). Pass each one the project name. Record each report with `npx openfleet ext result <project> <extension> --slot post-run --report '<json>'`. `post-run` entries are advisory. Collect any report paths they produce for the summary.
+Run `npx openfleet ext plan <project> post-run` and <!--mode:subagent-->spawn each entry under `run` in order (for example, an audit). Pass each one the project name.<!--mode:session-->start each entry under `run` in order (for example, an audit) with `npx openfleet agent start <project> --agent <agent>` and wait for its turn (`agent wait`).<!--/mode--> Record each report with `npx openfleet ext result <project> <extension> --slot post-run --report '<json>'`. `post-run` entries are advisory. Collect any report paths they produce for the summary.
 
 ## 2. Run summary
 

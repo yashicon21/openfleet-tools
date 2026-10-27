@@ -224,7 +224,7 @@ The keys under `models.<copilot|claude>` are `default` and the roles `coordinato
 
 ### Role sessions
 
-With `agentMode: "session"`, each planner, baseline tester, implementer, tester and extension agent runs as its own headless session (`claude -p` or `copilot -p`), started by the CLI instead of as a subagent of the coordinator. The coordinator drives them with `npx openfleet agent`:
+New workspaces use role sessions (`agentMode: "session"`); workspaces created before keep subagents until you run `npx openfleet config set agentMode session`, and `config set agentMode subagent` goes back. With `agentMode: "session"`, each planner, baseline tester, implementer, tester and extension agent runs as its own headless session (`claude -p` or `copilot -p`), started by the CLI instead of as a subagent of the coordinator. The coordinator drives them with `npx openfleet agent`:
 
 | Command                                                                                        | What it does                                                                                                                                                                            |
 | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -233,7 +233,7 @@ With `agentMode: "session"`, each planner, baseline tester, implementer, tester 
 | `agent reply <project> <job> --message <text>`                                                 | Next turn in the same session: answers, plan revisions, contract changes (queued while a turn runs)                                                                                     |
 | `agent status <project> [job]` · `agent result <project> <job>` · `agent stop <project> <job>` | Jobs, the last report again, stop one                                                                                                                                                   |
 
-Each session gets its role's host, model and endpoint, and its own transcript (counted per role in the report and for spending limits). Jobs live in `projects/<name>/jobs/` and keep running if the coordinator's session ends; a job whose runner died is `lost`, and `agent reply … --message Continue.` resumes its session. `cancel` stops running jobs.
+The coordinator and repo coordinators follow the session version of their skills (`config set agentMode` renders them again). Each session gets its role's host, model and endpoint, and its own transcript (counted per role in the report and for spending limits). Jobs live in `projects/<name>/jobs/` and keep running if the coordinator's session ends; a job whose runner died is `lost`, and `agent reply … --message Continue.` resumes its session. `cancel` stops running jobs.
 
 ### Model endpoints
 

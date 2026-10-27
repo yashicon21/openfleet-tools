@@ -18,7 +18,8 @@ import {
   type LoadedExtension,
   type PhaseEntry,
 } from "./extensions.js";
-import { agentFileModel, readConfig, type ModelKey } from "./config.js";
+import { agentFileModel, agentModeOf, readConfig, type ModelKey } from "./config.js";
+import type { AgentMode } from "./endpoints.js";
 import type { CoreIndex } from "./coreindex.js";
 import { copyDir, readJson, writeFileAtomic, writeJson } from "./fsutil.js";
 import {
@@ -27,6 +28,7 @@ import {
   HOSTS,
   pluginDir,
   renderForHost,
+  renderForMode,
   toClaudeAgent,
   withModel,
   type Host,
@@ -77,20 +79,21 @@ export function installCore(ws: Workspace, warn: (msg: string) => void = () => {
   const claude = path.join(tmp, "claude");
   writeJson(path.join(claude, ".claude-plugin", "plugin.json"), claudePluginManifest(plugin));
   writeJson(path.join(claude, "hooks", "hooks.json"), claudeHooks());
-  // Skills hold host blocks: render Claude's copy first, then Copilot's in place.
-  renderSkills(path.join(tmp, "skills"), path.join(claude, "skills"), "claude");
-  renderSkills(path.join(tmp, "skills"), path.join(tmp, "skills"), "copilot");
+  // Skills hold host and agent-mode blocks: render Claude's copy first, then Copilot's in place.
+  const mode = agentModeOf(readConfig(ws));
+  renderSkills(path.join(tmp, "skills"), path.join(claude, "skills"), "claude", mode);
+  renderSkills(path.join(tmp, "skills"), path.join(tmp, "skills"), "copilot", mode);
   fs.rmSync(ws.core, { recursive: true, force: true });
   fs.renameSync(tmp, ws.core);
   return syncExtensions(ws, warn);
 }
 
-function renderSkills(src: string, dest: string, host: Host): void {
+function renderSkills(src: string, dest: string, host: Host, mode: AgentMode): void {
   for (const rel of fs.readdirSync(src, { recursive: true, encoding: "utf8" })) {
     const from = path.join(src, rel);
     if (!fs.statSync(from).isFile()) continue;
     const text = fs.readFileSync(from, "utf8");
-    writeFileAtomic(path.join(dest, rel), rel.endsWith(".md") ? renderForHost(text, host) : text);
+    writeFileAtomic(path.join(dest, rel), rel.endsWith(".md") ? renderForMode(renderForHost(text, host), mode) : text);
   }
 }
 
@@ -249,7 +252,8 @@ export function syncExtensions(ws: Workspace, warn: (msg: string) => void = () =
     for (const ext of exts) {
       if ((ext.manifest.augments ?? []).some((a) => a.role === role)) index.augments[role].push(ext.manifest.name);
     }
-    const body = (host: Host) => renderForHost(template, host).trimEnd() + "\n" + augmentText(host);
+    const body = (host: Host) =>
+      renderForMode(renderForHost(template, host), agentModeOf(workspaceConfig)).trimEnd() + "\n" + augmentText(host);
     const copilot = body("copilot");
     if (copilot.length > MAX_AGENT_PROMPT) {
       warn(

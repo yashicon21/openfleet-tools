@@ -523,7 +523,7 @@ describe("workspace config", () => {
     const ws = workspace();
     const file = ws.marker;
     const version = packageVersion();
-    expect(readJson(file)).toEqual({ version, maxParallel: 6, host: "copilot" });
+    expect(readJson(file)).toEqual({ version, maxParallel: 6, host: "copilot", agentMode: "session" });
     fs.writeFileSync(file, JSON.stringify({ version }));
     expect(readConfig(ws)).toEqual({ maxParallel: 6, host: "copilot" });
     expect(json(cli(ws.root, ["config"]))).toEqual({ maxParallel: 6, host: "copilot" });
@@ -541,8 +541,12 @@ describe("workspace config", () => {
     const ws = workspace();
     const file = ws.marker;
     expect(readConfig(ws).host).toBe("copilot");
-    expect(json(cli(ws.root, ["config", "set", "host", "claude"]))).toEqual({ maxParallel: 6, host: "claude" });
-    expect(readJson(file)).toEqual({ version: packageVersion(), maxParallel: 6, host: "claude" });
+    expect(json(cli(ws.root, ["config", "set", "host", "claude"]))).toEqual({
+      maxParallel: 6,
+      host: "claude",
+      agentMode: "session",
+    });
+    expect(readJson(file)).toEqual({ version: packageVersion(), maxParallel: 6, host: "claude", agentMode: "session" });
     const bad = cli(ws.root, ["config", "set", "host", "other"]);
     expect(bad.code).toBe(1);
     expect(bad.stderr).toMatch(/host must be one of copilot, claude/);

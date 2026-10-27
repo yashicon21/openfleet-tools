@@ -88,6 +88,8 @@ export function initWorkspace(root: string): InitResult {
   ensureFile(ws.reposFile, () => writeJson(ws.reposFile, emptyRepos()));
   ensureFile(ws.lockFile, () => writeJson(ws.lockFile, emptyLock()));
   writeWorkspaceVersion(ws, packageVersion());
+  // New workspaces run child roles as their own sessions; existing ones keep what they have.
+  if (created) setConfig(ws, "agentMode", "session");
   const gi = path.join(ws.root, ".gitignore");
   const gitignoreWritten = ensureFile(gi, () => fs.writeFileSync(gi, WORKSPACE_GITIGNORE));
   installCore(ws, warn);
@@ -224,6 +226,14 @@ export function cmdConfig(args: string[]): number {
   const next = setConfig(ws, key, value);
   // Models are written into the generated agent files: regenerate them now.
   if (key.startsWith("models.")) syncExtensions(ws, warn);
+  // The agent mode picks the skill and agent text: render core again.
+  if (key === "agentMode") {
+    if (installedCoreVersion(ws) === packageVersion()) installCore(ws, warn);
+    else
+      warn(
+        `Run \`npx openfleet update\` to apply agentMode to core (core ${installedCoreVersion(ws) ?? "missing"}, CLI ${packageVersion()}).`,
+      );
+  }
   out(JSON.stringify(next, null, 2));
   return 0;
 }

@@ -43,8 +43,14 @@ Fields that core sets (do not patch them): `portBase` (the child's port range, a
 ```sh
 npx openfleet preflight <project>                              # can git write in every repo? before approval, at run start, on resume
 npx openfleet next <project> [--repo <repo>]                   # next actions (top, or one repo coordinator's)
-npx openfleet claim <project> <child> <role>                   # before every spawn: "claimed" (spawn now) or "wait"
-npx openfleet config [set maxParallel <n>]                     # workspace settings (maxParallel caps busy children across all projects)
+<!--mode:subagent-->npx openfleet claim <project> <child> <role>                   # before every spawn: "claimed" (spawn now) or "wait"
+<!--/mode--><!--mode:session-->npx openfleet agent start <project> <child> --role <role>      # claims and starts a role session: "started", "wait" or "stop"
+npx openfleet agent wait <project> [--repo <repo>]             # next finished turn of your jobs (report, text), "timeout" or "idle"
+npx openfleet agent reply <project> <job> --message '…'        # next turn in the same session (logs message.sent)
+npx openfleet agent result <project> <job> --out <file>        # save a planner's plan
+npx openfleet agent status <project>                           # every job; lost jobs resume with reply
+npx openfleet claim <project> <repo> repo-coordinator          # before spawning a repo coordinator (still a subagent)
+<!--/mode-->npx openfleet config [set maxParallel <n>]                     # workspace settings (maxParallel caps busy children across all projects)
 npx openfleet ack <project> <child> <role>                     # optional: re-prints a subagent's assignment (binds its id if the hook could not)
 npx openfleet gate <project> consistent [--child <id>,<id>]    # plans passed the consistency check; logs plans.consistent
 npx openfleet gate <project> consistent --repo <repo>          # a repo coordinator's sibling check (repoConsistent)

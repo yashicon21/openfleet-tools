@@ -271,6 +271,8 @@ export function run(argv: string[]): number {
         job: { type: "string" },
         timeout: { type: "string" },
         reason: { type: "string" },
+        repo: { type: "string" },
+        out: { type: "string" },
       });
       return cmdAgent(positionals, values);
     }

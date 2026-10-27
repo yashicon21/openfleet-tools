@@ -45,6 +45,8 @@ export interface Job {
   host: Host;
   model?: string;
   endpoint?: string;
+  /** Coordinator that acts on the job's turns: `top`, or the repo key of a repo coordinator. */
+  owner?: string;
   sessionId: string;
   state: JobState;
   createdAt: string;

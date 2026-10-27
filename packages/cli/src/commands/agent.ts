@@ -1,5 +1,6 @@
 // `npx openfleet agent start|status|wait|result|reply|stop`: role sessions (agentMode "session").
 import fs from "node:fs";
+import path from "node:path";
 import {
   jobResult,
   listJobs,
@@ -11,6 +12,7 @@ import {
   sweepLost,
   view,
   waitJobs,
+  withoutReport,
 } from "../jobs.js";
 import { projectPaths, requireWorkspace, UserError, validateProjectName } from "../workspace.js";
 import { out } from "./output.js";
@@ -19,8 +21,8 @@ export const AGENT_USAGE = `Usage:
   openfleet agent start <project> <child> --role <planner|baseline|implementer|tester> [--message <text> | --message-file <f>]
   openfleet agent start <project> [child] --agent <extension phase agent> [--message <text> | --message-file <f>]
   openfleet agent status <project> [job]
-  openfleet agent wait <project> [--job <job>] [--timeout <seconds>]
-  openfleet agent result <project> <job>
+  openfleet agent wait <project> [--repo <repo>] [--job <job>] [--timeout <seconds>]
+  openfleet agent result <project> <job> [--out <file>]
   openfleet agent reply <project> <job> --message <text> | --message-file <f>
   openfleet agent stop <project> <job> [--reason <text>]`;
 
@@ -32,6 +34,8 @@ export interface AgentFlags {
   job?: string;
   timeout?: string;
   reason?: string;
+  repo?: string;
+  out?: string;
 }
 
 function message(flags: AgentFlags): string | undefined {
@@ -82,12 +86,18 @@ export function cmdAgent(args: string[], flags: AgentFlags): number {
     case "wait": {
       const seconds = flags.timeout === undefined ? 540 : Number(flags.timeout);
       if (!Number.isFinite(seconds) || seconds < 0) throw new UserError("--timeout must be a number of seconds.");
-      waitJobs(p, { jobId: flags.job, timeoutMs: seconds * 1000 }).then(print, fail);
+      waitJobs(p, { jobId: flags.job, owner: flags.repo, timeoutMs: seconds * 1000 }).then(print, fail);
       return 0;
     }
-    case "result":
-      print(jobResult(p, needJob()));
+    case "result": {
+      const res = jobResult(p, needJob());
+      if (flags.out) {
+        fs.mkdirSync(path.dirname(path.resolve(flags.out)), { recursive: true });
+        fs.writeFileSync(flags.out, withoutReport(res.text));
+        print({ ...res, text: undefined, savedTo: path.resolve(flags.out) });
+      } else print(res);
       return 0;
+    }
     case "reply": {
       const text = message(flags);
       if (!text?.trim()) throw new UserError("agent reply needs --message or --message-file.");

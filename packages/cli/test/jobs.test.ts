@@ -321,6 +321,37 @@ describe("role session jobs", () => {
   });
 });
 
+describe("job ownership and plans", () => {
+  it("wait returns only the caller's jobs: repo coordinators pass --repo", async () => {
+    const { ws, p, env } = setup();
+    // Two children in one repo get an integration child and a repo coordinator.
+    patchState(p, {
+      children: {
+        "app/home": { repo: "app", paths: ["src/home/**"], phase: "planned" },
+        "app/about": { repo: "app", paths: ["src/about/**"], phase: "planned" },
+      },
+    });
+    const top = (startJob({ ws, project: "p", child: "web", role: "tester", detach: false }) as { job: string }).job;
+    const repo = (startJob({ ws, project: "p", child: "app/home", role: "tester", detach: false }) as { job: string })
+      .job;
+    expect(readJob(p, repo).owner).toBe("app");
+    await runJob(ws, "p", repo, env, 0);
+    expect(await waitJobs(p, { timeoutMs: 0 })).toMatchObject({ result: "timeout", running: [top] });
+    expect(await waitJobs(p, { owner: "app", timeoutMs: 0 })).toMatchObject({ result: "turn", job: repo });
+  });
+
+  it("result --out saves the final text without its report block", async () => {
+    const plan = "# Plan: web\n\n1. Do it.";
+    const { ws, p, env } = setup([`${plan}\n\n\`\`\`openfleet-report\n{"status": "done"}\n\`\`\``]);
+    const id = (startJob({ ws, project: "p", child: "web", role: "planner", detach: false }) as { job: string }).job;
+    await runJob(ws, "p", id, env, 0);
+    const file = path.join(p.plans, "web.md");
+    const r = cli(ws.root, ["agent", "result", "p", id, "--out", file], env);
+    expect(r.code).toBe(0);
+    expect(fs.readFileSync(file, "utf8")).toBe(`${plan}\n`);
+  });
+});
+
 describe("job helpers", () => {
   it("parses the last report block and Claude's json output", () => {
     expect(parseReport(`a\n${report("question")}\nb\n${report("done")}`)?.status).toBe("done");

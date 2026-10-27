@@ -7,7 +7,7 @@ description: The hands-off OpenFleet run loop after the grill. Create worktrees,
 
 Use this skill when the project `status` is `running`. Use `openfleet-records` for every state change and log entry.
 
-**This loop is hands-off.** The user is not watching. Never ask the user anything and never use <!--host:copilot-->`ask_user`. Do not end your turn while any child is still pending or in progress: keep waiting with `read_agent` and acting on reports until every child is `done`, `failed` or `blocked`, then go to completion.<!--host:claude-->`AskUserQuestion`. Spawn agents with the `Agent` tool in the background, then end your turn: each finished agent arrives as a completion notification that starts your next turn. On every notification, act on the report, run `npx openfleet next <project>` and spawn what it returns. Never block waiting on one child. Keep going until every child is `done`, `failed` or `blocked`, then go to completion.<!--/host-->
+**This loop is hands-off.** The user is not watching. Never ask the user anything and never use <!--host:copilot-->`ask_user`.<!--host:claude-->`AskUserQuestion`.<!--/host--> <!--mode:subagent--><!--host:copilot-->Do not end your turn while any child is still pending or in progress: keep waiting with `read_agent` and acting on reports until every child is `done`, `failed` or `blocked`, then go to completion.<!--host:claude-->Spawn agents with the `Agent` tool in the background, then end your turn: each finished agent arrives as a completion notification that starts your next turn. On every notification, act on the report, run `npx openfleet next <project>` and spawn what it returns. Never block waiting on one child. Keep going until every child is `done`, `failed` or `blocked`, then go to completion.<!--/host--><!--/mode--><!--mode:session-->Child roles run as their own sessions, started with `npx openfleet agent start` (section 2c). <!--host:copilot-->Do not end your turn while any child is still pending or in progress: keep waiting with `npx openfleet agent wait` and acting on reports until every child is `done`, `failed` or `blocked`, then go to completion.<!--host:claude-->Start jobs, run `npx openfleet agent wait <project>` in the background, then end your turn: each finished turn arrives as that command's completion notification. On every notification, act on the report, run `npx openfleet next <project>`, start what it returns and wait again. Never block on one child. Keep going until every child is `done`, `failed` or `blocked`, then go to completion.<!--/host--><!--/mode-->
 
 ## 0. Greenfield repos
 
@@ -51,7 +51,7 @@ Do not work this out by hand. Run this whenever something changes (a report arri
 npx openfleet next <project>
 ```
 
-It prints `{"gate": "planning"|"checking"|"plans-ready"|"open", "actions": [...], "waiting": [...]}`. Do every action, <!--host:copilot-->then wait for the next report with `read_agent`:<!--host:claude-->then end your turn and act on the next completion notification:<!--/host-->
+It prints `{"gate": "planning"|"checking"|"plans-ready"|"open", "actions": [...], "waiting": [...]}`. Do every action, <!--mode:subagent--><!--host:copilot-->then wait for the next report with `read_agent`:<!--host:claude-->then end your turn and act on the next completion notification:<!--/host--><!--mode:session-->then wait for the next finished turn with `npx openfleet agent wait <project>`:<!--/mode-->
 
 Every action has an `owner`: `top` (you) or a repo key. `next <project>` returns your actions, plus `delegated`: actions that belong to a repo coordinator (read them, but do not act on them). A repo coordinator runs `next <project> --repo <repo>` for its own.
 
@@ -70,13 +70,35 @@ Every action has an `owner`: `top` (you) or a repo key. `next <project>` returns
 
 Repo coordinators also get `check-repo-consistency`, `merge`, `resolve-conflict` and `integrate` (section 2a).
 
-<!--host:copilot-->Use background subagents and collect results with `read_agent`. Do not block on one child while others could make progress.<!--host:claude-->Spawn every agent with the `Agent` tool in the background (`subagent_type` is the full agent name, e.g. `openfleet:openfleet-planner`), then end your turn. Results arrive as completion notifications; after each one, run `npx openfleet next <project>`, which stays the source of truth. Do not block on one child while others could make progress. Never use the `Agent` tool's worktree isolation: OpenFleet creates the worktrees and passes their paths in the assignment.<!--/host-->
+<!--mode:subagent--><!--host:copilot-->Use background subagents and collect results with `read_agent`. Do not block on one child while others could make progress.<!--host:claude-->Spawn every agent with the `Agent` tool in the background (`subagent_type` is the full agent name, e.g. `openfleet:openfleet-planner`), then end your turn. Results arrive as completion notifications; after each one, run `npx openfleet next <project>`, which stays the source of truth. Do not block on one child while others could make progress. Never use the `Agent` tool's worktree isolation: OpenFleet creates the worktrees and passes their paths in the assignment.<!--/host--><!--/mode-->
+<!--mode:session-->Start every planner, baseline tester, implementer, tester and extension agent as a job (section 2c), never as a subagent. Do not block on one child while others could make progress.<!--/mode-->
 
-**Claim every spawn.** Right before you spawn any OpenFleet agent, run `npx openfleet claim <project> <child> <role>` (role: `planner`, `baseline`, `implementer`, `tester` or `repo-coordinator`). It sets the child's phase for that role (`planning`, `baseline`, `implementing`, `testing`) and `pendingSpawn`, which the spawn hook consumes to attribute the agent and inject its context.
+<!--mode:subagent-->**Claim every spawn.** Right before you spawn any OpenFleet agent, run `npx openfleet claim <project> <child> <role>` (role: `planner`, `baseline`, `implementer`, `tester` or `repo-coordinator`). It sets the child's phase for that role (`planning`, `baseline`, `implementing`, `testing`) and `pendingSpawn`, which the spawn hook consumes to attribute the agent and inject its context.
 
 - `{"result":"claimed",…}`: spawn that agent **now**, before any other claim. The `subagentStart` hook records its agent id on the child (`agentIds.<role>`); you do not patch it.
 - `{"result":"wait","reason":…,"retryAfterSeconds":5}`: do not spawn. Either another claim for the same role is not consumed yet (spawn that one first), or `maxParallel` agents are already running across the workspace (workspace setting, `npx openfleet config`; default 6). <!--host:copilot-->Do other work or wait for a running agent with `read_agent`, then claim again.<!--host:claude-->Do other work, or end your turn and claim again after the next completion notification.<!--/host-->
 - `{"result":"stop","reason":…}`: the run is halted. Do not spawn this or anything else; go to section 2b.
+
+<!--/mode-->
+<!--mode:session-->**Every start claims.** `npx openfleet agent start` runs `claim` for you (same rules: `maxParallel` across the workspace, one role per child, halts). Its result:
+
+- `{"result":"started","job":…}`: the session is running. Keep the job id.
+- `{"result":"wait","reason":…,"retryAfterSeconds":5}`: nothing started; `maxParallel` agents are running. Do other work, or wait for a finished turn, then start it again.
+- `{"result":"stop","reason":…}`: the run is halted. Start nothing more; go to section 2b.
+
+Only repo coordinators are still spawned as subagents: claim them with `npx openfleet claim <project> <repo> repo-coordinator` right before the spawn, as section 2a says.
+
+## 2c. Role sessions
+
+- **Start:** `npx openfleet agent start <project> <child> --role <planner|baseline|implementer|tester> [--message-file <file>]`. An extension slot entry: `npx openfleet agent start <project> [<child>] --agent <its agent>`. The CLI writes the assignment (worktree, branch, spec, contracts, plan, ports, scope, upstream outputs) into the session's prompt. Pass findings, guidance and other text you add with `--message` or, when long, a file under `projects/<project>/` with `--message-file`.
+- **Wait:** <!--host:claude-->after starting jobs, run `npx openfleet agent wait <project>` with the Bash tool in the background (`run_in_background: true`) and end your turn; its completion notification starts your next turn. Keep one such wait running whenever a job of yours runs.<!--host:copilot-->`npx openfleet agent wait <project> --timeout 100`. On `{"result":"timeout"}`, run it again.<!--/host--> It prints the next finished turn of one of your jobs: `job`, `child`, `role`, `state` (`finished`, `failed`: ended without a report, `stopped`, `lost`), `report` (the parsed `openfleet-report` block) and `text`. `{"result":"idle"}` means none of your jobs runs.
+- **Reply:** `npx openfleet agent reply <project> <job> --message '…'` (or `--message-file`) sends the next turn to the same session: answers, plan revisions, contract changes, a request for a missing report. It is logged as `message.sent`; do not log it again.
+- **Plans:** `npx openfleet agent result <project> <job> --out projects/<project>/plans/<child>.md` saves a planner's plan (its final text without the report block).
+- **Stop:** `npx openfleet agent stop <project> <job> --reason '…'` (timeouts, a failed dependency).
+- **Status:** `npx openfleet agent status <project>` lists every job. A `lost` job's runner died (for example the machine restarted): `npx openfleet agent reply <project> <job> --message 'Continue.'` resumes its session.
+- A job that is `failed` counts as a failed attempt of that role.
+
+<!--/mode-->
 
 ## 2a. Repo coordinators
 
@@ -94,7 +116,7 @@ A repo with more than one child (path-scoped children such as pages or modules, 
 A run halts when a spending limit (`budget` in `openfleet.json`, or the project's `budget`) is reached, or when the user runs `npx openfleet pause` or `npx openfleet cancel`. Then `claim` returns `{"result":"stop"}` and `next` returns only `{"action":"halt"}`, for you and for every repo coordinator.
 
 1. Spawn nothing more, and start no extension slot.
-2. Let agents that are already running finish their current step: act on each report as usual (save plans, record test results and phases), but do not spawn the next step. For `cancelled`, also tell each running agent to stop and report (<!--host:copilot-->`write_agent`<!--host:claude-->`SendMessage`<!--/host-->).
+2. Let agents that are already running finish their current step: act on each report as usual (save plans, record test results and phases), but do not spawn the next step. For `cancelled`, also tell each running <!--mode:subagent-->agent<!--mode:session-->repo coordinator<!--/mode--> to stop and report (<!--host:copilot-->`write_agent`<!--host:claude-->`SendMessage`<!--/host-->)<!--mode:session-->; `cancel` already stopped every running job<!--/mode-->.
 3. When no agent is running, write `projects/<project>/summary.md` as `openfleet-finalize` section 2 describes, starting with **Halted:** the reason and detail from `next`, what is done, what is still open, and how to continue (`npx openfleet resume <project>` after raising the limit or pausing; `resume --reopen` after a cancel). Do not stage changes or open PRs.
 4. End your turn and stop. Do not set the project status: `cancel` already set it, and a paused or budget-halted run stays `running` until `resume`.
 
@@ -102,8 +124,8 @@ A run halts when a spending limit (`budget` in `openfleet.json`, or the project'
 
 ### Plan
 
-1. Claim it (`npx openfleet claim <project> <id> planner`). Spawn `openfleet:openfleet-planner` with: "Plan child `<id>` of project `<project>`." Log the prompt as `message.sent`.
-2. When it reports `done`, save the plan to `projects/<project>/plans/<child id>.md`. Patch `{"phase":"plan-review","plan":"<abs path>"}` and log `plan.submitted`.
+1. <!--mode:subagent-->Claim it (`npx openfleet claim <project> <id> planner`). Spawn `openfleet:openfleet-planner` with: "Plan child `<id>` of project `<project>`." Log the prompt as `message.sent`.<!--mode:session-->Start it: `npx openfleet agent start <project> <id> --role planner`.<!--/mode-->
+2. When it reports `done`, save the plan to `projects/<project>/plans/<child id>.md`<!--mode:session--> with `npx openfleet agent result <project> <job> --out projects/<project>/plans/<child id>.md`<!--/mode-->. Patch `{"phase":"plan-review","plan":"<abs path>"}` and log `plan.submitted`.
 3. **Validate the plan against the spec yourself:**
    - Every acceptance criterion for this child is mapped.
    - Every contract it produces or consumes has a contract test.
@@ -113,7 +135,7 @@ A run halts when a spending limit (`budget` in `openfleet.json`, or the project'
    - **Greenfield projects** (`state.greenfield`): nothing in the plan implements an item from the spec's `## Follow-ups` section, and it adds no endpoints, pages or tables beyond the contracts and this child's acceptance criteria.
    - The build and test commands match the spec.
 
-   If the plan fails, log `plan.rejected` with `{"reason":"invalid","reasons":["…"]}`, or `{"reason":"out-of-scope","reasons":["<the Follow-ups item or extra endpoint/page/table>"]}` when it builds something the greenfield MVP slice cut. Send the reasons to the **same** <!--host:copilot-->planner with `write_agent`<!--host:claude-->planner with `SendMessage` (to its agent id)<!--/host-->. Log that message. Wait for the revision. Repeat until the plan passes. Do not ask the user.
+   If the plan fails, log `plan.rejected` with `{"reason":"invalid","reasons":["…"]}`, or `{"reason":"out-of-scope","reasons":["<the Follow-ups item or extra endpoint/page/table>"]}` when it builds something the greenfield MVP slice cut. Send the reasons to the **same** <!--mode:subagent--><!--host:copilot-->planner with `write_agent`<!--host:claude-->planner with `SendMessage` (to its agent id)<!--/host-->. Log that message.<!--mode:session-->planner with `npx openfleet agent reply <project> <job> --message-file <file>`.<!--/mode--> Wait for the revision. Repeat until the plan passes. Do not ask the user.
 
    If the plan passes, log `plan.validated`.
 
@@ -125,7 +147,7 @@ Run it when `next` returns `check-consistency`. Before the gate opens, that happ
 
 1. Read every listed plan, the spec's **Shared approach** section, and the other children's plans (including ones already checked).
 2. Compare them. Plans must agree on everything the Shared approach lists (config shape, patterns, env var names, library versions, naming) and on anything two plans both touch (a shared interface, a value one child produces and another reads).
-3. For each plan that differs: log `plan.rejected` with `{"reason":"inconsistent","reasons":["<what differs and what to use instead>"],"with":["<other child ids>"]}`. Patch the child `{"phase":"plan-review"}`. Send the revision to the **same** <!--host:copilot-->planner with `write_agent`<!--host:claude-->planner with `SendMessage` (to its agent id)<!--/host--> and log it. When the revision arrives, save it, re-validate it (step 3 of "Plan") and patch `{"phase":"planned"}` again. Pick one approach and send the same decision to every differing planner; record the choice as an `assumption` if the spec did not settle it.
+3. For each plan that differs: log `plan.rejected` with `{"reason":"inconsistent","reasons":["<what differs and what to use instead>"],"with":["<other child ids>"]}`. Patch the child `{"phase":"plan-review"}`. Send the revision to the **same** <!--mode:subagent--><!--host:copilot-->planner with `write_agent`<!--host:claude-->planner with `SendMessage` (to its agent id)<!--/host--> and log it<!--mode:session-->planner job with `agent reply`<!--/mode-->. When the revision arrives, save it, re-validate it (step 3 of "Plan") and patch `{"phase":"planned"}` again. Pick one approach and send the same decision to every differing planner; record the choice as an `assumption` if the spec did not settle it.
 4. Repeat until no plan differs. Then run:
 
    ```sh
@@ -146,7 +168,7 @@ When `next` returns `plans-ready`:
 
 Only for children whose spec section has **Baseline: yes** (`baseline: true` in state).
 
-1. Claim it (`claim <project> <id> baseline`). Spawn `openfleet:openfleet-baseline` with: "Write and pass baseline tests for child `<id>` of project `<project>`." The spawn hook injects what to cover, the ports and the local files.
+1. <!--mode:subagent-->Claim it (`claim <project> <id> baseline`). Spawn `openfleet:openfleet-baseline` with: "Write and pass baseline tests for child `<id>` of project `<project>`." The spawn hook injects what to cover, the ports and the local files.<!--mode:session-->Start it: `npx openfleet agent start <project> <id> --role baseline`. Its prompt names what to cover, the ports and the local files.<!--/mode-->
 2. **Pass** (`status: "done"`): record it from the workspace root:
 
    ```sh
@@ -155,15 +177,15 @@ Only for children whose spec section has **Baseline: yes** (`baseline: true` in 
 
    It stores the file list and a hash of each file, sets `baselinePassed`, logs `baseline.passed`, and sets the phase back to `planned`. Run `next` again: the child now gets `implement` once its dependencies are `done`.
 
-3. **Fail**: handle it like a failed test run (step 8 of "Test"), but patch `{"retries":n}`, claim `baseline` again and spawn a **new baseline tester** with the findings instead of an implementer. The guided attempt and "Failed children" apply the same way. Never let the baseline tester change app code to make a test pass.
+3. **Fail**: handle it like a failed test run (step 8 of "Test"), but patch `{"retries":n}`<!--mode:subagent-->, claim `baseline` again and spawn<!--mode:session--> and start<!--/mode--> a **new baseline tester** with the findings instead of an implementer. The guided attempt and "Failed children" apply the same way. Never let the baseline tester change app code to make a test pass.
 
 ### Implement
 
-5. Run the `pre-implement` slot for the child (see "Extension slots" below). Then claim it (`claim <project> <id> implementer`). Spawn `openfleet:openfleet-implementer`: "Implement the approved plan for child `<id>` of project `<project>`." On a retry, append the tester's findings verbatim.
+5. Run the `pre-implement` slot for the child (see "Extension slots" below). Then <!--mode:subagent-->claim it (`claim <project> <id> implementer`). Spawn `openfleet:openfleet-implementer`: "Implement the approved plan for child `<id>` of project `<project>`." On a retry, append the tester's findings verbatim.<!--mode:session-->start it: `npx openfleet agent start <project> <id> --role implementer`. On a retry, pass the tester's findings verbatim with `--message-file`.<!--/mode-->
 
 ### Test
 
-6. When the implementer reports `done`, claim `tester` and spawn `openfleet:openfleet-tester`: "Verify child `<id>` of project `<project>`."
+6. When the implementer reports `done`, <!--mode:subagent-->claim `tester` and spawn `openfleet:openfleet-tester`: "Verify child `<id>` of project `<project>`."<!--mode:session-->start its tester: `npx openfleet agent start <project> <id> --role tester`.<!--/mode-->
 7. **Pass** (`status: "done"`): patch `{"phase":"post-test"}` and run the `post-test` slot for the child (see "Extension slots" below). Patch `{"phase":"done"}` only after every `post-test` entry has finished. If a blocking entry failed twice, the child is already `failed`; do not mark it `done`.
    **Greenfield `setup` and `system` children:** before patching `done`, record the commands from the tester's report `commands` (the ones it ran and saw pass) in `repos.json`, per package where they differ, and update the spec's build/test/e2e lines to match (log `spec.written`). For the system child, add `.env.local` as a local file:
 
@@ -174,12 +196,12 @@ Only for children whose spec section has **Baseline: yes** (`baseline: true` in 
    Never edit `repos.json` by hand.
 
 8. **Fail**: increment `retries`.
-   - If `retries < 3`: patch `{"retries":n}`, claim `implementer` and spawn a **new** implementer with the findings (step 5).
+   - If `retries < 3`: patch `{"retries":n}`, <!--mode:subagent-->claim `implementer` and spawn<!--mode:session-->start<!--/mode--> a **new** implementer with the findings (step 5).
    - If `retries` reaches 3: **guided attempt.** Do not ask the user. Review the problem yourself:
      1. Read the tester findings from all three attempts and the diff (`git -C <worktree> diff <baseSha>`).
      2. Work out the root cause. Is the implementation wrong, a test wrong, the plan wrong, or does the spec or a contract conflict with the code?
      3. Write concrete guidance: the cause, the approach to take, the files to change, and what to stop doing. If the fix needs a decision the spec does not cover, make it and log an `assumption` (see section 4).
-     4. Patch `{"retries":3}`, claim `implementer` and spawn **one** more new implementer with your guidance and the latest findings. Log the prompt as `message.sent`.
+     4. Patch `{"retries":3}`, <!--mode:subagent-->claim `implementer` and spawn **one** more new implementer with your guidance and the latest findings. Log the prompt as `message.sent`.<!--mode:session-->start **one** more new implementer with your guidance and the latest findings (`--message-file`).<!--/mode-->
    - If the guided attempt also fails (`retries` reaches 4): the child has **failed**. Follow "Failed children" below.
 
 ### Extension slots
@@ -187,11 +209,11 @@ Only for children whose spec section has **Baseline: yes** (`baseline: true` in 
 `post-plan`, `pre-implement` and `post-test` run per child (`--child <id>`). `plans-ready` runs once per project (no `--child`).
 
 1. `npx openfleet ext plan <project> <slot> --child <id>`. Run only the entries under `run`; skipped entries are already logged as `extension.skipped`.
-2. For each entry, in order: spawn its `agent` with "Run `<slot>` for child `<id>` of project `<project>`. Worktree: `<worktree>`." <!--host:copilot-->Wait for it with `read_agent`. If it is still running after `timeoutMinutes`, stop it<!--host:claude-->End your turn and wait for its completion notification. If it is still running after `timeoutMinutes`, stop it with `TaskStop`<!--/host--> and treat the attempt as failed.
+2. For each entry, in order: <!--mode:subagent-->spawn its `agent` with "Run `<slot>` for child `<id>` of project `<project>`. Worktree: `<worktree>`." <!--host:copilot-->Wait for it with `read_agent`. If it is still running after `timeoutMinutes`, stop it<!--host:claude-->End your turn and wait for its completion notification. If it is still running after `timeoutMinutes`, stop it with `TaskStop`<!--/host--><!--mode:session-->start its `agent`: `npx openfleet agent start <project> <id> --agent <agent>` (no child for `plans-ready`), and wait for its turn. If it is still running after `timeoutMinutes`, stop it with `agent stop`<!--/mode--> and treat the attempt as failed.
 3. Record its `openfleet-report` block: `npx openfleet ext result <project> <extension> --slot <slot> --child <id> --report '<json from the block>'`. Pass `outputs` and `followUps` through exactly as reported; the helper validates them (flat string values only). An output named `prUrl` becomes the child's `prUrl`.
 4. If the attempt failed (report `status: "failed"`, no report, or a timeout):
    - **advisory** entry: record it and continue.
-   - **blocking** entry: spawn one **fresh** agent for the same entry and try again. If the retry also fails, run `npx openfleet ext fail <project> <extension> --slot <slot> --child <id> --reason '<why>'` and stop this child's pipeline. The helper marks the child `failed`, marks its not-yet-done dependents `blocked`, and logs `extension.failed` and `child.failed`.
+   - **blocking** entry: <!--mode:subagent-->spawn<!--mode:session-->start<!--/mode--> one **fresh** agent for the same entry and try again. If the retry also fails, run `npx openfleet ext fail <project> <extension> --slot <slot> --child <id> --reason '<why>'` and stop this child's pipeline. The helper marks the child `failed`, marks its not-yet-done dependents `blocked`, and logs `extension.failed` and `child.failed`.
 
 For `plans-ready`, the blocking failure helper call has no `--child`; it marks every active child `blocked` (see "Gate").
 
@@ -200,7 +222,7 @@ Dependents are implemented only when this child is `done`, so they start after e
 ### Failed children
 
 1. Patch the child `{"phase":"failed","retries":4,"notes":"<one-line cause>"}`. (`next` returns `block` actions for its dependents too.)
-2. Find every child that depends on it, directly or transitively. Patch each one that is not `done` to `{"phase":"blocked","notes":"dependency <id> failed"}`. If one of them has an agent running, stop it.
+2. Find every child that depends on it, directly or transitively. Patch each one that is not `done` to `{"phase":"blocked","notes":"dependency <id> failed"}`. If one of them has an agent running, stop it<!--mode:session--> (`agent stop`)<!--/mode-->.
 3. Log `child.failed` with `{"reason":"…","retries":4,"findings":["…"],"worktree":"<abs path>","blocked":["<dependent ids>"]}`.
 4. Keep the worktree as it is. Continue with every other child. Do not ask the user. The final summary reports the failure, and the user can deal with it later with `npx openfleet resume`.
 
@@ -209,14 +231,14 @@ Dependents are implemented only when this child is `done`, so they start after e
 When a child reports `status: "question"`:
 
 1. Add the question to `questions` with status `open`, and log `question.asked`.
-2. **If `spec.md` or `contracts/` answers it,** reply with <!--host:copilot-->`write_agent`<!--host:claude-->`SendMessage`<!--/host-->, quoting the relevant spec lines. Set `answeredBy: "spec"`.
-3. **Otherwise, decide yourself.** Do not ask the user. Choose the option that best fits the goal, the existing code, the contracts and the out-of-scope list. When in doubt, prefer the smallest, most conventional and backward-compatible choice. Reply with <!--host:copilot-->`write_agent`<!--host:claude-->`SendMessage`<!--/host--> and set `answeredBy: "coordinator"`. Log an `assumption` event:
+2. **If `spec.md` or `contracts/` answers it,** reply with <!--mode:subagent--><!--host:copilot-->`write_agent`<!--host:claude-->`SendMessage`<!--/host--><!--mode:session-->`npx openfleet agent reply <project> <job>`<!--/mode-->, quoting the relevant spec lines. Set `answeredBy: "spec"`.
+3. **Otherwise, decide yourself.** Do not ask the user. Choose the option that best fits the goal, the existing code, the contracts and the out-of-scope list. When in doubt, prefer the smallest, most conventional and backward-compatible choice. Reply with <!--mode:subagent--><!--host:copilot-->`write_agent`<!--host:claude-->`SendMessage`<!--/host--><!--mode:session-->`agent reply`<!--/mode--> and set `answeredBy: "coordinator"`. Log an `assumption` event:
 
    ```sh
    npx openfleet event <project> --type assumption --target <child id> --payload '{"child":"<child id>","question":"…","decision":"…","rationale":"…","contractChange":false}'
    ```
 
-4. Mark the question `answered` and log `question.answered`. Log the reply as `message.sent`.
+4. Mark the question `answered` and log `question.answered`.<!--mode:subagent--> Log the reply as `message.sent`.<!--/mode-->
 5. If your decision changes a contract (`contractChange: true`), follow "Changing a contract" in `openfleet-contracts`, including the broadcast to affected children. If it changes the scope, update `spec.md` and log `spec.written`.
 
 Answer questions as they arrive. Do not hold a question back while you wait for others.
@@ -229,7 +251,7 @@ When every child is `done`, `failed` or `blocked` (not counting children waiting
 
 On resume, run `npx openfleet preflight <project>` first (section 0b): `resume` marks the last result stale, and nothing can be claimed until it passes. Then read `state.json` and answer any `open` questions. For each child:
 
-- `planning`, `baseline`, `implementing` or `testing` with a recorded agent id: <!--host:copilot-->try `read_agent` on that id. If the agent is gone,<!--host:claude-->send it a `SendMessage` ("Continue.") on that id. If the agent cannot be found,<!--/host--> re-spawn that role. Implementers and baseline testers continue from the worktree's current contents.
+- <!--mode:subagent-->`planning`, `baseline`, `implementing` or `testing` with a recorded agent id: <!--host:copilot-->try `read_agent` on that id. If the agent is gone,<!--host:claude-->send it a `SendMessage` ("Continue.") on that id. If the agent cannot be found,<!--/host--> re-spawn that role. Implementers and baseline testers continue from the worktree's current contents.<!--mode:session-->Run `npx openfleet agent status <project>`. Jobs keep running while no coordinator runs, so first collect every unread turn with `agent wait` and act on it. A `lost` job: `npx openfleet agent reply <project> <job> --message 'Continue.'`. A child in `planning`, `baseline`, `implementing` or `testing` with no running or lost job: start that role again. Implementers and baseline testers continue from the worktree's current contents.<!--/mode-->
 - `plan-review`: re-validate the saved plan.
 - `planned`: nothing to do; `next` decides.
 - Integration children (repo coordinators): `resume` marks them stopped and clears every unconsumed claim. `next` returns `repo-coordinator` for each repo that is not finished: spawn them again; they continue from `state.json`.
