@@ -1,10 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { installedCoreVersion, syncExtensions } from "../src/core.js";
+import { setConfig } from "../src/config.js";
+import { installCore, installedCoreVersion, syncExtensions } from "../src/core.js";
 import { addExtension } from "../src/extensions.js";
 import { readJson } from "../src/fsutil.js";
-import { claudeModel, claudeTools, pluginDir, renderForHost, toClaudeAgent } from "../src/hosts.js";
+import { claudeModel, claudeTools, pluginDir, renderForHost, renderForMode, toClaudeAgent } from "../src/hosts.js";
 import { publishFixture, tmpDir, workspace } from "./helpers.js";
 
 function files(dir: string): string[] {
@@ -12,6 +13,22 @@ function files(dir: string): string[] {
     .readdirSync(dir, { recursive: true, encoding: "utf8" })
     .filter((rel) => fs.statSync(path.join(dir, rel)).isFile());
 }
+
+describe("renderForMode", () => {
+  it("keeps one mode's parts, nests with host parts and collapses the gaps a dropped block leaves", () => {
+    const text =
+      "A <!--mode:subagent-->sub<!--mode:session-->ses<!--/mode--> B\n\n<!--mode:session-->\n\nonly sessions\n\n<!--/mode-->\n\nC";
+    expect(renderForMode(text, "subagent")).toBe("A sub B\n\nC");
+    expect(renderForMode(text, "session")).toBe("A ses B\n\nonly sessions\n\nC");
+    expect(
+      renderForMode(
+        renderForHost("<!--mode:session--><!--host:claude-->x<!--host:copilot-->y<!--/host--><!--/mode-->", "copilot"),
+        "session",
+      ),
+    ).toBe("y");
+    expect(() => renderForMode("<!--mode:thread-->x<!--/mode-->", "session")).toThrow(/Unknown mode "thread"/);
+  });
+});
 
 describe("renderForHost", () => {
   it("returns text without markers unchanged", () => {
@@ -72,6 +89,7 @@ describe("generated plugins", () => {
     ).hooks;
     expect(Object.keys(hooks).sort()).toEqual([
       "PostToolUse",
+      "PreToolUse",
       "SessionEnd",
       "SessionStart",
       "SubagentStart",
@@ -95,6 +113,8 @@ describe("generated plugins", () => {
 
   it("renders host parts for each plugin and leaves no markers or foreign tool names", () => {
     const ws = workspace();
+    setConfig(ws, "agentMode", "subagent");
+    installCore(ws);
     const copilot = [path.join(ws.core, "agents"), path.join(ws.core, "skills")];
     const claude = [path.join(pluginDir(ws, "claude"), "agents"), path.join(pluginDir(ws, "claude"), "skills")];
     const read = (dir: string) => files(dir).map((f) => fs.readFileSync(path.join(dir, f), "utf8"));
@@ -105,6 +125,29 @@ describe("generated plugins", () => {
     const copilotText = copilot.flatMap(read).join("\n");
     expect(copilotText).toContain("read_agent");
     expect(copilotText).not.toMatch(/SendMessage|AskUserQuestion/);
+  });
+
+  it("renders agent-mode parts: role sessions in new workspaces, subagents after config set", () => {
+    const ws = workspace();
+    const dirs = [ws.core, pluginDir(ws, "claude")].flatMap((d) => [path.join(d, "agents"), path.join(d, "skills")]);
+    const all = () =>
+      dirs.flatMap((dir) => files(dir).map((f) => fs.readFileSync(path.join(dir, f), "utf8"))).join("\n");
+    let text = all();
+    expect(text).not.toMatch(/<!--\s*(mode:|\/mode)/);
+    expect(text).toContain("npx openfleet agent start");
+    expect(text).toContain("npx openfleet agent wait");
+    expect(text).not.toMatch(/\n{3,}/);
+    const orchestrate = fs.readFileSync(
+      path.join(pluginDir(ws, "claude"), "skills", "openfleet-orchestrate", "SKILL.md"),
+      "utf8",
+    );
+    expect(orchestrate).toContain("run_in_background: true");
+    expect(orchestrate).not.toContain("Spawn agents with the `Agent` tool in the background");
+    setConfig(ws, "agentMode", "subagent");
+    installCore(ws);
+    text = all();
+    expect(text).not.toContain("npx openfleet agent start");
+    expect(text).toContain("**Claim every spawn.**");
   });
 
   it("generates extension agents and command skills for both hosts", () => {

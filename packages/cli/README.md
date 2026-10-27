@@ -174,6 +174,9 @@ Repos can live anywhere: give a `path` (relative to the workspace root) or a `ur
 | `npx openfleet config set greenfield.<key> <n>`                     | Greenfield caps: `maxServices` (5), `maxChildren` (12), `maxCriteriaPerChild` (8)                                                 |
 | `npx openfleet config set budget.<maxTokens\|maxCost> <n>`          | Spending limit per run (tokens, or USD with `pricing`); a run that reaches it halts                                               |
 | `npx openfleet config set models.<host>.<role> <model>`             | Model per agent role (`default`, `coordinator`, `planner`, `implementer`, `tester`, …) for `copilot` or `claude`; `""` removes it |
+| `npx openfleet config set agentMode <subagent\|session>`            | How child roles run: subagents of the coordinator's session, or their own sessions                                                |
+| `npx openfleet config set endpoints.<name>.<key> <value>`           | Model server for role sessions: `baseUrl`, `token` (local only) or `tokenEnv`, `minContext`; `endpoints.<name> ""` removes it     |
+| `npx openfleet config set roleHosts.<role> <copilot\|claude>`       | Host for one session role when it differs from the coordinator's                                                                  |
 | `npx openfleet new <name> ["<request>"] [--ask] [--host <h>]`       | Create a project and launch the coordinator (`--host` overrides the workspace host)                                               |
 | `npx openfleet resume <name> [--fresh] [--ask]`                     | Continue a project in its host session (`--fresh`, or a missing session: a new one)                                               |
 | `npx openfleet continue <name> [new-name]`                          | Start the next slice of a finished greenfield project from its Follow-ups                                                         |
@@ -219,6 +222,32 @@ npx openfleet config set models.copilot.planner "Claude Sonnet 5.5"
 
 The keys under `models.<copilot|claude>` are `default` and the roles `coordinator`, `repo-coordinator`, `planner`, `baseline`, `implementer`, `tester` and `extensions` (extension agents). A role without a model uses `default`, then the host's own default. Use each host's model names: aliases such as `sonnet` or full ids such as `claude-opus-5-5` on Claude Code, model names as Copilot lists them on Copilot CLI. They are written into the generated agents as `model:`, and the coordinator also gets `--model` at launch (a `--model` you pass after `--` wins). Models are workspace settings, read when a session starts: a change applies from the next `new` or `resume`. `""` removes a model.
 
+### Role sessions
+
+New workspaces use role sessions (`agentMode: "session"`); workspaces created before keep subagents until you run `npx openfleet config set agentMode session`, and `config set agentMode subagent` goes back. With `agentMode: "session"`, each planner, baseline tester, implementer, tester and extension agent runs as its own headless session (`claude -p` or `copilot -p`), started by the CLI instead of as a subagent of the coordinator. The coordinator drives them with `npx openfleet agent`:
+
+| Command                                                                                        | What it does                                                                                                                                                                            |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `agent start <project> <child> --role <role> [--message <text>]`                               | Claim the child (same `maxParallel`, halt and preflight rules as `claim`) and start the role's session; prints the job id at once. `--agent <ext agent>` starts an extension slot entry |
+| `agent wait <project> [--job <job>] [--timeout <s>]`                                           | Wait for the next finished turn (default 540 s) and print its `openfleet-report`                                                                                                        |
+| `agent reply <project> <job> --message <text>`                                                 | Next turn in the same session: answers, plan revisions, contract changes (queued while a turn runs)                                                                                     |
+| `agent status <project> [job]` · `agent result <project> <job>` · `agent stop <project> <job>` | Jobs, the last report again, stop one                                                                                                                                                   |
+
+The coordinator and repo coordinators follow the session version of their skills (`config set agentMode` renders them again). Each session gets its role's host, model and endpoint, and its own transcript (counted per role in the report and for spending limits). Jobs live in `projects/<name>/jobs/` and keep running if the coordinator's session ends; a job whose runner died is `lost`, and `agent reply … --message Continue.` resumes its session. `cancel` stops running jobs.
+
+### Model endpoints
+
+A role that runs as its own session (`agentMode: "session"`) can use another model server, for example a local Ollama, with no proxy. Name the endpoint, then give the role an `<endpoint>:<model>` model:
+
+```sh
+npx openfleet config set agentMode session
+npx openfleet config set endpoints.ollama.baseUrl http://localhost:11434
+npx openfleet config set endpoints.ollama.token ollama
+npx openfleet config set models.claude.implementer ollama:qwen3-coder:30b
+```
+
+Endpoints work with Claude Code sessions (they get `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN` and the model in their own env). Only `planner`, `baseline`, `implementer`, `tester` and `extensions` can use one; the coordinator and repo coordinators stay on the host's own provider. A literal `token` is allowed only for local servers, because `openfleet.json` is committed; use `tokenEnv` (an env var name) for anything else. Under a Copilot coordinator, run the role on Claude Code: `config set roleHosts.implementer claude`, then set `models.claude.implementer`. `npx openfleet preflight` checks that each endpoint answers, has the model, supports tool calls and has at least `minContext` tokens of context (default 32768; for Ollama also the server's `OLLAMA_CONTEXT_LENGTH`).
+
 ## Hosts
 
 OpenFleet runs on [GitHub Copilot CLI](https://github.com/github/copilot-cli) and [Claude Code](https://code.claude.com). Both are fully supported and tested against the same scenarios.
@@ -233,7 +262,8 @@ OpenFleet runs on [GitHub Copilot CLI](https://github.com/github/copilot-cli) an
 
 ## Limitations and known issues
 
-- **Hosts and models:** GitHub Copilot CLI and Claude Code only. Ollama, other providers and local models are not supported in v1. Models per role are workspace-wide and apply from the next `new` or `resume`; whether Copilot honours a model for a subagent depends on Copilot.
+- **Hosts and models:** GitHub Copilot CLI and Claude Code. Other model servers (for example a local Ollama) work only for role sessions on Claude Code, through an Anthropic-compatible endpoint; the coordinator and repo coordinators always use the host's own provider. Local models are best kept to bounded roles (implementer, tester): weaker models skip the coordination protocol. Models per role are workspace-wide and apply from the next `new` or `resume`; whether Copilot honours a model for a subagent depends on Copilot.
+- **Guards** check file tools and spawns, not shell commands: an agent can still write files with a shell command.
 - **Platforms:** macOS and Linux. Windows only through WSL2.
 - **Pull requests:** GitHub only (`gh`). Stacked PRs need the `gh stack` extension and stay within one repo. No GitLab or Bitbucket.
 - **Spending limits** are checked when an agent is about to start, so agents already running can take a run past a limit. There is no per-child limit, and usage is only known when the host transcripts are on the machine that runs OpenFleet.

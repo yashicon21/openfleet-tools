@@ -55,6 +55,7 @@ const PASCAL: Record<string, string> = {
   subagentStart: "SubagentStart",
   subagentStop: "SubagentStop",
   postToolUse: "PostToolUse",
+  preToolUse: "PreToolUse",
 };
 
 const CASES: Record<Host, HostCase> = {

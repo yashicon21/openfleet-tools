@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { qualifiedAgentName } from "./attribution.js";
 import fs from "node:fs";
-import { MODEL_KEYS, modelFor, readConfig } from "./config.js";
+import { MODEL_KEYS, modelFor, readConfig, roleTarget } from "./config.js";
 import { appendEvent, readEvents } from "./events.js";
 import { isDir, realish } from "./fsutil.js";
 import { out, warn } from "./commands/output.js";
@@ -234,7 +234,9 @@ function prepareClaude(ws: Workspace, bin: string): void {
 function recordModels(opts: LaunchOptions, host: Host): void {
   const config = readConfig(opts.ws);
   const models: Record<string, string | null> = {};
-  for (const key of MODEL_KEYS) if (key !== "default") models[key] = modelFor(config, host, key) ?? null;
+  // A role on another host (`roleHosts`) uses that host's model.
+  for (const key of MODEL_KEYS)
+    if (key !== "default") models[key] = modelFor(config, roleTarget(config, host, key).host, key) ?? null;
   const own = opts.passthrough ?? [];
   const i = own.findIndex((a) => a === "--model" || a.startsWith("--model="));
   if (i >= 0) models.coordinator = own[i]!.includes("=") ? own[i]!.split("=")[1]! : (own[i + 1] ?? null);

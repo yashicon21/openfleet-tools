@@ -1,7 +1,7 @@
 import { DEFAULT_HOST, isHost, type Host } from "../hosts.js";
 import type { HookOutput, HookPayload } from "./handlers.js";
 
-const EVENTS = ["sessionStart", "sessionEnd", "subagentStart", "subagentStop", "postToolUse"] as const;
+const EVENTS = ["sessionStart", "sessionEnd", "subagentStart", "subagentStop", "preToolUse", "postToolUse"] as const;
 export type HookEvent = (typeof EVENTS)[number];
 
 /** Parses `<host> <event>` or the legacy `<event>` (Copilot). Event names may be camelCase or PascalCase. */
@@ -43,6 +43,17 @@ const PASCAL: Record<string, string> = {
 
 /** Formats a handler's output for the host, or returns undefined when nothing should be written. */
 export function formatOutput(host: Host, event: string, out: HookOutput): string | undefined {
+  if (event === "preToolUse") {
+    if (!out.deny) return undefined;
+    if (host === "copilot") return JSON.stringify({ permissionDecision: "deny", permissionDecisionReason: out.deny });
+    return JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "deny",
+        permissionDecisionReason: out.deny,
+      },
+    });
+  }
   if (!out.additionalContext) return undefined;
   if (host === "copilot") return JSON.stringify(out);
   const hookEventName = PASCAL[event];

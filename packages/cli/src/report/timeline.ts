@@ -127,6 +127,8 @@ export interface AgentRun {
   end: number;
   /** No matching `agent.stopped` was logged, so `end` is inferred. */
   inferred?: boolean;
+  /** A role session started by `agent start` (not a subagent). */
+  job?: boolean;
 }
 
 /**
@@ -139,13 +141,27 @@ export function agentRuns(events: OpenFleetEvent[], end: number): AgentRun[] {
   const runs: AgentRun[] = [];
   const open = new Map<string, AgentRun>();
   const stopped = new Set<AgentRun>();
+  /** The last run of each role session job, so a reply after it stopped starts a new segment. */
+  const jobs = new Map<string, AgentRun>();
   for (const e of events) {
     const t = Date.parse(e.ts);
     const id = typeof e.payload.agentId === "string" ? e.payload.agentId : null;
+    const jobId = typeof e.payload.jobId === "string" ? e.payload.jobId : null;
     if (e.type === "agent.spawned") {
       const run: AgentRun = { agentId: id, role: roleOf(e.payload.agentName, e.actor), child: e.target, start: t, end };
+      if (jobId) run.job = true;
       runs.push(run);
       if (id) open.set(id, run);
+      if (jobId) jobs.set(jobId, run);
+    } else if (e.type === "message.sent" && jobId && !open.has(jobId)) {
+      // `agent reply` to a finished job: its session runs again from here.
+      const last = jobs.get(jobId);
+      if (!last) continue;
+      const run: AgentRun = { ...last, start: t, end, job: true };
+      delete run.inferred;
+      runs.push(run);
+      open.set(jobId, run);
+      jobs.set(jobId, run);
     } else if (e.type === "agent.stopped" && id) {
       const run = open.get(id);
       if (run) {
@@ -157,7 +173,8 @@ export function agentRuns(events: OpenFleetEvent[], end: number): AgentRun[] {
   }
   for (const run of runs) {
     if (stopped.has(run)) continue;
-    const nextSession = sessions.find((s) => s > run.start) ?? Infinity;
+    // Role sessions outlive the coordinator's session; only subagents end with it.
+    const nextSession = run.job ? Infinity : (sessions.find((s) => s > run.start) ?? Infinity);
     const nextSame =
       runs.find((r) => r.start > run.start && r.child === run.child && r.role === run.role)?.start ?? Infinity;
     run.end = Math.max(run.start, Math.min(end, nextSession, nextSame));

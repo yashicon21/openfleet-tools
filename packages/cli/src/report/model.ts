@@ -1,6 +1,7 @@
 // The data behind `openfleet report`, derived from events.jsonl, state.json, spec.md, summary.md,
 // git (when a child has no snapshot) and host transcripts.
 import fs from "node:fs";
+import { jobSessions } from "../jobstore.js";
 import { readConfig, type BudgetLimits } from "../config.js";
 import { readEvents, type OpenFleetEvent } from "../events.js";
 import { tryGit } from "../git.js";
@@ -103,6 +104,8 @@ export interface ReportModel {
   halts: HaltEntry[];
   /** Models per role from the last launch (`models.configured`); `null` is the host's default. */
   models?: { configured: Record<string, string | null>; changed: boolean };
+  /** Role sessions per role (`agent.spawned` with a job): the hosts and endpoints they ran on. */
+  sessions?: Record<string, { jobs: number; hosts: string[]; endpoints: string[] }>;
   eventCount: number;
   inProgress: boolean;
 }
@@ -155,6 +158,8 @@ function gitDiff(c: ChildState): ChildReport["diff"] {
 export function sessionIds(events: OpenFleetEvent[], state: ProjectState): string[] {
   const ids: string[] = [];
   for (const e of events) {
+    // Role session jobs are read separately, with their own host and role (`jobSessions`).
+    if (e.payload.jobId) continue;
     for (const key of ["sessionId", "previous"]) {
       const v = e.payload[key];
       if (typeof v === "string" && v) ids.push(v);
@@ -173,6 +178,7 @@ export function buildModel(ws: Workspace, name: string, opts: ReportOptions = {}
     host: state.host ?? DEFAULT_HOST,
     cwd: ws.root,
     sessionIds: sessionIds(events, state),
+    jobs: jobSessions(p),
     pricing,
     env: opts.env,
   });
@@ -186,6 +192,22 @@ export function buildModel(ws: Workspace, name: string, opts: ReportOptions = {}
     budget: { ...readConfig(ws).budget, ...state.budget },
     opts,
   });
+}
+
+/** Role sessions by role: how many jobs, on which hosts and endpoints. */
+function sessionsOf(events: OpenFleetEvent[]): Pick<ReportModel, "sessions"> {
+  const out: NonNullable<ReportModel["sessions"]> = {};
+  for (const e of events) {
+    if (e.type !== "agent.spawned" || typeof e.payload.jobId !== "string") continue;
+    const role = e.actor.startsWith("ext:") ? "extensions" : (e.actor.split("/").at(-1) ?? "unknown");
+    const entry = (out[role] ??= { jobs: 0, hosts: [], endpoints: [] });
+    entry.jobs++;
+    const host = e.payload.host;
+    const endpoint = e.payload.endpoint;
+    if (typeof host === "string" && !entry.hosts.includes(host)) entry.hosts.push(host);
+    if (typeof endpoint === "string" && !entry.endpoints.includes(endpoint)) entry.endpoints.push(endpoint);
+  }
+  return Object.keys(out).length ? { sessions: out } : {};
 }
 
 /** The configured models of the last launch, and whether they changed during the run. */
@@ -357,6 +379,7 @@ export function deriveModel(input: ModelInput): ReportModel {
     ...(input.budget && Object.keys(input.budget).length ? { budget: input.budget } : {}),
     ...(state.halt ? { halt: state.halt } : {}),
     ...modelsOf(events),
+    ...sessionsOf(events),
     halts: events
       .filter((e) => e.type === "run.halted" || e.type === "run.resumed" || e.type === "budget.warning")
       .map((e) => ({

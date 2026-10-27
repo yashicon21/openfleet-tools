@@ -285,11 +285,20 @@ export function computeCost(messages: Message[], pricing: Pricing): Cost {
   return cost;
 }
 
+/** A role session started by `agent start`: its own host and role. */
+export interface JobSession {
+  host: Host;
+  sessionId: string;
+  role: string;
+}
+
 export interface TokenSource {
   host: Host;
   /** Workspace root: the host session's cwd. */
   cwd: string;
   sessionIds: string[];
+  /** Role sessions; their main transcript counts for the job's role, not the coordinator. */
+  jobs?: JobSession[];
   pricing?: Pricing;
   env?: NodeJS.ProcessEnv;
 }
@@ -311,6 +320,20 @@ export function readTokenUsage(src: TokenSource): TokenReport | undefined {
       if (!fs.existsSync(file)) continue;
       files.push(file);
       messages.push(...copilotMessages(file));
+    }
+  }
+  for (const job of src.jobs ?? []) {
+    const asRole = (role: string) => (role === "coordinator" ? job.role : role);
+    if (job.host === "claude") {
+      for (const { file, role } of claudeFiles(claudeProjectDir(src.cwd, env), [job.sessionId])) {
+        files.push(file);
+        messages.push(...claudeMessages(file, asRole(role)));
+      }
+    } else {
+      const file = path.join(copilotSessionDir(job.sessionId, env), "events.jsonl");
+      if (!fs.existsSync(file)) continue;
+      files.push(file);
+      messages.push(...copilotMessages(file).map((m) => ({ ...m, role: asRole(m.role) })));
     }
   }
   if (!messages.length) return undefined;

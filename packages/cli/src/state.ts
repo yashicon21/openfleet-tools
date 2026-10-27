@@ -401,8 +401,36 @@ function checkGreenfieldScope(p: ProjectPaths, state: ProjectState): void {
   );
 }
 
+/** Guards on what a patch may do, from runs where the coordinator skipped steps. */
+function checkPatch(p: ProjectPaths, current: ProjectState, patch: Record<string, unknown>): void {
+  const next = mergePatch(current, patch);
+  // No finalize (or done) while a child is still working or waits on an escalation, unless the run is halted.
+  if ((next.status === "finalizing" || next.status === "done") && next.status !== current.status && !next.halt) {
+    const open = Object.entries(next.children).filter(([, c]) => !isFinal(c));
+    if (open.length) {
+      throw new UserError(
+        `Project ${p.name} cannot be ${next.status} yet: children are not finished: ${open.map(([id, c]) => `${id} (${c.phase})`).join(", ")}. ` +
+          "Run `npx openfleet next` and finish them first (or mark them failed or blocked).",
+      );
+    }
+  }
+  // Greenfield children are registered with their kind, which sets their run order.
+  if (next.greenfield && isPlainObject(patch.children)) {
+    const missing = Object.entries(patch.children)
+      .filter(([id, c]) => c !== null && !current.children[id] && !next.children[id]?.kind)
+      .map(([id]) => id);
+    if (missing.length) {
+      throw new UserError(
+        `Greenfield children need a kind (${CHILD_KINDS.join(", ")}): ${missing.join(", ")}. ` +
+          `Register them with it, for example {"children":{"${missing[0]}":{"kind":"service", …}}}.`,
+      );
+    }
+  }
+}
+
 export function patchState(p: ProjectPaths, patch: unknown, actor?: string): ProjectState {
   if (!isPlainObject(patch)) throw new UserError("State patch must be a JSON object.");
+  checkPatch(p, readState(p), patch);
   if ("maxParallel" in patch) {
     throw new UserError(
       "maxParallel is a workspace setting, not project state. Use: npx openfleet config set maxParallel <n>",

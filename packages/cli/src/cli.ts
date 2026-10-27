@@ -1,5 +1,6 @@
 import { parseArgs } from "node:util";
 import { packageVersion } from "./core.js";
+import { cmdAgent } from "./commands/agent.js";
 import { cmdAdd, cmdExtensions, cmdRemove, runExtensionCommand } from "./commands/extensions.js";
 import { cmdExt } from "./commands/ext.js";
 import { cmdEvent, cmdSpecCheck, cmdState, cmdWorktree } from "./commands/internal.js";
@@ -31,7 +32,10 @@ Workspace
                                greenfield.maxCriteriaPerChild (8) cap a greenfield spec before it can be approved;
                                budget.maxTokens and budget.maxCost (USD, needs pricing) halt a run that reaches them;
                                models.<copilot|claude>.<role> picks the model per agent role (default, coordinator,
-                               repo-coordinator, planner, baseline, implementer, tester, extensions); "" removes it
+                               repo-coordinator, planner, baseline, implementer, tester, extensions); "" removes it;
+                               agentMode (subagent | session) runs child roles as subagents or their own sessions;
+                               endpoints.<name>.<baseUrl|token|tokenEnv|minContext> names a model server, used as
+                               models.claude.<role> <name>:<model>; roleHosts.<role> runs a role on another host
 
 Projects
   new <name> ["<request>"] [--ask] [--host copilot|claude]
@@ -87,6 +91,12 @@ Agent helpers (used by OpenFleet agents)
   gate <project> open          Open the plans-ready gate
   baseline <project> <child> --report <json> | --check
                                Record a passed baseline, or check the diff for unlisted baseline edits
+  agent start <project> <child> --role <role> [--message <text> | --message-file <f>]
+                               Role sessions (agentMode session): claim the child and start the role as its own
+                               headless session; prints the job id at once. --agent <ext agent> for extension slots
+  agent status|wait|result|reply|stop <project> [job]
+                               Jobs and their reports; wait for the next finished turn (--timeout, default 540 s);
+                               reply continues a job's session (--message); stop ends it
   claim <project> <child> <role>
                                Reserve a spawn (workspace maxParallel, one claim per role); prints claimed or wait
   ack <project> <child> <role> Re-print a child's assignment (optional; fallback id binding)
@@ -252,6 +262,20 @@ export function run(argv: string[]): number {
     }
     case "claim":
       return cmdClaim(parse(rest, {}).positionals);
+    case "agent": {
+      const { values, positionals } = parse(rest, {
+        role: { type: "string" },
+        agent: { type: "string" },
+        message: { type: "string" },
+        "message-file": { type: "string" },
+        job: { type: "string" },
+        timeout: { type: "string" },
+        reason: { type: "string" },
+        repo: { type: "string" },
+        out: { type: "string" },
+      });
+      return cmdAgent(positionals, values);
+    }
     case "ack":
       return cmdAck(parse(rest, {}).positionals);
     case "scope": {

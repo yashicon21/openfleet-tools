@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
+import { stopAllJobs } from "../jobs.js";
 import { appendEvent, readEvents } from "../events.js";
 import { deleteBranch, removeWorktree, tryGit } from "../git.js";
 import { syncExtensions } from "../core.js";
@@ -324,6 +325,9 @@ export function cmdHalt(kind: "paused" | "cancelled", args: string[], opts: { re
   const next = haltRun(p, kind, opts.reason, "user", (s) => {
     if (kind === "cancelled") s.status = "cancelled";
   });
+  // Role sessions run outside the coordinator: a cancel stops them here.
+  const stopped = kind === "cancelled" ? stopAllJobs(ws, name, opts.reason ?? "cancelled") : [];
+  if (stopped.length) out(`Stopped role sessions: ${stopped.join(", ")}.`);
   const running = Object.entries(next.children)
     .filter(([, c]) => ["planning", "baseline", "implementing", "testing"].includes(c.phase))
     .map(([id]) => id);

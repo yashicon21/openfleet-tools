@@ -19,7 +19,11 @@ export function pluginDir(ws: Workspace, host: Host): string {
   return host === "claude" ? path.join(ws.core, "claude") : ws.core;
 }
 
-const MARKER = /<!--\s*(?:host:([a-z]+)|\/host)\s*-->/g;
+const MARKERS = {
+  host: /<!--\s*(?:host:([a-z]+)|\/host)\s*-->/g,
+  mode: /<!--\s*(?:mode:([a-z]+)|\/mode)\s*-->/g,
+};
+const MODES = ["subagent", "session"];
 
 /**
  * Keep shared text and the parts for `host`; drop the other hosts' parts and every marker.
@@ -28,7 +32,22 @@ const MARKER = /<!--\s*(?:host:([a-z]+)|\/host)\s*-->/g;
  * left empty only because its markers were removed is dropped. Text without markers is unchanged.
  */
 export function renderForHost(text: string, host: Host): string {
-  if (!text.includes("host:")) return text;
+  return renderBlocks(text, "host", host, (v) => isHost(v));
+}
+
+/**
+ * Keep shared text and the parts for an agent mode (`<!--mode:session-->` / `<!--mode:subagent-->`,
+ * closed by `<!--/mode-->`), with the same rules as host parts. Host and mode parts nest freely; runs of blank lines left behind collapse to one.
+ */
+export function renderForMode(text: string, mode: string): string {
+  if (!text.includes("mode:")) return text;
+  // Formatters put blank lines around block markers; dropping a block must not leave a double gap.
+  return renderBlocks(text, "mode", mode, (v) => MODES.includes(v)).replace(/\n{3,}/g, "\n\n");
+}
+
+function renderBlocks(text: string, tag: "host" | "mode", keep: string, known: (v: string) => boolean): string {
+  if (!text.includes(`${tag}:`)) return text;
+  const MARKER = MARKERS[tag];
   const out: string[] = [];
   let current: string | undefined;
   for (const line of text.split("\n")) {
@@ -36,15 +55,15 @@ export function renderForHost(text: string, host: Host): string {
     let last = 0;
     let marked = false;
     for (const m of line.matchAll(MARKER)) {
-      if (current === undefined || current === host) kept += line.slice(last, m.index);
-      if (m[1] !== undefined && !isHost(m[1])) throw new Error(`Unknown host "${m[1]}" in a host marker.`);
+      if (current === undefined || current === keep) kept += line.slice(last, m.index);
+      if (m[1] !== undefined && !known(m[1])) throw new Error(`Unknown ${tag} "${m[1]}" in a ${tag} marker.`);
       current = m[1];
       last = m.index + m[0].length;
       marked = true;
     }
-    if (current === undefined || current === host) kept += line.slice(last);
+    if (current === undefined || current === keep) kept += line.slice(last);
     if (marked && kept.trim() === "") continue;
-    if (!marked && current !== undefined && current !== host) continue;
+    if (!marked && current !== undefined && current !== keep) continue;
     out.push(kept);
   }
   return out.join("\n");
@@ -136,6 +155,7 @@ export function claudeHooks(): Record<string, unknown> {
       SessionEnd: [{ hooks: [cmd("sessionEnd", 10)] }],
       SubagentStart: [{ matcher: "^(openfleet:)?openfleet-", hooks: [cmd("subagentStart", 10)] }],
       SubagentStop: [{ matcher: "^(openfleet:)?openfleet-", hooks: [cmd("subagentStop", 30)] }],
+      PreToolUse: [{ matcher: "^(Write|Edit|MultiEdit|NotebookEdit|Agent|Task)$", hooks: [cmd("preToolUse", 10)] }],
       PostToolUse: [{ matcher: "^(Write|Edit|MultiEdit|Bash)$", hooks: [cmd("postToolUse", 10)] }],
     },
   };

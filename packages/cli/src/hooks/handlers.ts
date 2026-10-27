@@ -8,6 +8,7 @@ import { appendEvent } from "../events.js";
 import { filePatch, snapshotWorktree, type FileKind } from "../git.js";
 import { groupOf, isSetup, membersOf, scopeGlobs } from "../groups.js";
 import { greenfieldContext } from "./greenfield-context.js";
+import { onPreToolUse } from "./guards.js";
 import {
   dependenciesOf,
   PORT_STEP,
@@ -41,10 +42,14 @@ export interface HookContext {
   ws: Workspace;
   /** Project from OPENFLEET_PROJECT, if the session was launched by the CLI. */
   project?: string;
+  /** Set in a role session started by `agent start` (OPENFLEET_JOB, OPENFLEET_ROLE, OPENFLEET_CHILD). */
+  job?: { id: string; role: string; child?: string };
 }
 
 export interface HookOutput {
   additionalContext?: string;
+  /** `preToolUse` only: refuse the tool call with this reason. */
+  deny?: string;
 }
 
 /** Hooks are a no-op unless the session is inside (or launched for) an OpenFleet workspace. */
@@ -54,7 +59,15 @@ export function resolveContext(payload: HookPayload, env: NodeJS.ProcessEnv = pr
   if (!ws) return undefined;
   const project = env.OPENFLEET_PROJECT || undefined;
   if (project && !fs.existsSync(projectPaths(ws, project).state)) return { ws };
-  return { ws, ...(project ? { project } : {}) };
+  const job =
+    project && env.OPENFLEET_JOB
+      ? {
+          id: env.OPENFLEET_JOB,
+          role: env.OPENFLEET_ROLE ?? "unknown",
+          ...(env.OPENFLEET_CHILD ? { child: env.OPENFLEET_CHILD } : {}),
+        }
+      : undefined;
+  return { ws, ...(project ? { project } : {}), ...(job ? { job } : {}) };
 }
 
 function ts(payload: HookPayload): string {
@@ -81,6 +94,8 @@ function activeProject(ctx: HookContext): ProjectPaths | undefined {
 // ---------------------------------------------------------------- session
 
 export function onSessionStart(ctx: HookContext, payload: HookPayload): HookOutput {
+  // A role session's start and end are logged by its job runner (`agent.spawned`, `agent.turn`, `agent.stopped`).
+  if (ctx.job) return {};
   const p = ctx.project ? projectPaths(ctx.ws, ctx.project) : undefined;
   if (p) {
     appendEvent(p, {
@@ -111,7 +126,7 @@ export function onSessionStart(ctx: HookContext, payload: HookPayload): HookOutp
 }
 
 export function onSessionEnd(ctx: HookContext, payload: HookPayload): HookOutput {
-  if (!ctx.project) return {};
+  if (!ctx.project || ctx.job) return {};
   appendEvent(projectPaths(ctx.ws, ctx.project), {
     ts: ts(payload),
     actor: "coordinator",
@@ -401,7 +416,17 @@ export function onSubagentStart(ctx: HookContext, payload: HookPayload): HookOut
       agentDisplayName: payload.agentDisplayName ?? null,
     },
   });
-  if (!childId) return {};
+  if (!childId) {
+    // Spawned without a claim: nothing to attribute it to (the preToolUse guard refuses these where it can).
+    appendEvent(p, {
+      ts: ts(payload),
+      actor: actorFor("unknown", role),
+      type: "guard.refused",
+      target: null,
+      payload: { guard: "claim", reason: `${role} spawned without a claim`, agentName: payload.agentName ?? null },
+    });
+    return {};
+  }
   if (role === "repo-coordinator") {
     return {
       additionalContext: `${repoContext(p, state, childId)}\n${ackLine(p.name, childId, role)}`,
@@ -410,7 +435,7 @@ export function onSubagentStart(ctx: HookContext, payload: HookPayload): HookOut
   return { additionalContext: childContext(p, state, childId, role as Role) };
 }
 
-function snapshotChild(p: ProjectPaths, childId: string, child: ChildState, actor: string, at: string): void {
+export function snapshotChild(p: ProjectPaths, childId: string, child: ChildState, actor: string, at: string): void {
   if (!child.worktree || !fs.existsSync(child.worktree)) return;
   let snap;
   try {
@@ -645,7 +670,11 @@ export function onPostToolUse(ctx: HookContext, payload: HookPayload): HookOutpu
     const abs = path.resolve(cwd, change.path);
     const loc = locatePath(ctx.ws, abs, ctx.project);
     if (!loc) continue;
-    const role = roleByAgentId(loc.child, payload.agentId) ?? roleOf(loc.child);
+    // In a role session the env names the role; a subagent the session spawns still acts for it.
+    const role =
+      ctx.job && ctx.job.child === loc.childId
+        ? ctx.job.role
+        : (roleByAgentId(loc.child, payload.agentId) ?? roleOf(loc.child));
     const rel = loc.rel.split(path.sep).join("/");
     const copied = loc.child.copiedFiles?.includes(rel) === true;
     let patch = "";
@@ -680,6 +709,7 @@ export const HANDLERS: Record<string, (ctx: HookContext, payload: HookPayload) =
   subagentStart: onSubagentStart,
   subagentStop: onSubagentStop,
   postToolUse: onPostToolUse,
+  preToolUse: onPreToolUse,
 };
 
 export function runHook(event: string, payload: HookPayload, env: NodeJS.ProcessEnv = process.env): HookOutput {
