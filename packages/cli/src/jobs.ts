@@ -10,7 +10,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { actorFor, bareAgentName, qualifiedAgentName } from "./attribution.js";
 import { claim, type ClaimResult } from "./claim.js";
-import { agentModeOf, readConfig, roleTarget, type RoleTarget } from "./config.js";
+import { agentModeOf, readConfig, roleTarget, splitsInSteps, type RoleTarget } from "./config.js";
 import { findSlotEntry, readCoreIndex } from "./coreindex.js";
 import { endpointEnv } from "./endpoints.js";
 import { appendEvent } from "./events.js";
@@ -28,11 +28,14 @@ import {
   type Job,
   type JobRole,
   type JobState,
+  type JobStep,
   type Report,
+  type SessionRef,
 } from "./jobstore.js";
 import { groupOf } from "./groups.js";
+import { parseSteps, PLANNER_STEPS_NOTE, stepPrompt, stepsHash, worktreeChanges, type PlanStep } from "./steps.js";
 import { TOP } from "./schedule.js";
-import { readState, updateState, type ProjectState, type WorkRole } from "./state.js";
+import { readState, updateState, type ChildState, type ProjectState, type WorkRole } from "./state.js";
 import { projectPaths, UserError, type ProjectPaths, type Workspace } from "./workspace.js";
 
 export * from "./jobstore.js";
@@ -159,6 +162,7 @@ export function startJob(opts: StartOptions): StartResult {
   let slot: string | undefined;
   let target: RoleTarget;
   let prompt: string;
+  let split: ReturnType<typeof planSplit> | undefined;
   const child = opts.child ?? null;
   if (opts.agent) {
     const index = readCoreIndex(ws);
@@ -195,6 +199,8 @@ export function startJob(opts: StartOptions): StartResult {
     if (res.result !== "claimed") return res;
     const state = readState(p);
     prompt = [ROLE_LINE[role](child, project), "", childContext(p, state, child, role), "", SESSION_NOTE].join("\n");
+    if (role === "planner" && splitsInSteps(config, "implementer")) prompt += `\n\n${PLANNER_STEPS_NOTE}`;
+    if (role === "implementer" && splitsInSteps(config, "implementer")) split = planSplit(state.children[child]!);
   }
   if (opts.message?.trim()) prompt += `\n\n## From the coordinator\n\n${opts.message.trim()}`;
   const id = newJobId(p, role, child);
@@ -218,6 +224,21 @@ export function startJob(opts: StartOptions): StartResult {
     queue: [prompt],
     unread: false,
   };
+  if (split?.pending.length) {
+    // Step mode: each pending step runs in its own session; the first one starts now.
+    const fb = roleTarget(config, job.host, "fallback");
+    job.steps = split.steps.map((s) => ({ ...s, state: split.done.includes(s.n) ? "done" : "pending", attempts: 0 }));
+    job.stepsPlan = split.hash;
+    if (fb.model) job.fallback = { model: fb.model, ...(fb.endpoint ? { endpoint: fb.endpoint.name } : {}) };
+    if (opts.message?.trim()) job.stepMessage = opts.message.trim();
+    job.queue = [];
+    startStep(
+      p,
+      job,
+      job.steps.find((s) => s.state === "pending")!,
+      false,
+    );
+  }
   fs.mkdirSync(path.dirname(jobFile(p, id)), { recursive: true });
   writeJson(jobFile(p, id), job);
   if (role !== "extension") {
@@ -242,6 +263,10 @@ export function startJob(opts: StartOptions): StartResult {
       host: job.host,
       model: job.model ?? null,
       endpoint: job.endpoint ?? null,
+      ...(split ? { steps: job.steps ? job.steps.filter((s) => s.state === "pending").length : null } : {}),
+      ...(split && !job.steps
+        ? { split: split.steps.length ? "every step is done: one session for the message" : "the plan has no ## Steps" }
+        : {}),
     },
   });
   if (opts.detach !== false) spawnRunner(ws, p, id, opts.env);
@@ -278,9 +303,16 @@ export function spawnRunner(ws: Workspace, p: ProjectPaths, id: string, env: Nod
 // ---------------------------------------------------------------- run
 
 /** Host args for one headless turn. The first turn creates the session; later turns resume it. */
+/** The session turns go to: the current step's, else the job's own. */
+export function sessionOf(job: Job): SessionRef {
+  return job.current ?? { sessionId: job.sessionId, model: job.model, endpoint: job.endpoint };
+}
+
 export function turnArgs(ws: Workspace, job: Job, prompt: string, first: boolean): string[] {
   const dirs = allowedDirs(ws, job.project).flatMap((d) => ["--add-dir", d]);
-  const model = job.model ? ["--model", job.model] : [];
+  const s = sessionOf(job);
+  const model = s.model ? ["--model", s.model] : [];
+  const session = first ? ["--session-id", s.sessionId] : ["--resume", s.sessionId];
   if (job.host === "claude") {
     return [
       "-p",
@@ -289,7 +321,7 @@ export function turnArgs(ws: Workspace, job: Job, prompt: string, first: boolean
       pluginDir(ws, "claude"),
       "--agent",
       job.agent,
-      ...(first ? ["--session-id", job.sessionId] : ["--resume", job.sessionId]),
+      ...session,
       "--output-format",
       "json",
       "--permission-mode",
@@ -307,7 +339,7 @@ export function turnArgs(ws: Workspace, job: Job, prompt: string, first: boolean
     ws.core,
     "--agent",
     job.agent,
-    ...(first ? ["--session-id", job.sessionId] : ["--resume", job.sessionId]),
+    ...session,
     "--allow-all-tools",
     ...dirs,
     ...model,
@@ -328,12 +360,13 @@ export function jobEnv(ws: Workspace, job: Job, env: NodeJS.ProcessEnv = process
     OPENFLEET_ROLE: job.role,
     OPENFLEET_CHILD: job.child ?? "",
   });
-  if (job.endpoint) {
-    const ep = readConfig(ws).endpoints?.[job.endpoint];
-    if (!ep) throw new UserError(`Endpoint "${job.endpoint}" is no longer configured.`);
+  const s = sessionOf(job);
+  if (s.endpoint) {
+    const ep = readConfig(ws).endpoints?.[s.endpoint];
+    if (!ep) throw new UserError(`Endpoint "${s.endpoint}" is no longer configured.`);
     delete next.CLAUDE_CODE_USE_BEDROCK;
     delete next.CLAUDE_CODE_USE_VERTEX;
-    Object.assign(next, endpointEnv(ep, job.model!, env));
+    Object.assign(next, endpointEnv(ep, s.model!, env));
   }
   return next;
 }
@@ -415,23 +448,31 @@ export async function runJob(
   });
   for (;;) {
     let prompt: string | undefined;
+    let stepped: StepChange | undefined;
     let job = updateJob(p, id, (j) => {
       prompt = j.queue.shift();
+      // Step mode: the queue ran dry, so the current step's session is done; move on.
+      if (prompt === undefined && j.steps) {
+        stepped = advanceSteps(p, j);
+        prompt = j.queue.shift();
+      }
       if (prompt === undefined) {
         // Nothing left: finish under the same lock, so a concurrent `reply` sees the final state.
         const last = j.turns.at(-1);
-        j.state = last?.report ? "finished" : "failed";
+        j.state = j.result || last?.report ? "finished" : "failed";
         j.endedAt = new Date().toISOString();
         j.unread = true;
         delete j.hostPid;
         delete j.runnerPid;
       }
     });
+    if (stepped) recordStep(p, job, stepped);
     if (prompt === undefined) {
       finishJob(ws, p, job);
       return job;
     }
-    const first = !job.turns.some((t) => t.exitCode === 0 || t.text);
+    const sid = sessionOf(job).sessionId;
+    const first = job.started ? !job.started.includes(sid) : !job.turns.some((t) => t.exitCode === 0 || t.text);
     const res = await runTurn(ws, job, prompt, first, env);
     const { text, error } = turnText(job.host, res.stdout);
     const report = parseReport(text);
@@ -441,6 +482,10 @@ export async function runJob(
       t.exitCode = res.code;
       if (text) t.text = text.slice(-TEXT_LIMIT);
       if (report) t.report = report;
+      // The host session exists once a turn produced output; later turns resume it.
+      if ((res.code === 0 || text) && !(j.started ??= []).includes(sid)) j.started.push(sid);
+      const ref = sessionOf(j);
+      if (!(j.sessions ??= []).some((x) => x.sessionId === ref.sessionId)) j.sessions.push(ref);
       const err =
         error ??
         (res.code === 0 ? undefined : res.stderr.trim().split("\n").slice(-5).join("\n") || `exit ${res.code}`);
@@ -471,6 +516,141 @@ export async function runJob(
   }
 }
 
+// ---------------------------------------------------------------- steps
+
+/** The plan's steps for an implementer in step mode, and which of them earlier jobs of the same plan finished. */
+function planSplit(child: ChildState): { steps: PlanStep[]; hash: string; done: number[]; pending: PlanStep[] } {
+  // Merge conflicts and integration fixes are one task, not plan steps.
+  const text =
+    child.plan && !child.conflict && !child.integration && fs.existsSync(child.plan)
+      ? fs.readFileSync(child.plan, "utf8")
+      : "";
+  const steps = parseSteps(text);
+  const hash = stepsHash(steps);
+  const done = child.stepsDone?.plan === hash ? child.stepsDone.steps : [];
+  return { steps, hash, done, pending: steps.filter((s) => !done.includes(s.n)) };
+}
+
+/** Queue a step's prompt for a fresh session (on the fallback model when `fallback`). */
+function startStep(p: ProjectPaths, j: Job, step: JobStep, fallback: boolean, previous?: string): void {
+  const state = readState(p);
+  const child = state.children[j.child!]!;
+  const ref = fallback && j.fallback ? j.fallback : { model: j.model, endpoint: j.endpoint };
+  j.current = {
+    sessionId: crypto.randomUUID(),
+    ...(ref.model ? { model: ref.model } : {}),
+    ...(ref.endpoint ? { endpoint: ref.endpoint } : {}),
+  };
+  step.state = "running";
+  delete j.nudged;
+  delete j.retried;
+  const steps = j.steps!;
+  j.queue.push(
+    stepPrompt({
+      child: j.child!,
+      project: p.name,
+      step,
+      total: steps.length,
+      done: steps.filter((s) => s.state === "done"),
+      assignment: childContext(p, state, j.child!, "implementer"),
+      changes: worktreeChanges(child.worktree),
+      ...(j.stepMessage ? { message: j.stepMessage } : {}),
+      ...(previous ? { previous } : {}),
+    }) + `\n\n${SESSION_NOTE}`,
+  );
+  delete j.stepMessage;
+}
+
+interface StepChange {
+  step: JobStep;
+  status: string;
+  session: SessionRef;
+}
+
+/**
+ * The current step's session ran out of turns: record its result and queue the next session. A
+ * failed step gets one more fresh session, then one on the fallback model (if set); a question or
+ * a step that still fails ends the job with that step's report.
+ */
+function advanceSteps(p: ProjectPaths, j: Job): StepChange | undefined {
+  const steps = j.steps!;
+  const step = steps.find((s) => s.state === "running" || s.state === "waiting");
+  const total = steps.length;
+  let change: StepChange | undefined;
+  if (step) {
+    const last = j.turns.at(-1);
+    const rep = last?.report;
+    const session = sessionOf(j);
+    if (rep) step.report = rep;
+    if (rep?.status === "done") {
+      step.state = "done";
+      change = { step, status: "done", session };
+    } else if (rep?.status === "question") {
+      step.state = "waiting";
+      j.result = { ...rep, child: j.child!, step: step.n, of: total };
+      return { step, status: "question", session };
+    } else {
+      step.attempts++;
+      const why = rep?.summary ?? last?.error ?? "the session ended without a report";
+      const previous = `Attempt ${step.attempts} (${session.model ?? "default model"}): ${String(why)}`;
+      const onFallback = j.fallback && session.model === j.fallback.model && session.endpoint === j.fallback.endpoint;
+      if (step.attempts < 2) startStep(p, j, step, false, previous);
+      else if (j.fallback && !onFallback) startStep(p, j, step, true, previous);
+      else {
+        step.state = "failed";
+        j.result = {
+          status: "failed",
+          child: j.child!,
+          summary: `Step ${step.n} of ${total} (${step.title}) failed after ${step.attempts} attempts: ${String(why)}`,
+          findings: rep && Array.isArray(rep.findings) ? (rep.findings as unknown[]) : [String(why)],
+          step: step.n,
+          of: total,
+          done: steps.filter((s) => s.state === "done").map((s) => s.n),
+        };
+      }
+      return { step, status: step.state === "failed" ? "failed" : "retry", session };
+    }
+  }
+  const next = steps.find((s) => s.state === "pending");
+  if (next) startStep(p, j, next, false);
+  else if (steps.every((s) => s.state === "done")) {
+    j.result = {
+      status: "done",
+      child: j.child!,
+      summary: steps.map((s) => `${s.n}. ${s.title}: ${String(s.report?.summary ?? "done")}`).join("\n"),
+      steps: total,
+    };
+  }
+  return change;
+}
+
+/** Log `agent.step` and remember finished steps on the child, so a later job of the same plan skips them. */
+function recordStep(p: ProjectPaths, job: Job, c: StepChange): void {
+  appendEvent(p, {
+    actor: actorOf(job),
+    type: "agent.step",
+    target: job.child,
+    payload: {
+      jobId: job.id,
+      step: c.step.n,
+      of: job.steps!.length,
+      title: c.step.title,
+      status: c.status,
+      attempts: c.step.attempts,
+      sessionId: c.session.sessionId,
+      model: c.session.model ?? null,
+      endpoint: c.session.endpoint ?? null,
+    },
+  });
+  if (c.status !== "done") return;
+  updateState(p, (s) => {
+    const child = s.children[job.child!];
+    if (!child) return;
+    const prev = child.stepsDone?.plan === job.stepsPlan ? child.stepsDone!.steps : [];
+    child.stepsDone = { plan: job.stepsPlan!, steps: [...new Set([...prev, c.step.n])].sort((a, b) => a - b) };
+  });
+}
+
 export function actorOf(job: Job): string {
   return job.role === "extension" ? `ext:${job.extension}` : actorFor(job.child ?? "unknown", job.role);
 }
@@ -491,7 +671,8 @@ function finishJob(ws: Workspace, p: ProjectPaths, job: Job, stopped = false): v
       sessionId: job.sessionId,
       state: job.state,
       turns: job.turns.length,
-      response: last?.text ?? "",
+      response: job.result ? String(job.result.summary ?? "") : (last?.text ?? ""),
+      ...(job.result ? { report: job.result } : {}),
       ...(stopped ? { stopped: true } : {}),
     },
   });
@@ -545,6 +726,7 @@ export interface JobView {
   endedAt: string | null;
   report: Report | null;
   error: string | null;
+  steps?: { n: number; title: string; state: JobStep["state"]; attempts: number }[];
 }
 
 export function view(job: Job): JobView {
@@ -564,8 +746,11 @@ export function view(job: Job): JobView {
     unread: job.unread,
     createdAt: job.createdAt,
     endedAt: job.endedAt ?? null,
-    report: last?.report ?? null,
-    error: last?.error ?? null,
+    report: job.result ?? last?.report ?? null,
+    error: job.result ? null : (last?.error ?? null),
+    ...(job.steps
+      ? { steps: job.steps.map((x) => ({ n: x.n, title: x.title, state: x.state, attempts: x.attempts })) }
+      : {}),
   };
 }
 
@@ -574,7 +759,7 @@ export function jobResult(p: ProjectPaths, id: string): JobView & { text: string
   const job = updateJob(p, id, (j) => {
     if (j.state !== "running") j.unread = false;
   });
-  return { ...view(job), text: job.turns.at(-1)?.text ?? "" };
+  return { ...view(job), text: job.result ? String(job.result.summary ?? "") : (job.turns.at(-1)?.text ?? "") };
 }
 
 export type WaitResult =
@@ -630,6 +815,8 @@ export function replyJob(
       delete j.endedAt;
       delete j.nudged;
       delete j.retried;
+      // A step that asked a question continues; the job has no overall result yet.
+      delete j.result;
     }
   });
   appendEvent(p, {

@@ -97,6 +97,7 @@ Only repo coordinators are still spawned as subagents: claim them with `npx open
 - **Stop:** `npx openfleet agent stop <project> <job> --reason '…'` (timeouts, a failed dependency).
 - **Status:** `npx openfleet agent status <project>` lists every job. A `lost` job's runner died (for example the machine restarted): `npx openfleet agent reply <project> <job> --message 'Continue.'` resumes its session.
 - A job that is `failed` counts as a failed attempt of that role.
+- **Step mode** (`split.implementer: "steps"`): an implementer job runs the plan's `## Steps` one by one, each in a fresh session (usually a small local model), retries a failed step once and then gives it to the `fallback` model if one is set. You get one turn per job: `report.steps` when every step is done, or the step that asked (`status: "question"`, `step`, `of`; answer it with `agent reply` and the job continues) or failed (`step`, `of`, `done`). For a failed step, treat it as a failed implementer attempt: start a new implementer with your guidance; it skips the steps already done and starts at the failed one. After a failed test, a new implementer with the findings runs as one session.
 
 <!--/mode-->
 
@@ -128,6 +129,8 @@ A run halts when a spending limit (`budget` in `openfleet.json`, or the project'
 2. When it reports `done`, save the plan to `projects/<project>/plans/<child id>.md`<!--mode:session--> with `npx openfleet agent result <project> <job> --out projects/<project>/plans/<child id>.md`<!--/mode-->. Patch `{"phase":"plan-review","plan":"<abs path>"}` and log `plan.submitted`.
 3. **Validate the plan against the spec yourself:**
    - Every acceptance criterion for this child is mapped.
+
+   <!--mode:session-->- **Step mode** (`split.implementer` is `steps` in `npx openfleet config`): the plan ends with a `## Steps` list of small, ordered steps (a few files and one concern each; a rename stays in one step with its call sites). Send back a plan without one, or with a step too large for one short session.<!--/mode-->
    - Every contract it produces or consumes has a contract test.
    - It follows the spec's **Shared approach** section.
    - If the child has a baseline, every planned change to baseline behaviour is one the spec explicitly lists.

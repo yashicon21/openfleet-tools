@@ -176,6 +176,7 @@ Repos can live anywhere: give a `path` (relative to the workspace root) or a `ur
 | `npx openfleet config set models.<host>.<role> <model>`             | Model per agent role (`default`, `coordinator`, `planner`, `implementer`, `tester`, …) for `copilot` or `claude`; `""` removes it |
 | `npx openfleet config set agentMode <subagent\|session>`            | How child roles run: subagents of the coordinator's session, or their own sessions                                                |
 | `npx openfleet config set endpoints.<name>.<key> <value>`           | Model server for role sessions: `baseUrl`, `token` (local only) or `tokenEnv`, `minContext`; `endpoints.<name> ""` removes it     |
+| `npx openfleet config set split.implementer steps`                  | Step mode: run the plan's `## Steps` one fresh session each (`models.<host>.fallback` for failed steps)                           |
 | `npx openfleet config set roleHosts.<role> <copilot\|claude>`       | Host for one session role when it differs from the coordinator's                                                                  |
 | `npx openfleet new <name> ["<request>"] [--ask] [--host <h>]`       | Create a project and launch the coordinator (`--host` overrides the workspace host)                                               |
 | `npx openfleet resume <name> [--fresh] [--ask]`                     | Continue a project in its host session (`--fresh`, or a missing session: a new one)                                               |
@@ -234,6 +235,17 @@ New workspaces use role sessions (`agentMode: "session"`); workspaces created be
 | `agent status <project> [job]` · `agent result <project> <job>` · `agent stop <project> <job>` | Jobs, the last report again, stop one                                                                                                                                                   |
 
 The coordinator and repo coordinators follow the session version of their skills (`config set agentMode` renders them again). Each session gets its role's host, model and endpoint, and its own transcript (counted per role in the report and for spending limits). Jobs live in `projects/<name>/jobs/` and keep running if the coordinator's session ends; a job whose runner died is `lost`, and `agent reply … --message Continue.` resumes its session. `cancel` stops running jobs.
+
+### Step mode
+
+Local models have small context windows. In step mode the planner (on a strong model) ends its plan with a `## Steps` list of small steps, and the implementer job runs **each step in a fresh session**: the session sees only its step, the titles of the steps before it and the files on disk, never the history of earlier steps.
+
+```sh
+npx openfleet config set split.implementer steps
+npx openfleet config set models.claude.fallback sonnet   # optional: a cloud model for steps the local model cannot finish
+```
+
+A failed step gets one more fresh session, then one on the `fallback` model (if set); a step that still fails ends the job, and the next implementer job of the same plan starts at that step. A step that asks a question waits for the coordinator's `agent reply`. The coordinator gets one result per job, and the tester checks the whole child afterwards. Merge conflicts, integration fixes and fixes after a failed test run as one session.
 
 ### Model endpoints
 
