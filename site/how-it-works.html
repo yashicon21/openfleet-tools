@@ -1936,8 +1936,8 @@
       <div class="marquee" aria-hidden="true">
         <div class="band c">
           <span
-            >ACCOUNT-ID · 6 REPOS · 8 CHILDREN · 28 SUB-AGENTS · 254 EVENTS · ACCOUNT-ID · 6 REPOS · 8 CHILDREN · 28
-            SUB-AGENTS · 254 EVENTS ·</span
+            >ACCOUNT-ID · 6 REPOS · 8 CHILDREN · 28 AGENTS · 254 EVENTS · ACCOUNT-ID · 6 REPOS · 8 CHILDREN · 28 AGENTS
+            · 254 EVENTS ·</span
           >
         </div>
         <div class="band m">
@@ -1983,7 +1983,7 @@
       </div>
       <div class="wide stats" role="group" aria-label="The run at a glance">
         <div class="stat"><b>4:28</b><span>START TO DONE</span></div>
-        <div class="stat"><b>1 + 28</b><span>COORDINATOR + SUB-AGENTS</span></div>
+        <div class="stat"><b>1 + 28</b><span>COORDINATOR + AGENTS</span></div>
         <div class="stat"><b>1</b><span>BROKEN BASELINE TEST, FIXED ON RETRY</span></div>
         <div class="stat"><b>1</b><span>ASSUMPTION FOR YOU</span></div>
         <div class="stat"><b>0</b><span>PRS MERGED WITHOUT YOU</span></div>
@@ -2033,7 +2033,7 @@
             The <strong>coordinator</strong> is the agent you talk to. For the first forty seconds it
             <strong>grills</strong> you: it asks every question it needs answered, then writes a spec. Once you approve
             the spec, you are done talking. Each unit of work is a <strong>child</strong>: a whole repo, a monorepo
-            package or a path-scoped part of an app. Every child gets its own git worktree and short-lived sub-agents in
+            package or a path-scoped part of an app. Every child gets its own git worktree and short-lived agents in
             turn: a <strong>planner</strong>, an optional <strong>baseline</strong> tester, an
             <strong>implementer</strong> and a <strong>tester</strong>.
           </p>
@@ -2093,9 +2093,9 @@
             </div>
           </div>
           <p class="figcap">
-            Bars are sub-agents from spawn to stop; dots are file edits and test runs. Ticks on the web lane are its
-            repo coordinator checking plans and merging children. The dashed segment is the only time the run waited on
-            a person.
+            Bars are agents from start to stop; dots are file edits and test runs. Ticks on the web lane are its repo
+            coordinator checking plans and merging children. The dashed segment is the only time the run waited on a
+            person.
           </p>
         </figure>
 
@@ -2166,7 +2166,7 @@
         <section class="col prose" aria-labelledby="messages-h">
           <h2 id="messages-h"><small>03 · MESSAGES</small>The coordinator talks, agents report back</h2>
           <p>
-            Sub-agents never talk to each other. Each one gets a single instruction, does its job in its child’s git
+            Agents never talk to each other. Each one gets a single instruction, does its job in its child’s git
             worktree, and ends with a structured <code>openfleet-report</code>: a status, a summary and, if it has one,
             a question. The coordinator runs the five single-child repos itself. For <code>web</code> it starts a repo
             coordinator, which runs the three web children, merges them and reports back once. A question that would
@@ -2206,9 +2206,9 @@
             ></svg>
           </div>
           <p class="sr-only" id="hub-sum">
-            Finished run: the coordinator sent 19 instructions, 18 to the sub-agents of the five single-child repos and
-            one to web’s repo coordinator, which sent 9 more to the web children’s sub-agents. You answered the grill
-            and approved the spec at the start. All six repos are done.
+            Finished run: the coordinator sent 19 instructions, 18 to the agents of the five single-child repos and one
+            to web’s repo coordinator, which sent 9 more to the web children’s agents. You answered the grill and
+            approved the spec at the start. All six repos are done.
           </p>
           <div class="report" id="report"></div>
         </figure>
@@ -3762,7 +3762,7 @@
                     "</b></div><p>" +
                     esc(text) +
                     "</p>"
-                  : '<div class="who">WAITING FOR THE FIRST REPORT <b>—</b></div><p>Reports appear here as each sub-agent finishes.</p>';
+                  : '<div class="who">WAITING FOR THE FIRST REPORT <b>—</b></div><p>Reports appear here as each agent finishes.</p>';
               }
             };
           }

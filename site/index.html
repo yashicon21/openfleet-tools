@@ -314,6 +314,13 @@
         flex-wrap: wrap;
         gap: 10px;
       }
+      .of-models-k {
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+        font-size: 14px;
+        line-height: 20px;
+        letter-spacing: 0.04em;
+        color: #5f5754;
+      }
       .of-slotchips li {
         padding: 10px 18px;
         border-radius: 999px;
@@ -435,6 +442,11 @@
         }
       }
       @media (max-width: 599px) {
+        .of-b-m .of-slotchips li {
+          padding: 8px 14px;
+          font-size: 16px;
+          line-height: 22px;
+        }
         .of-bento {
           grid-template-columns: minmax(0, 1fr) !important;
         }
@@ -3047,6 +3059,65 @@
                   Each child gets its own port range, so apps and end-to-end tests run in parallel without clashing.
                   Git-ignored files like <code>.env.local</code> are copied into every worktree, never committed.
                 </p>
+              </div>
+            </article>
+
+            <article
+              class="of-cell of-b-m of-rise"
+              style="
+                grid-column: 1 / -1;
+                background: #eef0f2;
+                color: #2b1e1b;
+                border-radius: 28px;
+                padding: 32px;
+                overflow: hidden;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 28px 48px;
+                align-items: center;
+                justify-content: space-between;
+                box-sizing: border-box;
+              "
+            >
+              <div style="flex: 1 1 340px; max-width: 520px; display: flex; flex-direction: column; gap: 10px">
+                <h3
+                  style="
+                    margin: 0;
+                    font-family: &quot;Russo One&quot;, &quot;Arial Black&quot;, sans-serif;
+                    font-weight: 400;
+                    font-size: 34px;
+                    line-height: 40px;
+                  "
+                >
+                  Cloud plans. Local hands.
+                </h3>
+                <p style="margin: 0; font-size: 16px; line-height: 24px; color: #5f5754">
+                  Every child role runs as its own session, with its own model and server. Keep the coordinator,
+                  planners and testers on cloud models, and send the edits to a local model through Ollama, with no
+                  proxy. In step mode each plan step gets a fresh session, so a small context holds one step at a time,
+                  and a step the local model can’t finish goes to a cloud fallback.
+                </p>
+              </div>
+              <div
+                class="of-tile"
+                aria-label="Coordinator, planner and tester on cloud models; implementer steps 1 to 3 on a local model, with a cloud fallback."
+                style="flex: 0 1 auto; display: flex; flex-direction: column; gap: 14px; transform-origin: right center"
+              >
+                <span class="of-models-k">CLOUD</span>
+                <ul class="of-slotchips" aria-hidden="true">
+                  <li style="background: #2b1e1b; color: #f4f4f6">coordinator</li>
+                  <li style="background: #48a6ee; color: #2b1e1b">planner</li>
+                  <li style="background: #edeb3c; color: #2b1e1b">tester</li>
+                </ul>
+                <span class="of-models-k">LOCAL · ONE SESSION PER STEP</span>
+                <ul class="of-slotchips" aria-hidden="true">
+                  <li style="background: #ee5ad6; color: #2b1e1b">step 1</li>
+                  <li style="background: #ee5ad6; color: #2b1e1b">step 2</li>
+                  <li style="background: #ee5ad6; color: #2b1e1b">step 3</li>
+                  <li style="background: transparent; color: #5f5754; border: 2px dashed #5f5754">
+                    ↺ fallback → cloud
+                  </li>
+                </ul>
               </div>
             </article>
           </div>
