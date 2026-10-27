@@ -8,6 +8,7 @@ import { appendEvent } from "../events.js";
 import { filePatch, snapshotWorktree, type FileKind } from "../git.js";
 import { groupOf, isSetup, membersOf, scopeGlobs } from "../groups.js";
 import { greenfieldContext } from "./greenfield-context.js";
+import { onPreToolUse } from "./guards.js";
 import {
   dependenciesOf,
   PORT_STEP,
@@ -47,6 +48,8 @@ export interface HookContext {
 
 export interface HookOutput {
   additionalContext?: string;
+  /** `preToolUse` only: refuse the tool call with this reason. */
+  deny?: string;
 }
 
 /** Hooks are a no-op unless the session is inside (or launched for) an OpenFleet workspace. */
@@ -413,7 +416,17 @@ export function onSubagentStart(ctx: HookContext, payload: HookPayload): HookOut
       agentDisplayName: payload.agentDisplayName ?? null,
     },
   });
-  if (!childId) return {};
+  if (!childId) {
+    // Spawned without a claim: nothing to attribute it to (the preToolUse guard refuses these where it can).
+    appendEvent(p, {
+      ts: ts(payload),
+      actor: actorFor("unknown", role),
+      type: "guard.refused",
+      target: null,
+      payload: { guard: "claim", reason: `${role} spawned without a claim`, agentName: payload.agentName ?? null },
+    });
+    return {};
+  }
   if (role === "repo-coordinator") {
     return {
       additionalContext: `${repoContext(p, state, childId)}\n${ackLine(p.name, childId, role)}`,
@@ -696,6 +709,7 @@ export const HANDLERS: Record<string, (ctx: HookContext, payload: HookPayload) =
   subagentStart: onSubagentStart,
   subagentStop: onSubagentStop,
   postToolUse: onPostToolUse,
+  preToolUse: onPreToolUse,
 };
 
 export function runHook(event: string, payload: HookPayload, env: NodeJS.ProcessEnv = process.env): HookOutput {

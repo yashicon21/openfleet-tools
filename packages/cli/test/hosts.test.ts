@@ -89,6 +89,7 @@ describe("generated plugins", () => {
     ).hooks;
     expect(Object.keys(hooks).sort()).toEqual([
       "PostToolUse",
+      "PreToolUse",
       "SessionEnd",
       "SessionStart",
       "SubagentStart",

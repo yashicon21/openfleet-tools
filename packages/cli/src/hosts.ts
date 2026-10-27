@@ -155,6 +155,7 @@ export function claudeHooks(): Record<string, unknown> {
       SessionEnd: [{ hooks: [cmd("sessionEnd", 10)] }],
       SubagentStart: [{ matcher: "^(openfleet:)?openfleet-", hooks: [cmd("subagentStart", 10)] }],
       SubagentStop: [{ matcher: "^(openfleet:)?openfleet-", hooks: [cmd("subagentStop", 30)] }],
+      PreToolUse: [{ matcher: "^(Write|Edit|MultiEdit|NotebookEdit|Agent|Task)$", hooks: [cmd("preToolUse", 10)] }],
       PostToolUse: [{ matcher: "^(Write|Edit|MultiEdit|Bash)$", hooks: [cmd("postToolUse", 10)] }],
     },
   };

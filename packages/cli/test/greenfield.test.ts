@@ -13,7 +13,7 @@ import { formatFailure, greenfieldChecks, preflight } from "../src/preflight.js"
 import { buildModel } from "../src/report/model.js";
 import { onPath, registriesFor, toolchainsFor } from "../src/toolchains.js";
 import type { ReposFile } from "../src/repos.js";
-import { newState, patchState, readState, type ProjectState } from "../src/state.js";
+import { newState, patchState, readState, updateState, type ProjectState } from "../src/state.js";
 import { projectPaths, type Workspace } from "../src/workspace.js";
 import { sh, tmpDir, workspace } from "./helpers.js";
 
@@ -328,7 +328,11 @@ describe("greenfield scope guard", () => {
 
   it("refuses too many services, children and criteria, listing every violation", () => {
     const services = Object.fromEntries(["a", "b", "c", "d", "e"].map((s) => [`app:svc-${s}`, { kind: "service" }]));
-    const { approve } = setup(MVP_SPEC(9), { ...services, "app:web": { kind: "frontend" }, "app:x": {} });
+    const { p, approve } = setup(MVP_SPEC(9), { ...services, "app:web": { kind: "frontend" } });
+    // Registered before the project was greenfield (patchState refuses a new greenfield child without a kind).
+    updateState(p, (s) => {
+      s.children["app:x"] = { repo: "app", phase: "pending", retries: 0, dependsOn: [], agentIds: {} };
+    });
     let message = "";
     try {
       approve();
@@ -448,7 +452,8 @@ describe("greenfield prompts and helpers", () => {
   it("spec-check lists what blocks approval", () => {
     const ws = workspace();
     const p = project(ws);
-    patchState(p, { greenfield: true, children: { "app/setup": { kind: "setup" }, "app:api": {} } });
+    patchState(p, { children: { "app/setup": { kind: "setup" }, "app:api": {} } });
+    patchState(p, { greenfield: true });
     const bad = cli(ws.root, ["spec-check", "invoices"]);
     expect(bad.code).toBe(1);
     const report = JSON.parse(bad.stdout) as { ok: boolean; limits: object; problems: string[] };
@@ -548,7 +553,16 @@ describe("continue", () => {
         "app/system": { kind: "system" },
       },
     });
-    patchState(p, { status: "done", completionMode: "main" });
+    patchState(p, {
+      status: "done",
+      completionMode: "main",
+      children: {
+        "app/setup": { phase: "done" },
+        "app:invoices": { phase: "done" },
+        "app/system": { phase: "done" },
+        app: { phase: "done" },
+      },
+    });
     const dir = tmpDir();
     const out = path.join(dir, "launch.json");
     const bin = path.join(dir, "fake-copilot.mjs");
