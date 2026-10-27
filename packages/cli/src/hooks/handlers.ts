@@ -41,6 +41,8 @@ export interface HookContext {
   ws: Workspace;
   /** Project from OPENFLEET_PROJECT, if the session was launched by the CLI. */
   project?: string;
+  /** Set in a role session started by `agent start` (OPENFLEET_JOB, OPENFLEET_ROLE, OPENFLEET_CHILD). */
+  job?: { id: string; role: string; child?: string };
 }
 
 export interface HookOutput {
@@ -54,7 +56,15 @@ export function resolveContext(payload: HookPayload, env: NodeJS.ProcessEnv = pr
   if (!ws) return undefined;
   const project = env.OPENFLEET_PROJECT || undefined;
   if (project && !fs.existsSync(projectPaths(ws, project).state)) return { ws };
-  return { ws, ...(project ? { project } : {}) };
+  const job =
+    project && env.OPENFLEET_JOB
+      ? {
+          id: env.OPENFLEET_JOB,
+          role: env.OPENFLEET_ROLE ?? "unknown",
+          ...(env.OPENFLEET_CHILD ? { child: env.OPENFLEET_CHILD } : {}),
+        }
+      : undefined;
+  return { ws, ...(project ? { project } : {}), ...(job ? { job } : {}) };
 }
 
 function ts(payload: HookPayload): string {
@@ -81,6 +91,8 @@ function activeProject(ctx: HookContext): ProjectPaths | undefined {
 // ---------------------------------------------------------------- session
 
 export function onSessionStart(ctx: HookContext, payload: HookPayload): HookOutput {
+  // A role session's start and end are logged by its job runner (`agent.spawned`, `agent.turn`, `agent.stopped`).
+  if (ctx.job) return {};
   const p = ctx.project ? projectPaths(ctx.ws, ctx.project) : undefined;
   if (p) {
     appendEvent(p, {
@@ -111,7 +123,7 @@ export function onSessionStart(ctx: HookContext, payload: HookPayload): HookOutp
 }
 
 export function onSessionEnd(ctx: HookContext, payload: HookPayload): HookOutput {
-  if (!ctx.project) return {};
+  if (!ctx.project || ctx.job) return {};
   appendEvent(projectPaths(ctx.ws, ctx.project), {
     ts: ts(payload),
     actor: "coordinator",
@@ -410,7 +422,7 @@ export function onSubagentStart(ctx: HookContext, payload: HookPayload): HookOut
   return { additionalContext: childContext(p, state, childId, role as Role) };
 }
 
-function snapshotChild(p: ProjectPaths, childId: string, child: ChildState, actor: string, at: string): void {
+export function snapshotChild(p: ProjectPaths, childId: string, child: ChildState, actor: string, at: string): void {
   if (!child.worktree || !fs.existsSync(child.worktree)) return;
   let snap;
   try {
@@ -645,7 +657,11 @@ export function onPostToolUse(ctx: HookContext, payload: HookPayload): HookOutpu
     const abs = path.resolve(cwd, change.path);
     const loc = locatePath(ctx.ws, abs, ctx.project);
     if (!loc) continue;
-    const role = roleByAgentId(loc.child, payload.agentId) ?? roleOf(loc.child);
+    // In a role session the env names the role; a subagent the session spawns still acts for it.
+    const role =
+      ctx.job && ctx.job.child === loc.childId
+        ? ctx.job.role
+        : (roleByAgentId(loc.child, payload.agentId) ?? roleOf(loc.child));
     const rel = loc.rel.split(path.sep).join("/");
     const copied = loc.child.copiedFiles?.includes(rel) === true;
     let patch = "";

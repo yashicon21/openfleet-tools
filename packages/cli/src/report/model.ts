@@ -1,6 +1,7 @@
 // The data behind `openfleet report`, derived from events.jsonl, state.json, spec.md, summary.md,
 // git (when a child has no snapshot) and host transcripts.
 import fs from "node:fs";
+import { jobSessions } from "../jobstore.js";
 import { readConfig, type BudgetLimits } from "../config.js";
 import { readEvents, type OpenFleetEvent } from "../events.js";
 import { tryGit } from "../git.js";
@@ -155,6 +156,8 @@ function gitDiff(c: ChildState): ChildReport["diff"] {
 export function sessionIds(events: OpenFleetEvent[], state: ProjectState): string[] {
   const ids: string[] = [];
   for (const e of events) {
+    // Role session jobs are read separately, with their own host and role (`jobSessions`).
+    if (e.payload.jobId) continue;
     for (const key of ["sessionId", "previous"]) {
       const v = e.payload[key];
       if (typeof v === "string" && v) ids.push(v);
@@ -173,6 +176,7 @@ export function buildModel(ws: Workspace, name: string, opts: ReportOptions = {}
     host: state.host ?? DEFAULT_HOST,
     cwd: ws.root,
     sessionIds: sessionIds(events, state),
+    jobs: jobSessions(p),
     pricing,
     env: opts.env,
   });

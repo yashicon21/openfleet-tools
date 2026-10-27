@@ -2,6 +2,7 @@
 // and cost (priced with `pricing`). `npx openfleet claim` checks them before every spawn and
 // halts the run when one is reached, so a hands-off run cannot spend without bound.
 import { readConfig, type BudgetLimits } from "./config.js";
+import { jobSessions } from "./jobstore.js";
 import { DEFAULT_HOST } from "./hosts.js";
 import { readEvents } from "./events.js";
 import { sessionIds } from "./report/model.js";
@@ -47,6 +48,7 @@ export function budgetStatus(
     host: state.host ?? DEFAULT_HOST,
     cwd: ws.root,
     sessionIds: sessionIds(readEvents(p), state),
+    jobs: jobSessions(p),
     pricing: limits.maxCost !== undefined ? readConfig(ws).pricing : undefined,
     env,
   });

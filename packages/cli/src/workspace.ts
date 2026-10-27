@@ -70,6 +70,8 @@ export interface ProjectPaths {
   stateLock: string;
   patches: string;
   worktrees: string;
+  /** Role session jobs (`agent start`), git-ignored. */
+  jobs: string;
 }
 
 export function projectPaths(ws: Workspace, name: string): ProjectPaths {
@@ -87,6 +89,7 @@ export function projectPaths(ws: Workspace, name: string): ProjectPaths {
     stateLock: path.join(dir, ".state.lock"),
     patches: path.join(dir, "patches"),
     worktrees: path.join(dir, "worktrees"),
+    jobs: path.join(dir, "jobs"),
   };
 }
 

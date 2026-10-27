@@ -222,6 +222,19 @@ npx openfleet config set models.copilot.planner "Claude Sonnet 5.5"
 
 The keys under `models.<copilot|claude>` are `default` and the roles `coordinator`, `repo-coordinator`, `planner`, `baseline`, `implementer`, `tester` and `extensions` (extension agents). A role without a model uses `default`, then the host's own default. Use each host's model names: aliases such as `sonnet` or full ids such as `claude-opus-5-5` on Claude Code, model names as Copilot lists them on Copilot CLI. They are written into the generated agents as `model:`, and the coordinator also gets `--model` at launch (a `--model` you pass after `--` wins). Models are workspace settings, read when a session starts: a change applies from the next `new` or `resume`. `""` removes a model.
 
+### Role sessions
+
+With `agentMode: "session"`, each planner, baseline tester, implementer, tester and extension agent runs as its own headless session (`claude -p` or `copilot -p`), started by the CLI instead of as a subagent of the coordinator. The coordinator drives them with `npx openfleet agent`:
+
+| Command                                                                                        | What it does                                                                                                                                                                            |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `agent start <project> <child> --role <role> [--message <text>]`                               | Claim the child (same `maxParallel`, halt and preflight rules as `claim`) and start the role's session; prints the job id at once. `--agent <ext agent>` starts an extension slot entry |
+| `agent wait <project> [--job <job>] [--timeout <s>]`                                           | Wait for the next finished turn (default 540 s) and print its `openfleet-report`                                                                                                        |
+| `agent reply <project> <job> --message <text>`                                                 | Next turn in the same session: answers, plan revisions, contract changes (queued while a turn runs)                                                                                     |
+| `agent status <project> [job]` · `agent result <project> <job>` · `agent stop <project> <job>` | Jobs, the last report again, stop one                                                                                                                                                   |
+
+Each session gets its role's host, model and endpoint, and its own transcript (counted per role in the report and for spending limits). Jobs live in `projects/<name>/jobs/` and keep running if the coordinator's session ends; a job whose runner died is `lost`, and `agent reply … --message Continue.` resumes its session. `cancel` stops running jobs.
+
 ### Model endpoints
 
 A role that runs as its own session (`agentMode: "session"`) can use another model server, for example a local Ollama, with no proxy. Name the endpoint, then give the role an `<endpoint>:<model>` model:

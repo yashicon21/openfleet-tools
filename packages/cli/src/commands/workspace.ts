@@ -17,6 +17,7 @@ core/
 repos/
 projects/*/worktrees/
 projects/*/patches/
+projects/*/jobs/
 projects/*/.events.seq
 projects/*/.*.lock
 .hook-errors.log
