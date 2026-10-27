@@ -64,6 +64,38 @@ export interface Job {
   /** Automatic follow-ups already sent: a missing report block, a crashed turn. */
   nudged?: boolean;
   retried?: boolean;
+  /** Step mode: the plan's steps, each run in its own session. */
+  steps?: JobStep[];
+  /** Hash of the plan's steps (`stepsHash`), to skip steps a job of the same plan already did. */
+  stepsPlan?: string;
+  /** The session turns go to, when it is not the job's own (step mode). */
+  current?: SessionRef;
+  /** Every host session the job used, for token usage. */
+  sessions?: SessionRef[];
+  /** Sessions that already exist on the host (later turns resume them). */
+  started?: string[];
+  /** The job's overall report when it is not the last turn's (step mode). */
+  result?: Report;
+  /** Step mode: model (and endpoint) for a step that failed twice. */
+  fallback?: { model: string; endpoint?: string };
+  /** Step mode: the coordinator's message, sent with the first step this job runs. */
+  stepMessage?: string;
+}
+
+export interface SessionRef {
+  sessionId: string;
+  model?: string;
+  endpoint?: string;
+}
+
+export interface JobStep {
+  n: number;
+  title: string;
+  text: string;
+  state: "pending" | "running" | "waiting" | "done" | "failed";
+  attempts: number;
+  /** The step's last report. */
+  report?: Report;
 }
 
 export function jobsDir(p: ProjectPaths): string {
@@ -104,9 +136,9 @@ export function updateJob(p: ProjectPaths, id: string, change: (j: Job) => void)
 
 /** Every job's host session, for token usage. Extension jobs count as `extensions`. */
 export function jobSessions(p: ProjectPaths): { host: Host; sessionId: string; role: string }[] {
-  return listJobs(p).map((j) => ({
-    host: j.host,
-    sessionId: j.sessionId,
-    role: j.role === "extension" ? "extensions" : j.role,
-  }));
+  return listJobs(p).flatMap((j) => {
+    const role = j.role === "extension" ? "extensions" : j.role;
+    const ids = j.sessions?.length ? j.sessions.map((x) => x.sessionId) : [j.sessionId];
+    return ids.map((sessionId) => ({ host: j.host, sessionId, role }));
+  });
 }

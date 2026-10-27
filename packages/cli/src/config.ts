@@ -39,6 +39,30 @@ export interface WorkspaceConfig {
   roleHosts?: Partial<Record<SessionRole, Host>>;
   /** How child roles run: `subagent` (inside the coordinator's session) or `session` (own CLI-started sessions). Unset means `subagent`. */
   agentMode?: AgentMode;
+  /** Roles that run their plan in steps, each step in a fresh session (`config set split.implementer steps`). */
+  split?: Partial<Record<SplitRole, "steps">>;
+}
+
+/** Roles that can run in steps. */
+export const SPLIT_ROLES = ["implementer"] as const;
+export type SplitRole = (typeof SPLIT_ROLES)[number];
+
+export function parseSplit(value: unknown): Partial<Record<SplitRole, "steps">> {
+  if (!isPlainObject(value)) throw new UserError("split must be an object of role → steps.");
+  const out: Partial<Record<SplitRole, "steps">> = {};
+  for (const [role, v] of Object.entries(value)) {
+    if (!(SPLIT_ROLES as readonly string[]).includes(role)) {
+      throw new UserError(`split: only ${SPLIT_ROLES.join(", ")} can run in steps (got "${role}").`);
+    }
+    if (v !== "steps") throw new UserError(`split.${role} must be "steps" (or "" to remove it).`);
+    out[role as SplitRole] = "steps";
+  }
+  return out;
+}
+
+/** Whether a role runs its plan in steps. */
+export function splitsInSteps(config: WorkspaceConfig, role: string): boolean {
+  return config.split?.[role as SplitRole] === "steps";
 }
 
 /** USD per million tokens. Cache writes: `cacheWrite5m`/`cacheWrite1h` where the host tells them apart, else `cacheWrite`. */
@@ -56,9 +80,9 @@ export const DEFAULT_MAX_PARALLEL = 6;
 export const DEFAULT_CONFIG: WorkspaceConfig = { maxParallel: DEFAULT_MAX_PARALLEL, host: DEFAULT_HOST };
 const KEYS = Object.keys(DEFAULT_CONFIG) as (keyof WorkspaceConfig)[];
 /** Settings with no default: `pricing` is set by editing openfleet.json, `greenfield` and `budget` with `config set <group>.<key>`. */
-const OPTIONAL_KEYS = ["pricing", "greenfield", "budget", "models", "endpoints", "roleHosts", "agentMode"];
+const OPTIONAL_KEYS = ["pricing", "greenfield", "budget", "models", "endpoints", "roleHosts", "agentMode", "split"];
 /** Settings set one key at a time with `config set <group>.<key>`. */
-const GROUP_KEYS = ["greenfield", "budget", "models", "endpoints", "roleHosts"];
+const GROUP_KEYS = ["greenfield", "budget", "models", "endpoints", "roleHosts", "split"];
 
 /** Keys under `models.<host>`: the agent roles, `extensions` (extension agents) and `default` (everything else). */
 export const MODEL_KEYS = [
@@ -70,6 +94,8 @@ export const MODEL_KEYS = [
   "implementer",
   "tester",
   "extensions",
+  // Model for a step that failed twice in step mode (`split`), for example a cloud model behind a local implementer.
+  "fallback",
 ] as const;
 export type ModelKey = (typeof MODEL_KEYS)[number];
 export type RoleModels = Partial<Record<ModelKey, string>>;
@@ -250,13 +276,17 @@ function crossCheck(out: Partial<WorkspaceConfig>): void {
           `${where}: endpoints work with Claude Code only. Run the role on Claude Code instead: npx openfleet config set roleHosts.${key} claude, then set models.claude.${key}.`,
         );
       }
-      if (!isSessionRole(key)) {
+      if (!isSessionRole(key) && key !== "fallback") {
         throw new UserError(
           `${where}: only planner, baseline, implementer, tester and extensions can use an endpoint; the ${key === "default" ? "default model also applies to the coordinator, which" : key} runs in the coordinator's session.`,
         );
       }
       if (!session) throw new UserError(`${where}: an endpoint model needs role sessions. Turn them on first: ${fix}`);
     }
+  }
+  const split = Object.keys(out.split ?? {});
+  if (split.length && !session) {
+    throw new UserError(`split (${split.join(", ")}) needs role sessions. Turn them on first: ${fix}`);
   }
   const hosts = Object.keys(out.roleHosts ?? {});
   if (hosts.length && !session) {
@@ -284,6 +314,22 @@ function setEndpoint(ws: Workspace, key: string, value: string): WorkspaceConfig
     }
     const out: Record<string, unknown> = { ...current, endpoints };
     if (!Object.keys(endpoints).length) delete out.endpoints;
+    validate(out, configFile(ws));
+    return out;
+  });
+  return { ...DEFAULT_CONFIG, ...validate(next, configFile(ws)) };
+}
+
+/** `config set split.<role> steps`; an empty value removes it. */
+function setSplit(ws: Workspace, key: string, value: string): WorkspaceConfig {
+  const [, role, ...rest] = key.split(".");
+  if (!role || rest.length) throw new UserError(`Use: npx openfleet config set split.<${SPLIT_ROLES.join("|")}> steps`);
+  const next = updateMarker(ws, (current) => {
+    const split = isPlainObject(current.split) ? { ...current.split } : {};
+    if (value.trim() === "") delete split[role];
+    else split[role] = value.trim();
+    const out: Record<string, unknown> = { ...current, split };
+    if (!Object.keys(split).length) delete out.split;
     validate(out, configFile(ws));
     return out;
   });
@@ -343,6 +389,7 @@ const PARSERS: { [K in keyof WorkspaceConfig]-?: (value: unknown) => WorkspaceCo
   endpoints: parseEndpoints,
   roleHosts: parseRoleHosts,
   agentMode: parseAgentMode,
+  split: parseSplit,
 };
 
 function validate(raw: unknown, file: string): Partial<WorkspaceConfig> {
@@ -386,6 +433,7 @@ export function setConfig(ws: Workspace, key: string, value: string): WorkspaceC
   if (key.startsWith("models.")) return setModel(ws, key, value);
   if (key.startsWith("endpoints.")) return setEndpoint(ws, key, value);
   if (key.startsWith("roleHosts.")) return setRoleHost(ws, key, value);
+  if (key.startsWith("split.")) return setSplit(ws, key, value);
   if (key === "agentMode") {
     const mode = parseAgentMode(value.trim());
     const next = updateMarker(ws, (current) => {

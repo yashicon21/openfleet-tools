@@ -71,6 +71,7 @@ const roleLabel = (r: string) =>
     implementer: "Implementers",
     tester: "Testers",
     extension: "Extensions",
+    fallback: "Step fallback",
   })[r] ?? r;
 
 const CSS = `
@@ -463,7 +464,16 @@ function usageRow(label: string, u: Usage, cost?: number, showCost = false): str
   return `<tr><td>${esc(label)}</td><td class="n">${num(u.calls)}</td><td class="n">${num(u.output)}</td><td class="n">${num(u.input)}</td><td class="n">${num(writes)}</td><td class="n">${num(u.cacheRead)}</td><td class="n">${num(totalTokens(u))}</td>${showCost ? `<td class="n">${cost === undefined ? "no price" : usd(cost)}</td>` : ""}</tr>`;
 }
 
-const MODEL_ROLES = ["coordinator", "repo-coordinator", "planner", "baseline", "implementer", "tester", "extensions"];
+const MODEL_ROLES = [
+  "coordinator",
+  "repo-coordinator",
+  "planner",
+  "baseline",
+  "implementer",
+  "tester",
+  "extensions",
+  "fallback",
+];
 
 /** Per role: the model configured at launch, and the models the transcripts show it actually used. */
 function modelsHtml(m: ReportModel): string {
@@ -479,6 +489,7 @@ function modelsHtml(m: ReportModel): string {
   const sessions = m.sessions;
   const runsOn = (r: string): string => {
     const s = sessions?.[r];
+    if (r === "fallback") return "failed implementer steps (tokens count as Implementers)";
     if (!s) return r === "coordinator" || r === "repo-coordinator" ? "coordinator's session" : "subagent";
     const hosts = s.hosts.map((h) => HOST_LABEL[h as Host] ?? h).join(", ");
     const eps = s.endpoints.length ? ` · endpoint ${s.endpoints.map((e) => `<code>${esc(e)}</code>`).join(", ")}` : "";

@@ -122,6 +122,8 @@ export interface ChildState {
   retries: number;
   dependsOn: string[];
   agentIds: Partial<Record<Role, string>>;
+  /** Step mode: steps of the current plan (by `stepsHash`) that an implementer finished. */
+  stepsDone?: { plan: string; steps: number[] };
   plan?: string;
   /** Integration child split into stacked PRs (`npx openfleet stack`): one layer per merged child, bottom first. */
   stack?: { child: string; branch: string; sha: string }[];

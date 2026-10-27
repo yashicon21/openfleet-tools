@@ -241,6 +241,8 @@ npx openfleet config set models.claude.implementer ollama:qwen3-coder:30b
 
 Here the coordinator and planner stay on Claude and the implementer runs on a local model. Endpoints are for Claude Code sessions (any Anthropic-compatible server); under a Copilot coordinator, run that role on Claude Code with `config set roleHosts.implementer claude`. `npx openfleet preflight` checks that the server answers, has the model, supports tool calls and has enough context (`minContext`, default 32768; for Ollama start it with `OLLAMA_CONTEXT_LENGTH=65536 ollama serve` or more). Workspaces created before keep subagents until `npx openfleet config set agentMode session`. See the [CLI README](packages/cli/README.md#role-sessions) for the `agent` commands the coordinator uses.
 
+The intended split: coordination, planning and testing on cloud models with large context windows, and the small, bounded edits on local models. **Step mode** (`npx openfleet config set split.implementer steps`) makes that work with small contexts: the planner writes a `## Steps` list and each step runs in its own fresh session, with an optional cloud `fallback` model for steps the local model cannot finish ([details](packages/cli/README.md#step-mode)).
+
 ## Hosts
 
 OpenFleet runs on [GitHub Copilot CLI](https://github.com/github/copilot-cli) and [Claude Code](https://code.claude.com). Both are fully supported and tested against the same scenarios.
