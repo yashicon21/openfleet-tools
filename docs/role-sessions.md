@@ -1,6 +1,6 @@
 # Role sessions — design (draft, 2026-10-27)
 
-Status: agreed with the user on 2026-10-27 (per-role host, repo coordinators stay subagents, `agentMode` setting, all four safeguards).
+Status: agreed with the user on 2026-10-27 and implemented in the role sessions PR stack (per-role host, repo coordinators stay subagents, `agentMode` setting, all four safeguards).
 
 ## Why
 
@@ -16,7 +16,7 @@ coordinator session (interactive, Claude or Copilot)
         └─ job runner (detached node process, survives the coordinator)
               └─ claude -p --agent openfleet:openfleet-implementer …   (child's own env: endpoint, model)
   └─ npx openfleet agent wait <project>                              → first finished job + its report
-  └─ npx openfleet agent reply <job> --message '…'                    → resumes the same child session
+  └─ npx openfleet agent reply <project> <job> --message '…'                    → resumes the same child session
 ```
 
 The coordinator keeps the judgment work (grill, plan validation, consistency check, questions, retries, guided attempt, finalize). The CLI owns process control, attribution, limits and safeguards.
@@ -25,39 +25,39 @@ The coordinator keeps the judgment work (grill, plan validation, consistency che
 
 All under `npx openfleet agent`, run from the workspace root. Every command prints one JSON object.
 
-| Command                                                                          | What it does                                                                                                                                                                                                                                                                                                                                    |
-| -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `agent start <project> <child> --role <role> [--prompt-file f \| --message '…']` | Runs `claim` for the role (same `maxParallel`, halt and preflight rules). On `claimed`: writes a job record, logs `agent.spawned` (actor `<child>/<role>`, `jobId`, `sessionId`, `model`, `endpoint`), starts the runner and returns `{"result":"started","job":…}`. On `wait`/`stop` it returns the claim result unchanged and starts nothing. |
-| `agent start <project> --ext <ext> --slot <slot> [--child <id>]`                 | Same for an extension slot entry (no claim; extensions do not count toward `maxParallel` today and keep not counting).                                                                                                                                                                                                                          |
-| `agent status <project> [job]`                                                   | Jobs with `state` (`running`, `finished`, `failed`, `lost`, `stopped`), child, role, model, endpoint, pid, started/ended, turns.                                                                                                                                                                                                                |
-| `agent wait <project> [--job <id>] [--timeout <s>]`                              | Blocks until a job of the project finishes a turn that the coordinator has not read yet, then prints it with its parsed `openfleet-report`. `{"result":"timeout"}` after `--timeout` (default 540 s, under every host's shell limit). `{"result":"idle"}` when nothing runs and nothing is unread.                                              |
-| `agent result <job>`                                                             | The last turn's report and final text again (marks it read).                                                                                                                                                                                                                                                                                    |
-| `agent reply <project> <job> --message '…' \| --message-file f`                  | Next turn in the **same** session (`--resume <sessionId>`): answers to questions, plan revisions, contract-change broadcasts, "give me the report block". On a running job the message is queued and sent right after the current turn ends, before the turn is reported. Logs `message.sent`.                                                  |
-| `agent stop <job> [--reason …]`                                                  | SIGTERM, then SIGKILL after 10 s; logs `agent.stopped` with `stopped: true`.                                                                                                                                                                                                                                                                    |
+| Command                                                                           | What it does                                                                                                                                                                                                                                                                                                                                    |
+| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `agent start <project> <child> --role <role> [--message-file f \| --message '…']` | Runs `claim` for the role (same `maxParallel`, halt and preflight rules). On `claimed`: writes a job record, logs `agent.spawned` (actor `<child>/<role>`, `jobId`, `sessionId`, `model`, `endpoint`), starts the runner and returns `{"result":"started","job":…}`. On `wait`/`stop` it returns the claim result unchanged and starts nothing. |
+| `agent start <project> [child] --agent <ext phase agent>`                         | Same for an extension slot entry (no claim; extensions do not count toward `maxParallel` today and keep not counting).                                                                                                                                                                                                                          |
+| `agent status <project> [job]`                                                    | Jobs with `state` (`running`, `finished`, `failed`, `lost`, `stopped`), child, role, model, endpoint, pid, started/ended, turns.                                                                                                                                                                                                                |
+| `agent wait <project> [--repo <r>] [--job <id>] [--timeout <s>]`                  | Blocks until one of the caller's jobs (`top`, or the repo coordinator's with `--repo`) finishes a turn that is not read yet, then prints it with its parsed `openfleet-report`. `{"result":"timeout"}` after `--timeout` (default 540 s, under every host's shell limit). `{"result":"idle"}` when nothing runs and nothing is unread.          |
+| `agent result <project> <job> [--out <file>]`                                     | The last turn's report and final text again (marks it read).                                                                                                                                                                                                                                                                                    |
+| `agent reply <project> <job> --message '…' \| --message-file f`                   | Next turn in the **same** session (`--resume <sessionId>`): answers to questions, plan revisions, contract-change broadcasts, "give me the report block". On a running job the message is queued and sent right after the current turn ends, before the turn is reported. Logs `message.sent`.                                                  |
+| `agent stop <project> <job> [--reason …]`                                         | SIGTERM to the host and the runner; logs `agent.stopped` with `stopped: true`.                                                                                                                                                                                                                                                                  |
 
-Jobs live in `projects/<project>/jobs/<job>/` (git-ignored like `worktrees/`): `job.json` (record), `prompt.md`, `turns/<n>.json` (host output per turn), `stderr.log`. Job ids are short and sortable (`j-0007-impl-web`).
+Jobs live in `projects/<project>/jobs/<job>/` (git-ignored like `worktrees/`): `job.json` (record), `turn-<n>.prompt.md` and `turn-<n>.out` per turn, `stderr.log`, `runner.log`. Job ids are short and sortable (`j-0007-impl-web`).
 
 ### Runner
 
-`agent start` forks `node <cli> agent run <job>` detached (internal command). The runner:
+`agent start` forks `node <cli> agent run <project> <job>` detached (internal command). The runner:
 
 1. Builds the prompt: the role line ("Implement the approved plan for child …"), the same `# OpenFleet assignment` block the `subagentStart` hook injects today (`childContext` / extension context, reused as is), then the coordinator's message (findings, guidance).
-2. Spawns the host headless in the **workspace root** (agents already `cd <worktree> &&`), with `--add-dir` for the child's worktree, `contracts/`, `spec.md` and plans only, not every repo:
+2. Spawns the host headless in the **workspace root** (agents already `cd <worktree> &&`), with the same `--add-dir` list as the coordinator (writes outside the worktree are refused by the `preToolUse` guard instead):
    - Claude Code: `claude -p <prompt> --plugin-dir core/claude --agent openfleet:openfleet-<role> --session-id <uuid> --output-format json --permission-mode acceptEdits --allowedTools Bash --model <model>`; next turns `--resume <uuid>`.
-   - Copilot CLI: `copilot -p <prompt> --plugin-dir core --agent openfleet:openfleet-<role> --session-id <uuid> --allow-all-tools --model <model>`; next turns `--resume <uuid>`. The final text is read from the session's `events.jsonl`.
+   - Copilot CLI: `copilot -p <prompt> --plugin-dir core --agent openfleet:openfleet-<role> --session-id <uuid> --allow-all-tools --model <model>`; next turns `--resume <uuid>`. The final text is the plain output (not verified against a live Copilot CLI yet).
    - Env: `OPENFLEET_WORKSPACE`, `OPENFLEET_PROJECT`, plus `OPENFLEET_JOB`, `OPENFLEET_CHILD`, `OPENFLEET_ROLE` so hooks attribute every tool call without guessing; plus the endpoint env (below).
-3. Per turn: stores the output, parses the `openfleet-report` block, logs `agent.turn` (and on the last turn `agent.stopped` with `response`, exactly like `subagentStop`), takes the worktree snapshot (`worktree.snapshot`) as `subagentStop` does today, and clears the child's `role` so `maxParallel` frees the slot.
-4. No report block → one automatic `reply` ("End with the openfleet-report block."), then the turn counts as `failed`.
+3. Per turn: stores the output, parses the `openfleet-report` block, logs `agent.turn` (and on the last turn `agent.stopped` with `response`, exactly like `subagentStop`), takes the worktree snapshot (`worktree.snapshot`) as `subagentStop` does today. The child's phase stays as it is until the coordinator moves it, exactly as with subagents.
+4. No report block → one automatic follow-up turn asking for the block; still none → the job ends `failed`.
 5. Host exits non-zero with no output (endpoint down, crash) → one automatic resume after 15 s; then `failed` with stderr tail in the report.
 
 `maxParallel` counts busy children as today; a job holds its child's phase (`implementing`, …) from claim until its turn ends.
 
 ### Halts and crashes
 
-- `pause` and budget halts: `claim` already returns `stop`; running jobs finish their turn. Budget is checked again after each turn from the job transcripts.
+- `pause` and budget halts: `claim` already returns `stop`; running jobs finish their turn. Budget is checked at each `claim`, and job transcripts count toward it.
 - `cancel`: the CLI stops every running job of the project itself (no longer relies on the coordinator).
 - Coordinator crash: jobs keep running; their results wait unread. On `resume`, the coordinator runs `agent status` and `agent wait` and picks up where it was.
-- Runner crash or machine restart: a `running` job whose runner pid is gone is `lost`. `resume` lists lost jobs; the coordinator restarts them with `agent start … --resume-job <job>`, which resumes the same host session (`--resume <sessionId>`) so implementers continue from the session and the worktree.
+- Runner crash or machine restart: a `running` job whose runner pid is gone is `lost`. `agent status` and `agent wait` show it; the coordinator resumes it with `agent reply <project> <job> --message 'Continue.'`, which starts a runner on the same host session (`--resume <sessionId>`) so implementers continue from the session and the worktree.
 
 ## Config
 
@@ -85,7 +85,7 @@ Jobs live in `projects/<project>/jobs/<job>/` (git-ignored like `worktrees/`): `
 
 - "Claim, then spawn with the Agent tool / background subagent" becomes one step: `npx openfleet agent start …`. `claim` stays as a helper (used inside `agent start`).
 - Waiting: Claude Code runs `npx openfleet agent wait <project>` with the Bash tool **in the background**; its exit is a completion notification, so the "end your turn, act on the next notification" loop stays. Copilot runs `agent wait` in the foreground in a loop (`timeout` → just wait again), replacing `read_agent`.
-- Questions: a child reports `status: "question"` and its session ends the turn. The coordinator decides as today and answers with `agent reply <job>`; that replaces `write_agent` / `SendMessage`. Plan revisions and contract broadcasts go the same way. Questions cannot interrupt a running child; a broadcast to a running job is queued (see `reply`).
+- Questions: a child reports `status: "question"` and its session ends the turn. The coordinator decides as today and answers with `agent reply <project> <job>`; that replaces `write_agent` / `SendMessage`. Plan revisions and contract broadcasts go the same way. Questions cannot interrupt a running child; a broadcast to a running job is queued (see `reply`).
 - Results feed the next role exactly as now: plans saved to `plans/<child>.md` and passed by path in the assignment; tester findings passed as the next implementer's `--message-file`; extension outputs injected as "Upstream outputs" by the same code.
 - Repo coordinators stay subagents of the top coordinator (a judgment role on the coordinator's model, needs the coordinator's session for escalations), and start their children with `agent start` too. Making them sessions as well is possible later; a `-p` session cannot use background notifications, so it would loop on `agent wait`.
 - **Subagent mode as fallback.** Setting `agentMode: "session" | "subagent"`; new workspaces get `session`, existing workspaces keep `subagent` until the user sets it (no behaviour change on `update`), and `subagent` stays for at least 1.x. Skills carry both paths behind a mode marker rendered at `update`, like the host markers. An endpoint model requires `session` mode (validated).

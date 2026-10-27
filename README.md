@@ -229,6 +229,18 @@ npx openfleet config set models.copilot.planner "Claude Sonnet 5.5"
 
 The keys under `models.<copilot|claude>` are `default` and the roles `coordinator`, `repo-coordinator`, `planner`, `baseline`, `implementer`, `tester` and `extensions` (extension agents). A role without a model uses `default`, then the host's own default. Use each host's model names: aliases such as `sonnet` or full ids such as `claude-opus-5-5` on Claude Code, model names as Copilot lists them on Copilot CLI. They are written into the generated agents as `model:`, and the coordinator also gets `--model` at launch (a `--model` you pass after `--` wins). Models are workspace settings, read when a session starts: a change applies from the next `new` or `resume`. `""` removes a model.
 
+### Role sessions and endpoints
+
+New workspaces run every planner, baseline tester, implementer, tester and extension agent as **its own headless session**, started by the CLI (`agentMode: "session"`), instead of as a subagent inside the coordinator's session. Roles are separated, each gets its own model and transcript, and each can use its own **model server** with no proxy:
+
+```sh
+npx openfleet config set endpoints.ollama.baseUrl http://localhost:11434
+npx openfleet config set endpoints.ollama.token ollama
+npx openfleet config set models.claude.implementer ollama:qwen3-coder:30b
+```
+
+Here the coordinator and planner stay on Claude and the implementer runs on a local model. Endpoints are for Claude Code sessions (any Anthropic-compatible server); under a Copilot coordinator, run that role on Claude Code with `config set roleHosts.implementer claude`. `npx openfleet preflight` checks that the server answers, has the model, supports tool calls and has enough context (`minContext`, default 32768; for Ollama start it with `OLLAMA_CONTEXT_LENGTH=65536 ollama serve` or more). Workspaces created before keep subagents until `npx openfleet config set agentMode session`. See the [CLI README](packages/cli/README.md#role-sessions) for the `agent` commands the coordinator uses.
+
 ## Hosts
 
 OpenFleet runs on [GitHub Copilot CLI](https://github.com/github/copilot-cli) and [Claude Code](https://code.claude.com). Both are fully supported and tested against the same scenarios.
@@ -243,7 +255,8 @@ OpenFleet runs on [GitHub Copilot CLI](https://github.com/github/copilot-cli) an
 
 ## Limitations and known issues
 
-- **Hosts and models:** GitHub Copilot CLI and Claude Code only. Ollama, other providers and local models are not supported in v1. Models per role are workspace-wide and apply from the next `new` or `resume`; whether Copilot honours a model for a subagent depends on Copilot.
+- **Hosts and models:** GitHub Copilot CLI and Claude Code. Other model servers (for example a local Ollama) work only for role sessions on Claude Code, through an Anthropic-compatible endpoint; the coordinator and repo coordinators always use the host's own provider. Local models are best kept to bounded roles (implementer, tester): weaker models skip the coordination protocol. Models per role are workspace-wide and apply from the next `new` or `resume`; whether Copilot honours a model for a subagent depends on Copilot.
+- **Guards** check file tools and spawns, not shell commands: an agent can still write files with a shell command.
 - **Platforms:** macOS and Linux. Windows only through WSL2.
 - **Pull requests:** GitHub only (`gh`). Stacked PRs need the `gh stack` extension and stay within one repo. No GitLab or Bitbucket.
 - **Spending limits** are checked when an agent is about to start, so agents already running can take a run past a limit. There is no per-child limit, and usage is only known when the host transcripts are on the machine that runs OpenFleet.

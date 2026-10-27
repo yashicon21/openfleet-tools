@@ -1,5 +1,6 @@
 // One self-contained HTML page for `openfleet report`: inline CSS and SVG, no scripts, fonts or
 // network requests. Tooltips use SVG <title>. All text from the run is escaped.
+import { HOST_LABEL, type Host } from "../hosts.js";
 import { escapeHtml as esc, markdown } from "./markdown.js";
 import type { ChildReport, ReportModel } from "./model.js";
 import { makeAxis, type Axis, type Segment } from "./timeline.js";
@@ -475,20 +476,30 @@ function modelsHtml(m: ReportModel): string {
   }
   const configured = m.models?.configured;
   if (!configured && !used.size) return "";
-  const rows = MODEL_ROLES.filter((r) => configured?.[r] || used.has(r)).map((r) => {
+  const sessions = m.sessions;
+  const runsOn = (r: string): string => {
+    const s = sessions?.[r];
+    if (!s) return r === "coordinator" || r === "repo-coordinator" ? "coordinator's session" : "subagent";
+    const hosts = s.hosts.map((h) => HOST_LABEL[h as Host] ?? h).join(", ");
+    const eps = s.endpoints.length ? ` · endpoint ${s.endpoints.map((e) => `<code>${esc(e)}</code>`).join(", ")}` : "";
+    return `${s.jobs} session${s.jobs === 1 ? "" : "s"} (${esc(hosts)})${eps}`;
+  };
+  const rows = MODEL_ROLES.filter((r) => configured?.[r] || used.has(r) || sessions?.[r]).map((r) => {
     const set = configured ? (configured[r] ?? "host default") : "not recorded";
     const actual = [...(used.get(r) ?? new Map<string, number>())]
       .sort((a, b) => b[1] - a[1])
       .map(([model, n]) => `<code>${esc(model)}</code> (${fmtTokens(n)})`)
       .join(", ");
     const label = r === "extensions" ? "Extensions" : roleLabel(r);
-    return `<tr><td>${esc(label)}</td><td>${configured?.[r] ? `<code>${esc(set)}</code>` : esc(set)}</td><td>${actual || "—"}</td></tr>`;
+    const where = sessions ? `<td>${runsOn(r)}</td>` : "";
+    return `<tr><td>${esc(label)}</td><td>${configured?.[r] ? `<code>${esc(set)}</code>` : esc(set)}</td>${where}<td>${actual || "—"}</td></tr>`;
   });
   if (!rows.length) return "";
   const note = m.models?.changed
     ? '<p class="muted">The models changed between sessions of this run; "Configured" shows the last launch.</p>'
     : "";
-  return `<h3>Models by role</h3><div class="card tbl"><table><thead><tr><th></th><th>Configured</th><th>Used (tokens)</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>${note}`;
+  const whereHead = sessions ? "<th>Runs as</th>" : "";
+  return `<h3>Models by role</h3><div class="card tbl"><table><thead><tr><th></th><th>Configured</th>${whereHead}<th>Used (tokens)</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>${note}`;
 }
 
 const HALT_LABEL: Record<string, string> = {

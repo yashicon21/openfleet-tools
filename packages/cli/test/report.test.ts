@@ -131,6 +131,27 @@ describe("report timeline", () => {
     ]);
     expect(steps.at(-1)?.n).toBe(0);
   });
+
+  it("keeps role session jobs across coordinator sessions and splits them at replies", () => {
+    const name = "openfleet:openfleet-planner";
+    const job = { agentId: "j-0001-plan-a", jobId: "j-0001-plan-a", agentName: name };
+    const events = [
+      ev(0, "session.started", null, { sessionId: "s1" }),
+      ev(1, "agent.spawned", "r/a", { ...job, host: "claude", endpoint: null }, "r/a/planner"),
+      ev(3, "session.started", null, { sessionId: "s2" }),
+      ev(4, "agent.stopped", "r/a", job, "r/a/planner"),
+      ev(6, "message.sent", "r/a", { jobId: job.jobId, text: "Revise." }),
+      ev(9, "agent.stopped", "r/a", job, "r/a/planner"),
+      ev(10, "agent.spawned", "r/b", { agentId: "j-0002-plan-b", jobId: "j-0002-plan-b", agentName: name }),
+      ev(11, "session.started", null, { sessionId: "s3" }),
+    ];
+    const runs = agentRuns(events, T0 + 20 * MIN);
+    expect(runs.map((r) => [r.child, (r.start - T0) / MIN, (r.end - T0) / MIN, Boolean(r.inferred)])).toEqual([
+      ["r/a", 1, 4, false],
+      ["r/a", 6, 9, false],
+      ["r/b", 10, 20, true], // a session outlives the coordinator's session
+    ]);
+  });
 });
 
 describe("report tokens", () => {
@@ -319,6 +340,41 @@ describe("report model and HTML", () => {
     ev(62, "test.run", "r/a", { command: "pnpm test", exitCode: 0, passed: true, summary: "ok" }, "r/a/tester"),
     phase(63, "r/a", "testing"),
   ];
+
+  it("shows how each role ran: sessions with their hosts and endpoints, or subagents", () => {
+    const m = deriveModel({
+      name: "demo",
+      state: state(children, { status: "running" }),
+      events: [
+        ...events(),
+        ev(64, "models.configured", null, {
+          host: "claude",
+          models: { planner: "sonnet", implementer: "ollama:qwen3-coder:30b" },
+        }),
+        ev(
+          65,
+          "agent.spawned",
+          "r/a",
+          { agentId: "j1", jobId: "j1", host: "claude", endpoint: "ollama" },
+          "r/a/implementer",
+        ),
+        ev(
+          66,
+          "agent.spawned",
+          "r/a",
+          { agentId: "j2", jobId: "j2", host: "claude", endpoint: null },
+          "r/a/implementer",
+        ),
+      ],
+      spec: "",
+      summary: "",
+    });
+    expect(m.sessions).toEqual({ implementer: { jobs: 2, hosts: ["claude"], endpoints: ["ollama"] } });
+    const html = renderReport(m);
+    expect(html).toContain("<th>Runs as</th>");
+    expect(html).toMatch(/2 sessions \(Claude Code\) · endpoint <code>ollama<\/code>/);
+    expect(html).toMatch(/<code>sonnet<\/code><\/td><td>subagent<\/td>/);
+  });
 
   it("derives children, gaps, tests and the plan gate", () => {
     const m = deriveModel({

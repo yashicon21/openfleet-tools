@@ -262,7 +262,8 @@ OpenFleet runs on [GitHub Copilot CLI](https://github.com/github/copilot-cli) an
 
 ## Limitations and known issues
 
-- **Hosts and models:** GitHub Copilot CLI and Claude Code only. Ollama, other providers and local models are not supported in v1. Models per role are workspace-wide and apply from the next `new` or `resume`; whether Copilot honours a model for a subagent depends on Copilot.
+- **Hosts and models:** GitHub Copilot CLI and Claude Code. Other model servers (for example a local Ollama) work only for role sessions on Claude Code, through an Anthropic-compatible endpoint; the coordinator and repo coordinators always use the host's own provider. Local models are best kept to bounded roles (implementer, tester): weaker models skip the coordination protocol. Models per role are workspace-wide and apply from the next `new` or `resume`; whether Copilot honours a model for a subagent depends on Copilot.
+- **Guards** check file tools and spawns, not shell commands: an agent can still write files with a shell command.
 - **Platforms:** macOS and Linux. Windows only through WSL2.
 - **Pull requests:** GitHub only (`gh`). Stacked PRs need the `gh stack` extension and stay within one repo. No GitLab or Bitbucket.
 - **Spending limits** are checked when an agent is about to start, so agents already running can take a run past a limit. There is no per-child limit, and usage is only known when the host transcripts are on the machine that runs OpenFleet.
