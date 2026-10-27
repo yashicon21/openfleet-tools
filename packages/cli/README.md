@@ -174,6 +174,9 @@ Repos can live anywhere: give a `path` (relative to the workspace root) or a `ur
 | `npx openfleet config set greenfield.<key> <n>`                     | Greenfield caps: `maxServices` (5), `maxChildren` (12), `maxCriteriaPerChild` (8)                                                 |
 | `npx openfleet config set budget.<maxTokens\|maxCost> <n>`          | Spending limit per run (tokens, or USD with `pricing`); a run that reaches it halts                                               |
 | `npx openfleet config set models.<host>.<role> <model>`             | Model per agent role (`default`, `coordinator`, `planner`, `implementer`, `tester`, …) for `copilot` or `claude`; `""` removes it |
+| `npx openfleet config set agentMode <subagent\|session>`            | How child roles run: subagents of the coordinator's session, or their own sessions                                                |
+| `npx openfleet config set endpoints.<name>.<key> <value>`           | Model server for role sessions: `baseUrl`, `token` (local only) or `tokenEnv`, `minContext`; `endpoints.<name> ""` removes it     |
+| `npx openfleet config set roleHosts.<role> <copilot\|claude>`       | Host for one session role when it differs from the coordinator's                                                                  |
 | `npx openfleet new <name> ["<request>"] [--ask] [--host <h>]`       | Create a project and launch the coordinator (`--host` overrides the workspace host)                                               |
 | `npx openfleet resume <name> [--fresh] [--ask]`                     | Continue a project in its host session (`--fresh`, or a missing session: a new one)                                               |
 | `npx openfleet continue <name> [new-name]`                          | Start the next slice of a finished greenfield project from its Follow-ups                                                         |
@@ -218,6 +221,19 @@ npx openfleet config set models.copilot.planner "Claude Sonnet 5.5"
 ```
 
 The keys under `models.<copilot|claude>` are `default` and the roles `coordinator`, `repo-coordinator`, `planner`, `baseline`, `implementer`, `tester` and `extensions` (extension agents). A role without a model uses `default`, then the host's own default. Use each host's model names: aliases such as `sonnet` or full ids such as `claude-opus-5-5` on Claude Code, model names as Copilot lists them on Copilot CLI. They are written into the generated agents as `model:`, and the coordinator also gets `--model` at launch (a `--model` you pass after `--` wins). Models are workspace settings, read when a session starts: a change applies from the next `new` or `resume`. `""` removes a model.
+
+### Model endpoints
+
+A role that runs as its own session (`agentMode: "session"`) can use another model server, for example a local Ollama, with no proxy. Name the endpoint, then give the role an `<endpoint>:<model>` model:
+
+```sh
+npx openfleet config set agentMode session
+npx openfleet config set endpoints.ollama.baseUrl http://localhost:11434
+npx openfleet config set endpoints.ollama.token ollama
+npx openfleet config set models.claude.implementer ollama:qwen3-coder:30b
+```
+
+Endpoints work with Claude Code sessions (they get `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN` and the model in their own env). Only `planner`, `baseline`, `implementer`, `tester` and `extensions` can use one; the coordinator and repo coordinators stay on the host's own provider. A literal `token` is allowed only for local servers, because `openfleet.json` is committed; use `tokenEnv` (an env var name) for anything else. Under a Copilot coordinator, run the role on Claude Code: `config set roleHosts.implementer claude`, then set `models.claude.implementer`. `npx openfleet preflight` checks that each endpoint answers, has the model, supports tool calls and has at least `minContext` tokens of context (default 32768; for Ollama also the server's `OLLAMA_CONTEXT_LENGTH`).
 
 ## Hosts
 

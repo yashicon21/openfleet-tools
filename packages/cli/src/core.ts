@@ -18,7 +18,7 @@ import {
   type LoadedExtension,
   type PhaseEntry,
 } from "./extensions.js";
-import { modelFor, readConfig, type ModelKey } from "./config.js";
+import { agentFileModel, readConfig, type ModelKey } from "./config.js";
 import type { CoreIndex } from "./coreindex.js";
 import { copyDir, readJson, writeFileAtomic, writeJson } from "./fsutil.js";
 import {
@@ -210,7 +210,7 @@ export function syncExtensions(ws: Workspace, warn: (msg: string) => void = () =
     modelKey: Exclude<ModelKey, "default"> = "extensions",
   ) => {
     for (const d of dirs.filter((x) => !hosts || hosts.includes(x.host))) {
-      const model = modelFor(workspaceConfig, d.host, modelKey);
+      const model = agentFileModel(workspaceConfig, d.host, modelKey);
       const [file, content] = hostAgent(d.host, name, copilotAgent(d.host), model);
       writeFileAtomic(path.join(d.agents, file), content);
     }

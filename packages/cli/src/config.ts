@@ -3,6 +3,18 @@
 // openfleet.json also records the core `version` the workspace was last initialized or updated with.
 import fs from "node:fs";
 import { readJson, writeJson } from "./fsutil.js";
+import {
+  isSessionRole,
+  parseAgentMode,
+  parseEndpoints,
+  parseRoleHosts,
+  splitModel,
+  type AgentMode,
+  type Endpoint,
+  type Endpoints,
+  type ModelRef,
+  type SessionRole,
+} from "./endpoints.js";
 import { DEFAULT_GREENFIELD_LIMITS, GREENFIELD_LIMIT_KEYS, type GreenfieldLimits } from "./greenfield.js";
 import { DEFAULT_HOST, HOSTS, isHost, type Host } from "./hosts.js";
 import { withLock } from "./lock.js";
@@ -21,6 +33,12 @@ export interface WorkspaceConfig {
   budget?: Partial<BudgetLimits>;
   /** Model per agent role, per host (`config set models.<host>.<role> <model>`); unset roles use `default`, then the host's own default. */
   models?: Partial<Record<Host, RoleModels>>;
+  /** Named Anthropic-compatible servers a role model can use as `<endpoint>:<model>` (`config set endpoints.<name>.<key> <value>`). */
+  endpoints?: Endpoints;
+  /** Host per session role when it differs from the coordinator's (`config set roleHosts.<role> <host>`). */
+  roleHosts?: Partial<Record<SessionRole, Host>>;
+  /** How child roles run: `subagent` (inside the coordinator's session) or `session` (own CLI-started sessions). Unset means `subagent`. */
+  agentMode?: AgentMode;
 }
 
 /** USD per million tokens. Cache writes: `cacheWrite5m`/`cacheWrite1h` where the host tells them apart, else `cacheWrite`. */
@@ -38,7 +56,9 @@ export const DEFAULT_MAX_PARALLEL = 6;
 export const DEFAULT_CONFIG: WorkspaceConfig = { maxParallel: DEFAULT_MAX_PARALLEL, host: DEFAULT_HOST };
 const KEYS = Object.keys(DEFAULT_CONFIG) as (keyof WorkspaceConfig)[];
 /** Settings with no default: `pricing` is set by editing openfleet.json, `greenfield` and `budget` with `config set <group>.<key>`. */
-const OPTIONAL_KEYS = ["pricing", "greenfield", "budget", "models"];
+const OPTIONAL_KEYS = ["pricing", "greenfield", "budget", "models", "endpoints", "roleHosts", "agentMode"];
+/** Settings set one key at a time with `config set <group>.<key>`. */
+const GROUP_KEYS = ["greenfield", "budget", "models", "endpoints", "roleHosts"];
 
 /** Keys under `models.<host>`: the agent roles, `extensions` (extension agents) and `default` (everything else). */
 export const MODEL_KEYS = [
@@ -167,10 +187,123 @@ export function parseModels(value: unknown): Partial<Record<Host, RoleModels>> {
   return out;
 }
 
-/** The model an agent of `key` uses on `host`, if one is configured. */
+/** The model an agent of `key` uses on `host`, if one is configured (as written, `<endpoint>:<model>` included). */
 export function modelFor(config: WorkspaceConfig, host: Host, key: Exclude<ModelKey, "default">): string | undefined {
   const m = config.models?.[host];
   return m?.[key] ?? m?.default;
+}
+
+export interface RoleTarget {
+  /** Host the role's agent runs on. */
+  host: Host;
+  /** Model to pass to the host, if one is configured. */
+  model?: string;
+  /** Endpoint the role's session uses instead of the host's own provider. */
+  endpoint?: { name: string } & Endpoint;
+}
+
+/** Where a role runs: its host (`roleHosts`, else the coordinator's), model and endpoint. */
+export function roleTarget(
+  config: WorkspaceConfig,
+  coordinatorHost: Host,
+  key: Exclude<ModelKey, "default">,
+): RoleTarget {
+  const host = (isSessionRole(key) ? config.roleHosts?.[key] : undefined) ?? coordinatorHost;
+  const raw = modelFor(config, host, key);
+  if (!raw) return { host };
+  const ref = splitModel(raw, config.endpoints, `models.${host}.${key}`);
+  if (!ref.endpoint) return { host, model: ref.model };
+  return { host, model: ref.model, endpoint: { name: ref.endpoint, ...config.endpoints![ref.endpoint]! } };
+}
+
+/** The model to write into an agent file: none for endpoint models, which only role sessions can use. */
+export function agentFileModel(
+  config: WorkspaceConfig,
+  host: Host,
+  key: Exclude<ModelKey, "default">,
+): string | undefined {
+  const raw = modelFor(config, host, key);
+  if (!raw) return undefined;
+  try {
+    return splitModel(raw, config.endpoints, key).endpoint ? undefined : raw;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Effective agent mode; workspaces that never set it keep subagents. */
+export function agentModeOf(config: WorkspaceConfig): AgentMode {
+  return config.agentMode ?? "subagent";
+}
+
+/** Settings that only work together: endpoint models and role hosts need role sessions. */
+function crossCheck(out: Partial<WorkspaceConfig>): void {
+  const session = out.agentMode === "session";
+  const fix = "npx openfleet config set agentMode session";
+  for (const [host, roles] of Object.entries(out.models ?? {}) as [Host, RoleModels][]) {
+    for (const [key, value] of Object.entries(roles) as [ModelKey, string][]) {
+      const where = `models.${host}.${key}`;
+      const ref: ModelRef = splitModel(value, out.endpoints, where);
+      if (!ref.endpoint) continue;
+      if (host !== "claude") {
+        throw new UserError(
+          `${where}: endpoints work with Claude Code only. Run the role on Claude Code instead: npx openfleet config set roleHosts.${key} claude, then set models.claude.${key}.`,
+        );
+      }
+      if (!isSessionRole(key)) {
+        throw new UserError(
+          `${where}: only planner, baseline, implementer, tester and extensions can use an endpoint; the ${key === "default" ? "default model also applies to the coordinator, which" : key} runs in the coordinator's session.`,
+        );
+      }
+      if (!session) throw new UserError(`${where}: an endpoint model needs role sessions. Turn them on first: ${fix}`);
+    }
+  }
+  const hosts = Object.keys(out.roleHosts ?? {});
+  if (hosts.length && !session) {
+    throw new UserError(`roleHosts (${hosts.join(", ")}) needs role sessions. Turn them on first: ${fix}`);
+  }
+}
+
+/** `config set endpoints.<name>.<key> <value>`, or `endpoints.<name> ""` to remove one. */
+function setEndpoint(ws: Workspace, key: string, value: string): WorkspaceConfig {
+  const [, name, field, ...rest] = key.split(".");
+  const usage =
+    "Use: npx openfleet config set endpoints.<name>.<baseUrl|token|tokenEnv|minContext> <value> (or endpoints.<name> '' to remove it)";
+  if (!name || rest.length || (!field && value.trim() !== "")) throw new UserError(usage);
+  const next = updateMarker(ws, (current) => {
+    const endpoints = isPlainObject(current.endpoints) ? { ...current.endpoints } : {};
+    if (!field) delete endpoints[name];
+    else {
+      const entry = isPlainObject(endpoints[name]) ? { ...endpoints[name] } : {};
+      if (value.trim() === "") delete entry[field];
+      else entry[field] = value.trim();
+      // token and tokenEnv replace each other.
+      if (field === "token" && value.trim()) delete entry.tokenEnv;
+      if (field === "tokenEnv" && value.trim()) delete entry.token;
+      endpoints[name] = entry;
+    }
+    const out: Record<string, unknown> = { ...current, endpoints };
+    if (!Object.keys(endpoints).length) delete out.endpoints;
+    validate(out, configFile(ws));
+    return out;
+  });
+  return { ...DEFAULT_CONFIG, ...validate(next, configFile(ws)) };
+}
+
+/** `config set roleHosts.<role> <host>`; an empty value removes it. */
+function setRoleHost(ws: Workspace, key: string, value: string): WorkspaceConfig {
+  const [, role, ...rest] = key.split(".");
+  if (!role || rest.length) throw new UserError("Use: npx openfleet config set roleHosts.<role> <copilot|claude>");
+  const next = updateMarker(ws, (current) => {
+    const roleHosts = isPlainObject(current.roleHosts) ? { ...current.roleHosts } : {};
+    if (value.trim() === "") delete roleHosts[role];
+    else roleHosts[role] = value.trim();
+    const out: Record<string, unknown> = { ...current, roleHosts };
+    if (!Object.keys(roleHosts).length) delete out.roleHosts;
+    validate(out, configFile(ws));
+    return out;
+  });
+  return { ...DEFAULT_CONFIG, ...validate(next, configFile(ws)) };
 }
 
 /** `config set models.<host>.<key> <model>`; an empty value removes the key. */
@@ -189,6 +322,7 @@ function setModel(ws: Workspace, key: string, value: string): WorkspaceConfig {
     const out = { ...current, models };
     if (!Object.keys(forHost).length) delete (out.models as Record<string, unknown>)[host];
     if (!Object.keys(out.models).length) delete (out as Record<string, unknown>).models;
+    validate(out, configFile(ws));
     return out;
   });
   return { ...DEFAULT_CONFIG, ...validate(next, configFile(ws)) };
@@ -206,6 +340,9 @@ const PARSERS: { [K in keyof WorkspaceConfig]-?: (value: unknown) => WorkspaceCo
   greenfield: parseGreenfield,
   budget: parseBudget,
   models: parseModels,
+  endpoints: parseEndpoints,
+  roleHosts: parseRoleHosts,
+  agentMode: parseAgentMode,
 };
 
 function validate(raw: unknown, file: string): Partial<WorkspaceConfig> {
@@ -224,13 +361,15 @@ function validate(raw: unknown, file: string): Partial<WorkspaceConfig> {
     try {
       out[key] = PARSERS[key](raw[key]);
     } catch (err) {
-      if (
-        err instanceof UserError &&
-        (key === "pricing" || key === "greenfield" || key === "budget" || key === "models")
-      )
-        throw new UserError(`${file}: ${err.message}`);
+      if (err instanceof UserError && OPTIONAL_KEYS.includes(key)) throw new UserError(`${file}: ${err.message}`);
       throw err;
     }
+  }
+  try {
+    crossCheck(out);
+  } catch (err) {
+    if (err instanceof UserError) throw new UserError(`${file}: ${err.message}`);
+    throw err;
   }
   return out;
 }
@@ -245,6 +384,17 @@ export function readConfig(ws: Workspace): WorkspaceConfig {
 /** Validate and write one key under a workspace lock. Returns the new effective config. */
 export function setConfig(ws: Workspace, key: string, value: string): WorkspaceConfig {
   if (key.startsWith("models.")) return setModel(ws, key, value);
+  if (key.startsWith("endpoints.")) return setEndpoint(ws, key, value);
+  if (key.startsWith("roleHosts.")) return setRoleHost(ws, key, value);
+  if (key === "agentMode") {
+    const mode = parseAgentMode(value.trim());
+    const next = updateMarker(ws, (current) => {
+      const out = { ...current, agentMode: mode };
+      validate(out, configFile(ws));
+      return out;
+    });
+    return { ...DEFAULT_CONFIG, ...validate(next, configFile(ws)) };
+  }
   const group = (["greenfield", "budget"] as const).find((g) => key.startsWith(`${g}.`));
   if (group) {
     const sub = key.slice(group.length + 1);
@@ -261,7 +411,9 @@ export function setConfig(ws: Workspace, key: string, value: string): WorkspaceC
         ? `Set one greenfield limit at a time: npx openfleet config set greenfield.<${GREENFIELD_LIMIT_KEYS.join("|")}> <n>`
         : key === "budget"
           ? `Set one budget limit at a time: npx openfleet config set budget.<${BUDGET_KEYS.join("|")}> <n>`
-          : `Set "${key}" by editing ${configFile(ws)} (see the CLI README).`,
+          : GROUP_KEYS.includes(key)
+            ? `Set one ${key} entry at a time: npx openfleet config set ${key}.<…> <value> (see the CLI README).`
+            : `Set "${key}" by editing ${configFile(ws)} (see the CLI README).`,
     );
   }
   if (!(KEYS as string[]).includes(key)) {

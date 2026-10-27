@@ -5,7 +5,7 @@ import path from "node:path";
 import { checkCopyPath } from "../copyfiles.js";
 import { appendEvent } from "../events.js";
 import { groupOf } from "../groups.js";
-import { formatFailure, preflight } from "../preflight.js";
+import { formatFailure, formatWarnings, preflight } from "../preflight.js";
 import { scheduleFor, TOP } from "../schedule.js";
 import { activeChildren, readState, updateState, type ProjectState } from "../state.js";
 import { projectPaths, requireWorkspace, UserError, validateProjectName } from "../workspace.js";
@@ -16,6 +16,7 @@ export function cmdPreflight(args: string[]): number {
   const ws = requireWorkspace();
   const report = preflight(ws, validateProjectName(args[0]));
   out(JSON.stringify(report, null, 2));
+  for (const w of formatWarnings(report)) process.stderr.write(`warning: ${w}\n`);
   if (report.ok) return 0;
   process.stderr.write(formatFailure(report) + "\n");
   return 1;

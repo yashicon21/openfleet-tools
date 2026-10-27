@@ -7,7 +7,10 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { checkCopyPath } from "./copyfiles.js";
+import { agentModeOf, readConfig, roleTarget } from "./config.js";
+import { checkEndpoint, SESSION_ROLES, type HttpJson } from "./endpoints.js";
 import { appendEvent } from "./events.js";
+import { DEFAULT_HOST } from "./hosts.js";
 import { isFile } from "./fsutil.js";
 import { tryGit } from "./git.js";
 import { readRepos, type RepoEntry } from "./repos.js";
@@ -45,7 +48,11 @@ export type PreflightCheck =
   | "worktrees-dir"
   | "clone-dir"
   | "toolchain"
-  | "registry";
+  | "registry"
+  | "endpoint"
+  | "endpoint-model"
+  | "endpoint-context"
+  | "endpoint-tools";
 
 export interface CheckResult {
   repo: string | null;
@@ -54,6 +61,8 @@ export interface CheckResult {
   ok: boolean;
   code?: string;
   error?: string;
+  /** Something the check could not confirm; it does not fail preflight. */
+  warning?: string;
 }
 
 export interface PreflightReport {
@@ -143,6 +152,9 @@ function checkRepo(ws: Workspace, key: string, entry: RepoEntry, io: ProbeFs): C
 }
 
 function overallHint(failed: CheckResult[]): string | undefined {
+  if (failed.length && failed.every((c) => c.check.startsWith("endpoint"))) {
+    return "Fix the model endpoints (see each check), then run preflight again.";
+  }
   if (failed.length && failed.every((c) => c.check === "toolchain" || c.check === "registry")) {
     return "Install the missing tools and check the network or registry mirror (see each check), then run preflight again.";
   }
@@ -197,6 +209,37 @@ export function deniedChecks(checks: readonly CheckResult[]): CheckResult[] {
 export interface EnvChecks {
   env?: NodeJS.ProcessEnv;
   probe?: UrlProbe;
+  http?: HttpJson;
+}
+
+/** Role sessions with an endpoint model: the server answers and can serve the model (once per endpoint and model). */
+export function endpointChecks(
+  ws: Workspace,
+  state: ProjectState,
+  { env = process.env, http }: EnvChecks = {},
+): CheckResult[] {
+  const config = readConfig(ws);
+  if (agentModeOf(config) !== "session") return [];
+  const seen = new Set<string>();
+  const checks: CheckResult[] = [];
+  for (const role of SESSION_ROLES) {
+    const t = roleTarget(config, state.host ?? DEFAULT_HOST, role);
+    if (!t.endpoint || !t.model) continue;
+    const key = `${t.endpoint.name}:${t.model}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    for (const r of checkEndpoint(t.endpoint.name, t.endpoint, t.model, { env, ...(http ? { http } : {}) })) {
+      checks.push({
+        repo: null,
+        check: r.check,
+        path: key,
+        ok: r.ok,
+        ...(r.ok ? {} : { code: "ENDPOINT", error: r.error }),
+        ...(r.ok && r.warning && r.error ? { warning: r.error } : {}),
+      });
+    }
+  }
+  return checks;
 }
 
 /** Greenfield projects: every toolchain on PATH and every package registry reachable. */
@@ -244,7 +287,12 @@ export function preflight(
 ): PreflightReport {
   const p = projectPaths(ws, project);
   const keys = projectRepos(ws, project);
-  const checks = [...runChecks(ws, project, io), ...greenfieldChecks(readState(p), envChecks)];
+  const state = readState(p);
+  const checks = [
+    ...runChecks(ws, project, io),
+    ...greenfieldChecks(state, envChecks),
+    ...endpointChecks(ws, state, envChecks),
+  ];
   const failed = checks.filter((c) => !c.ok);
   const hint = overallHint(failed);
   const report: PreflightReport = { ok: !failed.length, project, repos: keys, checks, ...(hint ? { hint } : {}) };
@@ -273,7 +321,12 @@ export function formatFailure(report: PreflightReport): string {
     .map(
       (c) =>
         `  - ${c.repo ?? "workspace"}: ${c.check} ${c.path}${c.code ? ` (${c.code})` : ""}` +
-        (c.check === "toolchain" || c.check === "registry" ? `: ${c.error}` : ""),
+        (c.check === "toolchain" || c.check === "registry" || c.check.startsWith("endpoint") ? `: ${c.error}` : ""),
     );
   return [`Preflight failed for project ${report.project}:`, ...lines, "", report.hint ?? ""].join("\n").trimEnd();
+}
+
+/** Warnings from passed checks (for example an endpoint that does not report its context length). */
+export function formatWarnings(report: PreflightReport): string[] {
+  return report.checks.filter((c) => c.ok && c.warning).map((c) => `${c.check} ${c.path}: ${c.warning}`);
 }
