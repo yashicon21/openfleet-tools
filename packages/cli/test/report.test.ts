@@ -8,7 +8,17 @@ import type { OpenFleetEvent } from "../src/events.js";
 import { writeJson } from "../src/fsutil.js";
 import { buildModel, deriveModel, generateReport, renderReport } from "../src/report/index.js";
 import { specAsk, summarySections } from "../src/report/markdown.js";
-import { activeMs, agentRuns, childSegments, concurrency, findGaps, makeAxis } from "../src/report/timeline.js";
+import {
+  activeBetween,
+  activeMs,
+  agentRuns,
+  childSegments,
+  concurrency,
+  findGaps,
+  haltGaps,
+  makeAxis,
+  mergeGaps,
+} from "../src/report/timeline.js";
 import { aggregate, claudeMessages, copilotMessages, costOf, readTokenUsage } from "../src/report/tokens.js";
 import type { ProjectState } from "../src/state.js";
 import { tmpDir, workspace } from "./helpers.js";
@@ -69,15 +79,48 @@ describe("report timeline", () => {
     expect(findGaps(times, 120 * MIN)).toEqual([]);
   });
 
-  it("collapses each gap on the axis into a small band", () => {
+  it("leaves each gap out of the axis", () => {
     const gaps = [{ start: T0 + 10 * MIN, end: T0 + 250 * MIN }];
     const ax = makeAxis(T0, T0 + 260 * MIN, gaps);
     expect(ax.frac(T0)).toBe(0);
     expect(ax.frac(T0 + 260 * MIN)).toBeCloseTo(1);
-    const band = ax.frac(T0 + 250 * MIN) - ax.frac(T0 + 10 * MIN);
-    // 20 active minutes with one 4% band: the 4-hour pause takes under 5% of the axis.
-    expect(band).toBeLessThan(0.05);
-    expect(ax.frac(T0 + 5 * MIN)).toBeCloseTo(ax.frac(T0 + 260 * MIN) - ax.frac(T0 + 255 * MIN));
+    expect(ax.frac(T0 + 10 * MIN)).toBeCloseTo(0.5);
+    expect(ax.frac(T0 + 100 * MIN)).toBeCloseTo(0.5);
+    expect(ax.frac(T0 + 250 * MIN)).toBeCloseTo(0.5);
+    expect(ax.frac(T0 + 255 * MIN)).toBeCloseTo(0.75);
+  });
+
+  it("counts active time between two points without the pauses", () => {
+    const gaps = [
+      { start: T0 + 10 * MIN, end: T0 + 40 * MIN },
+      { start: T0 + 50 * MIN, end: T0 + 70 * MIN },
+    ];
+    expect(activeBetween(T0, T0 + 80 * MIN, gaps)).toBe(30 * MIN);
+    expect(activeBetween(T0 + 20 * MIN, T0 + 60 * MIN, gaps)).toBe(10 * MIN);
+    expect(activeBetween(T0 + 15 * MIN, T0 + 35 * MIN, gaps)).toBe(0);
+  });
+
+  it("turns pause to resume into a gap from the last event after the halt", () => {
+    const events = [
+      ev(0, "project.created", null),
+      ev(5, "run.halted", null, { reason: "paused" }),
+      ev(7, "agent.stopped", "r/a"),
+      ev(12, "run.resumed", null, { from: "paused" }),
+      ev(13, "run.halted", null, { reason: "cancelled" }),
+      ev(14, "run.resumed", null, { from: "cancelled" }),
+      ev(20, "run.halted", null, { reason: "budget" }),
+    ];
+    expect(haltGaps(events)).toEqual([{ start: T0 + 7 * MIN, end: T0 + 12 * MIN }]);
+    expect(
+      mergeGaps([
+        { start: 30, end: 40 },
+        { start: 0, end: 10 },
+        { start: 5, end: 20 },
+      ]),
+    ).toEqual([
+      { start: 0, end: 20 },
+      { start: 30, end: 40 },
+    ]);
   });
 
   it("derives per-child phase segments", () => {
@@ -407,6 +450,27 @@ describe("report model and HTML", () => {
     ).toEqual([]);
   });
 
+  it("leaves pauses out of every time: halts count, a working agent does not", () => {
+    const evs = [
+      ev(0, "project.created", null),
+      phase(1, "r/a", "implementing"),
+      ev(1, "agent.spawned", "r/a", { agentId: "i", agentName: "openfleet:openfleet-implementer" }),
+      // 40 quiet minutes while the implementer works: not a pause.
+      ev(41, "agent.stopped", "r/a", { agentId: "i" }),
+      ev(42, "run.halted", null, { reason: "paused" }),
+      ev(100, "run.resumed", null, { from: "paused" }),
+      phase(101, "r/a", "done"),
+    ];
+    const m = deriveModel({ name: "demo", state: state(children), events: evs, spec: "", summary: "" });
+    expect(m.gaps).toEqual([{ start: T0 + 42 * MIN, end: T0 + 100 * MIN }]);
+    expect(m.activeMs).toBe(43 * MIN);
+    const html = renderReport(m);
+    expect(html).not.toContain("wall clock");
+    expect(html).not.toContain("hatched");
+    expect(html).toContain("left out of every time");
+    expect(html).toContain("(43m)"); // r/a implementing 1 → 101, without the 58-minute pause
+  });
+
   it("renders optional sections only when summary.md has them, and escapes run data", () => {
     const base = {
       name: "demo",
@@ -444,7 +508,7 @@ describe("report model and HTML", () => {
     expect(m.peakAgents).toBe(7);
     expect(m.tests).toMatchObject({ runs: 88, passed: 72 });
     expect(m.plans).toMatchObject({ submitted: 11, validated: 11, rejected: 1 });
-    expect(m.gaps).toHaveLength(2);
+    expect(m.gaps).toHaveLength(1); // the 29-minute quiet stretch is an implementer at work, not a pause
     expect(m.activeMs).toBeLessThan(m.wallMs - 4 * 60 * MIN);
     expect(m.tokens).toBeUndefined();
 

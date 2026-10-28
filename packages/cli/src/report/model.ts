@@ -16,6 +16,9 @@ import {
   childSegments,
   concurrency,
   findGaps,
+  haltGaps,
+  mergeGaps,
+  withoutBusy,
   projectSegments,
   type AgentRun,
   type Gap,
@@ -78,6 +81,7 @@ export interface ReportModel {
   wallMs: number;
   activeMs: number;
   gapMinutes: number;
+  /** Pauses (no events for over `gapMinutes`, or `pause` to `resume`), left out of every time shown. */
   gaps: Gap[];
   title?: string;
   goal?: string;
@@ -245,11 +249,14 @@ export function deriveModel(input: ModelInput): ReportModel {
   const times = events.map((e) => Date.parse(e.ts)).filter((t) => Number.isFinite(t));
   const t0 = times.length ? Math.min(...times) : Date.parse(state.createdAt);
   const t1 = times.length ? Math.max(...times) : t0;
-  const gaps = findGaps(times, gapMinutes * 60_000);
   const inProgress = state.status !== "done" && state.status !== "cancelled";
 
   const segs = childSegments(events, t1);
   const agents = agentRuns(events, t1);
+  // A pause: no events and no agent known to be running (an inferred run may span a real pause), or a halt.
+  const busy = agents.filter((a) => !a.inferred);
+  const quiet = withoutBusy(findGaps(times, gapMinutes * 60_000), busy, gapMinutes * 60_000);
+  const gaps = mergeGaps([...quiet, ...haltGaps(events)]);
   const steps = concurrency(agents);
 
   const children = new Map<string, ChildReport>();

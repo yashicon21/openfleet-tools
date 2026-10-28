@@ -57,7 +57,7 @@ Projects
                                Remove the project's child and integration worktrees (and branches)
   report <name> [--out <file>] [--open] [--gap <min>]
                                Write an HTML report of the run (default projects/<name>/report.html).
-                               Pauses longer than --gap minutes (default 15) are collapsed
+                               Pauses (no events for --gap minutes, default 15, or pause to resume) are left out
 
 Repos
   repo create <key> [--github <owner/name>] [--project <name>]

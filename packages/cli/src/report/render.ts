@@ -3,7 +3,7 @@
 import { HOST_LABEL, type Host } from "../hosts.js";
 import { escapeHtml as esc, markdown } from "./markdown.js";
 import type { ChildReport, ReportModel } from "./model.js";
-import { makeAxis, type Axis, type Segment } from "./timeline.js";
+import { activeBetween, makeAxis, type Axis, type Gap, type Segment } from "./timeline.js";
 import { totalTokens, type Usage } from "./tokens.js";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -109,10 +109,10 @@ pre{background:var(--raised);border:1px solid var(--line);border-radius:6px;padd
 .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted);margin-top:12px}
 .legend i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
 svg text{font-family:var(--sans);fill:var(--muted);font-size:12px}svg .lbl{fill:var(--fg);font-size:13px}svg .mono{font-family:var(--mono)}svg .hl{fill:var(--fg)}
-.grid{stroke:var(--grid)}.pause{fill:url(#hatch)}
+.grid{stroke:var(--grid)}.cut{stroke:var(--muted);stroke-dasharray:2 3}
 .ph-pending{fill:#2a2930}.ph-planning{fill:var(--magenta)}.ph-plan-review{fill:var(--lilac)}.ph-planned{fill:#3a3942}.ph-baseline{fill:#8a6cf0}.ph-implementing{fill:var(--cyan)}.ph-testing{fill:var(--yellow)}.ph-post-test,.ph-done{fill:var(--ok)}.ph-blocked{fill:#a35a2a}.ph-failed{fill:var(--bad)}
 .ph-specifying{fill:var(--lilac)}.ph-running{fill:var(--cyan)}.ph-finalizing{fill:var(--ok)}.ph-other{fill:#6b6873}
-.bg-pending{background:#2a2930}.bg-planning{background:var(--magenta)}.bg-plan-review{background:var(--lilac)}.bg-planned{background:#3a3942}.bg-baseline{background:#8a6cf0}.bg-implementing{background:var(--cyan)}.bg-testing{background:var(--yellow)}.bg-post-test,.bg-done{background:var(--ok)}.bg-blocked{background:#a35a2a}.bg-failed{background:var(--bad)}.bg-pause{background:repeating-linear-gradient(45deg,#45434c 0 3px,transparent 3px 6px)}
+.bg-pending{background:#2a2930}.bg-planning{background:var(--magenta)}.bg-plan-review{background:var(--lilac)}.bg-planned{background:#3a3942}.bg-baseline{background:#8a6cf0}.bg-implementing{background:var(--cyan)}.bg-testing{background:var(--yellow)}.bg-post-test,.bg-done{background:var(--ok)}.bg-blocked{background:#a35a2a}.bg-failed{background:var(--bad)}
 .open{opacity:.55}.merged{fill:#fff;stroke:var(--ground)}.rejected{fill:none;stroke:var(--bad);stroke-width:2.5}
 .area{fill:rgba(72,166,238,.25);stroke:var(--cyan);stroke-width:2}
 .bars{display:grid;gap:10px;max-width:760px}.bar{display:grid;grid-template-columns:150px 1fr 56px;align-items:center;gap:12px}
@@ -141,14 +141,13 @@ const L = 200;
 const R = 1124;
 
 interface Ticks {
-  defs: string;
   grid: string;
   labels: string;
 }
 
 const STEPS_MIN = [1, 2, 5, 10, 15, 20, 30, 60, 120, 180, 240, 360, 720, 1440];
 
-/** Grid lines and clock labels for active time, plus hatched bands for pauses. */
+/** Grid lines and clock labels for active time, plus a thin cut where a pause was left out. */
 function axisParts(ax: Axis, top: number, height: number, activeTotal: number): Ticks {
   const x = (t: number) => L + ax.frac(t) * (R - L);
   const stepMin = STEPS_MIN.find((s) => activeTotal / 60_000 / s <= 9) ?? 1440;
@@ -169,30 +168,32 @@ function axisParts(ax: Axis, top: number, height: number, activeTotal: number): 
     }
   }
   for (const g of ax.gaps) {
-    const x0 = x(g.start);
-    const x1 = x(g.end);
-    const mid = (x0 + x1) / 2;
+    const px = x(g.start).toFixed(1);
     lines.push(
-      `<rect class="pause" x="${(x0 + 1).toFixed(1)}" y="${top}" width="${Math.max(1, x1 - x0 - 2).toFixed(1)}" height="${height}"><title>Paused ${fmtDur(g.end - g.start)}: no events from ${clock(g.start)} to ${clock(g.end)}</title></rect>`,
-    );
-    labels.push(
-      `<text x="${mid.toFixed(1)}" y="${top - 6}" text-anchor="middle" font-size="11">paused ${fmtDur(g.end - g.start)}</text>`,
+      `<line class="cut" x1="${px}" x2="${px}" y1="${top}" y2="${top + height}"><title>Left out: pause from ${clock(g.start)} to ${clock(g.end)}</title></line>`,
     );
   }
-  const defs = `<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#45434c" stroke-width="3"/></pattern></defs>`;
-  return { defs, grid: lines.join(""), labels: labels.join("") };
+  return { grid: lines.join(""), labels: labels.join("") };
 }
 
 const truncate = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 
-function bars(segs: Segment[], x: (t: number) => number, y: number, h: number, who: string, project = false): string {
+function bars(
+  segs: Segment[],
+  x: (t: number) => number,
+  gaps: Gap[],
+  y: number,
+  h: number,
+  who: string,
+  project = false,
+): string {
   return segs
     .map((s) => {
       const x0 = x(s.start);
       const w = Math.max(1.5, x(s.end) - x0);
       const known = project ? PROJECT_PHASES.some(([p]) => p === s.phase) : PHASES.some(([p]) => p === s.phase);
       const cls = `ph-${known ? s.phase : "other"}${s.open ? " open" : ""}`;
-      const tip = `${who} · ${s.phase}${s.open ? " (still running)" : ""}\n${clock(s.start)} → ${clock(s.end)} (${fmtDur(s.end - s.start)})`;
+      const tip = `${who} · ${s.phase}${s.open ? " (still running)" : ""}\n${clock(s.start)} → ${clock(s.end)} (${fmtDur(activeBetween(s.start, s.end, gaps))})`;
       return `<rect class="${cls}" x="${x0.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="2"><title>${esc(tip)}</title></rect>`;
     })
     .join("");
@@ -207,7 +208,7 @@ function gantt(m: ReportModel, ax: Axis): string {
   const parts = axisParts(ax, top - 4, height + 4, m.activeMs);
   const body: string[] = [];
   body.push(`<text class="lbl hl" x="${L - 10}" y="${top + 18}" text-anchor="end">project</text>`);
-  body.push(bars(m.projectSegments, x, top + 6, rowH - 12, "project", true));
+  body.push(bars(m.projectSegments, x, ax.gaps, top + 6, rowH - 12, "project", true));
   for (const s of m.projectSegments) {
     const w = x(s.end) - x(s.start);
     const label = PROJECT_PHASES.find(([p]) => p === s.phase)?.[1] ?? s.phase;
@@ -222,7 +223,7 @@ function gantt(m: ReportModel, ax: Axis): string {
     body.push(
       `<text class="lbl" x="${L - 10}" y="${y + 18}" text-anchor="end"><title>${esc(c.id)}</title>${esc(truncate(c.label, 26))}</text>`,
     );
-    body.push(bars(c.segments, x, y + 6, rowH - 12, c.id));
+    body.push(bars(c.segments, x, ax.gaps, y + 6, rowH - 12, c.id));
     for (const r of c.planRejections) {
       body.push(
         `<circle class="rejected" cx="${x(r.ts).toFixed(1)}" cy="${y + rowH / 2}" r="6"><title>${esc(`${c.id}: plan sent back (${r.reason}) at ${clock(r.ts)}`)}</title></circle>`,
@@ -236,7 +237,7 @@ function gantt(m: ReportModel, ax: Axis): string {
     }
   });
   const H = top + height + 26;
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Phases of every child over time">${parts.defs}${parts.grid}${body.join("")}${parts.labels}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Phases of every child over time">${parts.grid}${body.join("")}${parts.labels}</svg>`;
 }
 
 function concurrencyChart(m: ReportModel, ax: Axis): string {
@@ -264,7 +265,7 @@ function concurrencyChart(m: ReportModel, ax: Axis): string {
   const peakLbl = peakAt
     ? `<text class="hl" x="${Math.min(R - 60, x(peakAt.t) + 6).toFixed(1)}" y="${(y(peak) - 6).toFixed(1)}">peak ${peak}</text>`
     : "";
-  return `<svg viewBox="0 0 ${W} ${top + h + 28}" role="img" aria-label="Agents running at once over time">${parts.defs}${yt.join("")}${parts.grid}<path class="area" d="${pts.join(" ")}"><title>Agents running at once</title></path>${peakLbl}<text class="lbl" x="${L - 40}" y="${top - 8}" text-anchor="end">agents</text>${parts.labels}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${top + h + 28}" role="img" aria-label="Agents running at once over time">${yt.join("")}${parts.grid}<path class="area" d="${pts.join(" ")}"><title>Agents running at once</title></path>${peakLbl}<text class="lbl" x="${L - 40}" y="${top - 8}" text-anchor="end">agents</text>${parts.labels}</svg>`;
 }
 
 function legend(items: [string, string][]): string {
@@ -320,19 +321,18 @@ function splitSection(m: ReportModel): Section {
 
 function runSection(m: ReportModel, ax: Axis): Section {
   const pauses = m.gaps.length
-    ? ` ${plural(m.gaps.length, "pause")} longer than ${m.gapMinutes} min (${fmtDur(m.wallMs - m.activeMs)} in total) ${m.gaps.length === 1 ? "is" : "are"} collapsed into the hatched band${m.gaps.length === 1 ? "" : "s"}.`
+    ? ` Pauses (no activity for over ${m.gapMinutes} min, or \`pause\` to \`resume\`) are left out of every time in this report; a dotted line marks each one.`
     : "";
   const used = new Set(m.children.flatMap((c) => c.segments.map((s) => s.phase)));
   const items: [string, string][] = PHASES.filter(([p]) => used.has(p)).map(([p, l]) => [`bg-${p}`, l]);
   if (m.children.some((c) => c.mergedAt !== undefined)) items.push(["", "◆ merged"]);
   if (m.children.some((c) => c.planRejections.length)) items.push(["", "○ plan sent back"]);
-  if (m.gaps.length) items.push(["bg-pause", "paused"]);
   return {
     id: "run",
     nav: "Timeline",
     eyebrow: "The whole run",
     title: "Every child, every phase, on one timeline.",
-    lead: `${fmtDur(m.activeMs)} of active work over ${fmtDur(m.wallMs)} of wall-clock time.${pauses}${m.inProgress ? " The run is still in progress; faded bars are still running." : ""}`,
+    lead: `${fmtDur(m.activeMs)} of active work.${pauses}${m.inProgress ? " The run is still in progress; faded bars are still running." : ""}`,
     body: `<div class="chart">${gantt(m, ax)}</div>${legend(items)}`,
   };
 }
@@ -344,7 +344,9 @@ function plansSection(m: ReportModel): Section | undefined {
     .map((c) => {
       const planningStart = c.segments.find((s) => s.phase === "planning")?.start;
       const took =
-        planningStart !== undefined && c.planValidated !== undefined ? fmtDur(c.planValidated - planningStart) : "–";
+        planningStart !== undefined && c.planValidated !== undefined
+          ? fmtDur(activeBetween(planningStart, c.planValidated, m.gaps))
+          : "–";
       const rej = c.planRejections.length
         ? c.planRejections
             .map(
@@ -646,7 +648,6 @@ function textSection(
 function topSection(m: ReportModel): string {
   const k: string[] = [
     kpi(fmtDur(m.activeMs), "active time", "c"),
-    kpi(fmtDur(m.wallMs), "wall clock"),
     kpi(num(m.children.filter((c) => c.kind !== "integration").length), "children", "m"),
     kpi(num(m.agents.length), "agent spawns", "y"),
     kpi(num(m.peakAgents), "agents at once", "y"),

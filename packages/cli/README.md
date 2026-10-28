@@ -75,7 +75,7 @@ Every spawn first takes a slot with `npx openfleet claim`. It allows at most `ma
 
 Every child runs at least a planner, an implementer and a tester (plus a baseline tester if it has one), and each failed test adds an implementer and a tester again, up to 3 retries and one guided attempt. Agent count, time and tokens grow with the number of children, the retries and the size of each change.
 
-For scale, the run on [openfleet.tools/how-it-works](https://openfleet.tools/how-it-works.html) moved one app to a new component library page by page: 10 children, 83 agent spawns, at most 7 agents at once, 3 retries and about 1.6 hours of active time (6 hours on the clock, including pauses).
+For scale, the run on [openfleet.tools/how-it-works](https://openfleet.tools/how-it-works.html) moved one app to a new component library page by page: 10 children, 83 agent spawns, at most 7 agents at once, 3 retries and about 2.1 hours of active time (6 hours on the clock, including pauses).
 
 Start with a small project to see what your host and models cost, then:
 
@@ -307,7 +307,7 @@ macOS Full Disk Access does not fix this. `EACCES` ("Permission denied") is a pl
 
 It is built only from the project's files (`events.jsonl`, `state.json`, `spec.md`, `summary.md`) and git, with no agent involved:
 
-- active time and wall-clock time, children, agent spawns, agents at once, test runs, lines changed;
+- active time (pauses left out), children, agent spawns, agents at once, test runs, lines changed;
 - the ask (the spec's `## Goal`), how the work was split, and a timeline of every child's phases;
 - the plan gate (plans submitted, validated and sent back), agents running at once and spawns by role;
 - lines changed and test runs per child;
@@ -316,7 +316,7 @@ It is built only from the project's files (`events.jsonl`, `state.json`, `spec.m
 - the spending limits (`budget`) against usage, and every halt, resume and 80% warning; a halted run is marked in the header.
 - the model configured for each role at launch next to the models the transcripts show it used, so you can check the `models` settings took effect.
 
-Pauses longer than 15 minutes (`--gap <min>`) are collapsed into hatched bands on the timeline. `--out <file>` writes elsewhere and `--open` opens the report in the browser.
+Pauses are left out of every time in the report: stretches of more than 15 minutes (`--gap <min>`) with no events and no agent running, and the time between `npx openfleet pause` and `resume`. The timeline marks each with a dotted line. `--out <file>` writes elsewhere and `--open` opens the report in the browser.
 
 Cost is shown only when `openfleet.json` has a `pricing` table. Prices are USD per million tokens, per model name as the host reports it (`.`/`-` and case differences are ignored). `input`, `output` and `cacheRead` are required; cache writes use `cacheWrite`, or `cacheWrite5m` and `cacheWrite1h` where the host tells them apart. OpenFleet ships no prices: copy them from your provider.
 
