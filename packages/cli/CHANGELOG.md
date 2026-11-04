@@ -1,5 +1,11 @@
 # @openfleet-tools/cli
 
+## 1.2.0
+
+### Minor Changes
+
+- [#28](https://github.com/yashicon21/openfleet-tools/pull/28) [`45e0212`](https://github.com/yashicon21/openfleet-tools/commit/45e02120dfda12a030d634f3fc8fe236e70e2c10) Thanks [@yashicon21](https://github.com/yashicon21)! - `openfleet report` leaves pauses out of every time it shows. Pauses are stretches over `--gap` minutes with no events and no agent running, plus the time between `pause` and `resume`. They take no space on the timeline (a dotted line marks each), phase and plan durations count active time only, and the wall-clock total is gone. A quiet stretch while an agent works is no longer counted as a pause.
+
 ## 1.1.0
 
 ### Minor Changes
