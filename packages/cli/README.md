@@ -75,7 +75,7 @@ Every spawn first takes a slot with `npx openfleet claim`. It allows at most `ma
 
 Every child runs at least a planner, an implementer and a tester (plus a baseline tester if it has one), and each failed test adds an implementer and a tester again, up to 3 retries and one guided attempt. Agent count, time and tokens grow with the number of children, the retries and the size of each change.
 
-For scale, the run on [openfleet.tools/how-it-works](https://openfleet.tools/how-it-works.html) moved one app to a new component library page by page: 10 children, 83 agent spawns, at most 7 agents at once, 3 retries and about 2.1 hours of active time (6 hours on the clock, including pauses).
+For scale, the run on [openfleet.tools/how-it-works](https://openfleet.tools/how-it-works.html?run=ui-migration) moved one app to a new component library page by page: 10 children, 83 agent spawns, at most 7 agents at once, 3 retries and about 2.1 hours of active time (6 hours on the clock, including pauses).
 
 Start with a small project to see what your host and models cost, then:
 
