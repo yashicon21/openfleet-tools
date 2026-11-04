@@ -1,5 +1,5 @@
-// Time handling for `openfleet report`: pauses between events, a time axis that collapses them,
-// per-child phase segments and the number of agents running at once.
+// Time handling for `openfleet report`: pauses, a time axis that leaves them out, per-child phase
+// segments and the number of agents running at once.
 import type { OpenFleetEvent } from "../events.js";
 
 export interface Gap {
@@ -19,39 +19,87 @@ export function findGaps(times: number[], minGapMs: number): Gap[] {
   return gaps;
 }
 
+/**
+ * The parts of `gaps` not covered by `busy` spans (agents known to be running), keeping only parts
+ * longer than `minGapMs`. A quiet stretch while an agent works is not a pause.
+ */
+export function withoutBusy(gaps: Gap[], busy: Gap[], minGapMs: number): Gap[] {
+  const out: Gap[] = [];
+  for (const g of gaps) {
+    let parts = [{ ...g }];
+    for (const b of busy) {
+      parts = parts.flatMap((p) =>
+        b.end <= p.start || b.start >= p.end
+          ? [p]
+          : [
+              { start: p.start, end: b.start },
+              { start: b.end, end: p.end },
+            ].filter((q) => q.end > q.start),
+      );
+    }
+    out.push(...parts.filter((p) => p.end - p.start > minGapMs));
+  }
+  return out;
+}
+
+/**
+ * Pauses from `npx openfleet pause` (and budget halts): from the last event after the halt, once
+ * running agents have finished, until `run.resumed`. A halt that was never resumed adds nothing.
+ */
+export function haltGaps(events: OpenFleetEvent[]): Gap[] {
+  const gaps: Gap[] = [];
+  let haltedAt: number | undefined;
+  let last = 0;
+  for (const e of [...events].sort((a, b) => Date.parse(a.ts) - Date.parse(b.ts))) {
+    const t = Date.parse(e.ts);
+    if (!Number.isFinite(t)) continue;
+    if (e.type === "run.halted" && (e.payload.reason === "paused" || e.payload.reason === "budget")) {
+      haltedAt ??= t;
+    } else if (e.type === "run.resumed" && haltedAt !== undefined) {
+      if (t > last) gaps.push({ start: last, end: t });
+      haltedAt = undefined;
+    }
+    last = t;
+  }
+  return gaps;
+}
+
+/** Sorted, non-overlapping gaps. */
+export function mergeGaps(gaps: Gap[]): Gap[] {
+  const out: Gap[] = [];
+  for (const g of [...gaps].sort((a, b) => a.start - b.start)) {
+    const prev = out[out.length - 1];
+    if (prev && g.start <= prev.end) prev.end = Math.max(prev.end, g.end);
+    else out.push({ ...g });
+  }
+  return out;
+}
+
+/** Time from `a` to `b` without the pauses in between. */
+export function activeBetween(a: number, b: number, gaps: Gap[]): number {
+  const paused = gaps.reduce((sum, g) => sum + Math.max(0, Math.min(b, g.end) - Math.max(a, g.start)), 0);
+  return Math.max(0, b - a - paused);
+}
+
 export function activeMs(t0: number, t1: number, gaps: Gap[]): number {
-  return t1 - t0 - gaps.reduce((sum, g) => sum + (g.end - g.start), 0);
+  return activeBetween(t0, t1, gaps);
 }
 
 export interface Axis {
   t0: number;
   t1: number;
   gaps: Gap[];
-  /** Map a time to [0, 1]. Active time is linear; each gap takes a fixed small band. */
+  /** Map a time to [0, 1]. Active time is linear; pauses take no space. */
   frac(t: number): number;
 }
 
-/** Width of one collapsed pause, as a share of the active time. */
-export const GAP_BAND_SHARE = 0.04;
-
 export function makeAxis(t0: number, t1: number, gaps: Gap[]): Axis {
-  const active = Math.max(1, activeMs(t0, t1, gaps));
-  const band = Math.max(1, active * GAP_BAND_SHARE);
-  const total = active + band * gaps.length;
-  const display = (t: number): number => {
-    let removed = 0;
-    for (const g of gaps) {
-      const len = g.end - g.start;
-      if (t >= g.end) removed += len - band;
-      else if (t > g.start) return g.start - t0 - removed + ((t - g.start) / len) * band;
-    }
-    return t - t0 - removed;
-  };
+  const total = Math.max(1, activeMs(t0, t1, gaps));
   return {
     t0,
     t1,
     gaps,
-    frac: (t) => Math.min(1, Math.max(0, display(Math.min(t1, Math.max(t0, t))) / total)),
+    frac: (t) => Math.min(1, Math.max(0, activeBetween(t0, Math.min(t1, Math.max(t0, t)), gaps) / total)),
   };
 }
 
