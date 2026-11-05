@@ -3929,7 +3929,7 @@
             f1sum:
               "Finished run, 3:33:57 of active time. The grill took 7 minutes 55; you approved the spec at 8:36, and OpenFleet created the nine repos and checked the toolchains. Ten planners ran on Claude; one plan was sent back for building past the slice. At 0:24 every plan agreed. platform was done at 0:47 and contracts at 1:08; you then paused the run for 52 minutes, left out. The five services and web shared two slots on the laptop from 1:08 to 2:42, with testers on Copilot alongside. media, posts and system each needed one retry. The system's end-to-end flow passed at 3:29, and the run finished with nine linked draft PRs.",
             f1cap:
-              "Bars are agents from start to stop, with the mark of the provider they ran on: Claude for planners and the steps handed to Opus, Ollama for implementer steps on the laptop, Copilot for testers. Each implementer is a row of short steps, one fresh session each, two at a time on the laptop. Dots are file edits and checks; the dotted line is the pause.",
+              "Bars are agents from start to stop, with the mark of the provider they ran on: Claude for planners and the steps handed to Opus, Ollama for implementer steps on the laptop, Copilot for testers. Each implementer job is one bar, with a thin line between its steps: one fresh session per step, two at a time on the laptop. A Claude badge marks a step handed to Opus; the dotted line is the pause.",
             f1label: "Swimlane timeline of the run, one lane per repo.",
             s2: '<h2 id="state-h"><small>02 · STATE</small>Nine repos, a fixed order</h2>\n<p>Each child moves through the same phases: pending, planning, <strong>plan-review</strong>, planned, implementing, testing, <strong>post-test</strong> and done. A new system is built in a fixed order: <code>platform</code> first, then <code>contracts</code>, then the five services and <code>web</code> side by side, then <code>system</code>. That is why the services sit in planned for over 40 minutes. <code>notifications</code> goes back to planning once, and <code>media</code>, <code>posts</code> and <code>system</code> each go back from testing to implementing (the ↺).</p>',
             f2title: '<span class="dot3"><i></i><i></i><i></i></span>PHASE.CHANGED · 9 CHILDREN',
@@ -4500,6 +4500,9 @@
           });
           return e ? e.t : 0;
         };
+        var HAS_HOSTS = RUNS.some(function (r) {
+          return r.host;
+        });
         var logo = function (host, x, y, size, fill) {
           var L = LOGOS[host];
           return (
@@ -4700,20 +4703,56 @@
                 });
                 return;
               }
+              // Implementer steps (step mode) are drawn as one bar per job, with a thin line between steps.
+              var items = [];
               RUNS.filter(function (r) {
                 return r.repo === lane;
               }).forEach(function (r) {
-                var fill = r.failed ? "#FFF1CC" : ROLE_FILL[r.role];
+                var prev = items[items.length - 1];
+                if (r.role === "implementer" && r.step) {
+                  var k = +r.step.split("/")[0];
+                  if (prev && prev.steps && k > 1 && prev.steps[0].step.split("/")[1] === r.step.split("/")[1])
+                    prev.steps.push(r);
+                  else items.push({ steps: [r] });
+                } else items.push({ r: r });
+              });
+              var S = N ? 12 : 13;
+              items.forEach(function (it) {
+                var r = it.r || it.steps[0];
+                var f = it.r ? it.r.f : it.steps[it.steps.length - 1].f;
+                var fill = it.r && it.r.failed ? "#FFF1CC" : ROLE_FILL[r.role];
                 var base = r.role === "baseline";
+                var failed = it.r && it.r.failed;
+                var title = it.r
+                  ? r.actor + (r.model ? " · " + r.model : "") + " · " + fmt(r.s) + " → " + fmt(f)
+                  : (function () {
+                      var opus = it.steps.filter(function (x) {
+                        return x.fb;
+                      }).length;
+                      return (
+                        r.actor +
+                        " · " +
+                        it.steps.length +
+                        " steps: " +
+                        (it.steps.length - opus) +
+                        " on " +
+                        r.model +
+                        (opus ? ", " + opus + " handed to Claude Opus 5.5" : "") +
+                        " · " +
+                        fmt(r.s) +
+                        " → " +
+                        fmt(f)
+                      );
+                    })();
                 h +=
                   '<rect class="lane-bar" fill="' +
                   fill +
                   '"' +
-                  (r.failed ? ' stroke="#8A5300" stroke-width="2"' : base ? ' stroke="#EDEB3C" stroke-width="2"' : "") +
+                  (failed ? ' stroke="#8A5300" stroke-width="2"' : base ? ' stroke="#EDEB3C" stroke-width="2"' : "") +
                   ' data-s="' +
                   r.s +
                   '" data-f="' +
-                  r.f +
+                  f +
                   '" x="' +
                   x(r.s) +
                   '" y="' +
@@ -4721,42 +4760,74 @@
                   '" height="' +
                   bar.h +
                   '" rx="5" width="' +
-                  (x(r.f) - x(r.s)) +
+                  (x(f) - x(r.s)) +
                   '"><title>' +
-                  esc(
-                    r.actor +
-                      (r.step ? " · step " + r.step : "") +
-                      (r.model ? " · " + r.model : "") +
-                      " · " +
-                      fmt(r.s) +
-                      " → " +
-                      fmt(r.f),
-                  ) +
+                  esc(title) +
                   "</title></rect>";
+                if (it.steps)
+                  it.steps.forEach(function (st, k) {
+                    if (k > 0)
+                      h +=
+                        '<line class="ev" data-t="' +
+                        st.s +
+                        '" x1="' +
+                        x(st.s) +
+                        '" x2="' +
+                        x(st.s) +
+                        '" y1="' +
+                        (bar.y + 4) +
+                        '" y2="' +
+                        (bar.y + bar.h - 4) +
+                        '" stroke="#0E0E10" stroke-width="1.5" opacity="0.55" pointer-events="none"/>';
+                  });
                 // The provider's mark sits on the bar, for runs that mix providers.
-                var S = N ? 12 : 13;
-                if (r.host && x(r.f) - x(r.s) >= S + 4)
+                var host = it.steps ? "ollama" : r.host;
+                if (host && x(f) - x(r.s) >= S + 4)
                   h +=
                     '<g class="ev" data-t="' +
                     r.s +
                     '" pointer-events="none">' +
-                    logo(r.host, x(r.s) + 2, bar.y + (bar.h - S) / 2, S, r.failed ? "#8A5300" : "#0E0E10") +
+                    logo(host, x(r.s) + 3, bar.y + (bar.h - S) / 2, S, failed ? "#8A5300" : "#0E0E10") +
                     "</g>";
+                // A step the local model could not finish carries a Claude badge.
+                if (it.steps)
+                  it.steps.forEach(function (st) {
+                    if (!st.fb) return;
+                    var cx = (x(st.s) + x(st.f)) / 2,
+                      cy = bar.y + bar.h / 2,
+                      rr = bar.h / 2 - 0.5;
+                    h +=
+                      '<g class="ev" data-t="' +
+                      st.s +
+                      '"><title>' +
+                      esc(r.actor + " · step " + st.step + " · " + st.model) +
+                      '</title><circle cx="' +
+                      cx +
+                      '" cy="' +
+                      cy +
+                      '" r="' +
+                      rr +
+                      '" fill="#0E0E10" stroke="#F4F4F6" stroke-width="1.5"/>' +
+                      logo("claude", cx - (rr - 2.5), cy - (rr - 2.5), 2 * (rr - 2.5), "#D97757") +
+                      "</g>";
+                  });
               });
-              E.filter(function (e) {
-                return e.target === lane && /^(file\.|test\.run)/.test(e.type);
-              }).forEach(function (e) {
-                h +=
-                  '<circle class="f-ink ev" data-t="' +
-                  e.t +
-                  '" cx="' +
-                  x(e.t) +
-                  '" cy="' +
-                  bar.c +
-                  '" r="' +
-                  (N ? 2.5 : 3) +
-                  '"/>';
-              });
+              // Dots for file edits and checks; a run with provider marks leaves them to section 06.
+              if (!HAS_HOSTS)
+                E.filter(function (e) {
+                  return e.target === lane && /^(file\.|test\.run)/.test(e.type);
+                }).forEach(function (e) {
+                  h +=
+                    '<circle class="f-ink ev" data-t="' +
+                    e.t +
+                    '" cx="' +
+                    x(e.t) +
+                    '" cy="' +
+                    bar.c +
+                    '" r="' +
+                    (N ? 2.5 : 3) +
+                    '"/>';
+                });
             });
             // The plans-ready gate: no code is written until every plan agrees.
             var gx = x(GATE_T),
