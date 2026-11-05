@@ -2032,10 +2032,10 @@
             ><b>Rename across six repos</b><span>6 repos · 8 children</span></a
           >
           <a href="how-it-works.html?run=ui-migration" data-run="ui-migration"
-            ><b>Move an app to a new UI library</b><span>1 repo · 10 children</span></a
+            ><b>Move an app to a new UI library</b><span>11 repos · one per part</span></a
           >
           <a href="how-it-works.html?run=photo-app" data-run="photo-app"
-            ><b>Build a photo app from scratch</b><span>greenfield · 9 children</span></a
+            ><b>Build a photo app from scratch</b><span>greenfield · 9 new repos</span></a
           >
         </nav>
         <h1 id="page-title" data-slot="title">One prompt. Six repos. Every step on the record.</h1>
@@ -2886,216 +2886,107 @@
       }
 
       // ---------- the other example runs ----------
-      // Each is one repo whose children run under a repo coordinator. Times are seconds from
+      // Every child is its own repo, run directly by the coordinator. Times are seconds from
       // project.created; a pause or a stretch with nobody at the keyboard is left out.
       var RUNDATA = {
         "ui-migration": {
           project: "ui-migration",
-          repos: ["web-app"],
-          groups: {
-            "web-app": [
-              "web-app/setup",
-              "web-app/billing",
-              "web-app/teams",
-              "web-app/team-details",
-              "web-app/users",
-              "web-app/user-details",
-              "web-app/users-offboard",
-              "web-app/permissions",
-              "web-app/roles",
-              "web-app/profile",
-            ],
-          },
+          repos: [
+            "ui-kit",
+            "billing",
+            "teams",
+            "team-details",
+            "users",
+            "user-details",
+            "users-offboard",
+            "permissions",
+            "roles",
+            "profile",
+            "integration",
+          ],
           children: [
-            "web-app/setup",
-            "web-app/billing",
-            "web-app/teams",
-            "web-app/team-details",
-            "web-app/users",
-            "web-app/user-details",
-            "web-app/users-offboard",
-            "web-app/permissions",
-            "web-app/roles",
-            "web-app/profile",
+            "ui-kit",
+            "billing",
+            "teams",
+            "team-details",
+            "users",
+            "user-details",
+            "users-offboard",
+            "permissions",
+            "roles",
+            "profile",
+            "integration",
           ],
           end: 7549.8,
           spec: 259.8,
           approved: 285,
           gate: 936.6,
-          groupCheck: { "web-app": 916.6 },
-          rejected: [["web-app/team-details", 729.6, "toast API: use the shared Toast wrapper"]],
-          merges: [
-            ["web-app/setup", 2875.2],
-            ["web-app/permissions", 3472.8],
-            ["web-app/team-details", 3780.6],
-            ["web-app/users", 4050],
-            ["web-app/teams", 4146],
-            ["web-app/billing", 4161],
-            ["web-app/users-offboard", 4222.2],
-            ["web-app/user-details", 4455.6],
-            ["web-app/profile", 4635],
-            ["web-app/roles", 4667.4],
-          ],
-          integrate: {
-            "web-app": [
-              [4681.8, 5459.4],
-              [5931.6, 7402.8],
-            ],
-          },
-          you: [[5464.8, 5904, "coverage call"]],
+          rejected: [["team-details", 729.6, "toast API: use the shared Toast wrapper"]],
+          you: [[5464.8, 5904, "integration"]],
           cuts: [[5464.8, "4H 02M AWAY · LEFT OUT"]],
           finalizing: 7404,
           done: 7515,
           sessions: [
-            { actor: "web-app/setup", child: "web-app/setup", kind: "p", s: 448.2, e: 457.2, integ: false },
-            { actor: "web-app/billing", child: "web-app/billing", kind: "p", s: 453, e: 462, integ: false },
-            { actor: "web-app/teams", child: "web-app/teams", kind: "p", s: 458.4, e: 467.4, integ: false },
-            { actor: "web-app/teams", child: "web-app/teams", kind: "p", s: 474.6, e: 592.8, integ: false },
-            { actor: "web-app/billing", child: "web-app/billing", kind: "p", s: 474.6, e: 565.8, integ: false },
-            { actor: "web-app/setup", child: "web-app/setup", kind: "p", s: 474.6, e: 793.8, integ: false },
-            { actor: "web-app/team-details", child: "web-app/team-details", kind: "p", s: 483, e: 669.6, integ: false },
-            { actor: "web-app/users", child: "web-app/users", kind: "p", s: 487.8, e: 613.8, integ: false },
-            {
-              actor: "web-app/user-details",
-              child: "web-app/user-details",
-              kind: "p",
-              s: 492.6,
-              e: 555.6,
-              integ: false,
-            },
-            {
-              actor: "web-app/users-offboard",
-              child: "web-app/users-offboard",
-              kind: "p",
-              s: 588.6,
-              e: 720.6,
-              integ: false,
-            },
-            { actor: "web-app/permissions", child: "web-app/permissions", kind: "p", s: 593.4, e: 658.2, integ: false },
-            { actor: "web-app/roles", child: "web-app/roles", kind: "p", s: 601.2, e: 675, integ: false },
-            { actor: "web-app/profile", child: "web-app/profile", kind: "p", s: 622.8, e: 664.8, integ: false },
-            {
-              actor: "web-app/team-details",
-              child: "web-app/team-details",
-              kind: "p",
-              s: 734.4,
-              e: 783.6,
-              integ: false,
-            },
-            { actor: "web-app/setup", child: "web-app/setup", kind: "i", s: 945.6, e: 2662.2, integ: false },
-            { actor: "web-app/setup", child: "web-app/setup", kind: "t", s: 2688, e: 2865.6, integ: false },
-            { actor: "web-app/users", child: "web-app/users", kind: "i", s: 2895.6, e: 3066, integ: false },
-            {
-              actor: "web-app/team-details",
-              child: "web-app/team-details",
-              kind: "i",
-              s: 2903.4,
-              e: 3305.4,
-              integ: false,
-            },
-            {
-              actor: "web-app/users-offboard",
-              child: "web-app/users-offboard",
-              kind: "i",
-              s: 2910.6,
-              e: 3164.4,
-              integ: false,
-            },
-            { actor: "web-app/teams", child: "web-app/teams", kind: "i", s: 2919, e: 3264.6, integ: false },
-            { actor: "web-app/billing", child: "web-app/billing", kind: "i", s: 2926.2, e: 3306, integ: false },
-            {
-              actor: "web-app/permissions",
-              child: "web-app/permissions",
-              kind: "i",
-              s: 2933.4,
-              e: 3047.4,
-              integ: false,
-            },
-            {
-              actor: "web-app/permissions",
-              child: "web-app/permissions",
-              kind: "f",
-              s: 3055.8,
-              e: 3457.2,
-              integ: false,
-            },
-            { actor: "web-app/users", child: "web-app/users", kind: "f", s: 3074.4, e: 4011.6, integ: false },
-            {
-              actor: "web-app/users-offboard",
-              child: "web-app/users-offboard",
-              kind: "f",
-              s: 3175.8,
-              e: 3633.6,
-              integ: false,
-            },
-            { actor: "web-app/teams", child: "web-app/teams", kind: "f", s: 3273.6, e: 3716.4, integ: false },
-            {
-              actor: "web-app/team-details",
-              child: "web-app/team-details",
-              kind: "t",
-              s: 3313.8,
-              e: 3768.6,
-              integ: false,
-            },
-            { actor: "web-app/billing", child: "web-app/billing", kind: "f", s: 3319.8, e: 4120.8, integ: false },
-            { actor: "web-app/roles", child: "web-app/roles", kind: "i", s: 3480, e: 3617.4, integ: false },
-            { actor: "web-app/roles", child: "web-app/roles", kind: "f", s: 3626.4, e: 4657.8, integ: false },
-            {
-              actor: "web-app/users-offboard",
-              child: "web-app/users-offboard",
-              kind: "i",
-              s: 3646.2,
-              e: 3654.6,
-              integ: false,
-            },
-            {
-              actor: "web-app/users-offboard",
-              child: "web-app/users-offboard",
-              kind: "t",
-              s: 3665.4,
-              e: 4213.2,
-              integ: false,
-            },
-            { actor: "web-app/teams", child: "web-app/teams", kind: "i", s: 3727.8, e: 3736.2, integ: false },
-            { actor: "web-app/teams", child: "web-app/teams", kind: "t", s: 3746.4, e: 4135.8, integ: false },
-            {
-              actor: "web-app/user-details",
-              child: "web-app/user-details",
-              kind: "i",
-              s: 3787.8,
-              e: 3949.2,
-              integ: false,
-            },
-            { actor: "web-app/user-details", child: "web-app/user-details", kind: "f", s: 3957, e: 4446, integ: false },
-            { actor: "web-app/users", child: "web-app/users", kind: "i", s: 4027.8, e: 4038, integ: false },
-            { actor: "web-app/profile", child: "web-app/profile", kind: "i", s: 4055.4, e: 4240.8, integ: false },
-            { actor: "web-app/billing", child: "web-app/billing", kind: "i", s: 4134, e: 4141.8, integ: false },
-            { actor: "web-app/profile", child: "web-app/profile", kind: "f", s: 4249.2, e: 4630.2, integ: false },
-            { actor: "web-app/repo-coordinator", child: "web-app", kind: "i", s: 4681.8, e: 5059.2, integ: true },
-            { actor: "web-app/repo-coordinator", child: "web-app", kind: "t", s: 5070.6, e: 5459.4, integ: true },
-            { actor: "web-app/repo-coordinator", child: "web-app", kind: "i", s: 5931.6, e: 7259.4, integ: true },
-            { actor: "web-app/repo-coordinator", child: "web-app", kind: "t", s: 7271.4, e: 7402.8, integ: true },
-          ],
-          wakes: [
-            293.4, 474.6, 556.2, 614.4, 658.8, 665.4, 721.2, 784.2, 887.4, 937.8, 2662.8, 2865.6, 3048, 3067.2, 3165.6,
-            3265.8, 3306.6, 3458.4, 3618.6, 3634.8, 3655.8, 3717.6, 3737.4, 3770.4, 3949.8, 4012.2, 4039.2, 4121.4,
-            4137, 4213.8, 4241.4, 4447.2, 4630.8, 4658.4, 5059.8, 5459.4, 5913.6, 7260, 7402.8,
+            { child: "ui-kit", kind: "p", s: 448.2, e: 457.2 },
+            { child: "billing", kind: "p", s: 453, e: 462 },
+            { child: "teams", kind: "p", s: 458.4, e: 467.4 },
+            { child: "teams", kind: "p", s: 474.6, e: 592.8 },
+            { child: "billing", kind: "p", s: 474.6, e: 565.8 },
+            { child: "ui-kit", kind: "p", s: 474.6, e: 793.8 },
+            { child: "team-details", kind: "p", s: 483, e: 669.6 },
+            { child: "users", kind: "p", s: 487.8, e: 613.8 },
+            { child: "user-details", kind: "p", s: 492.6, e: 555.6 },
+            { child: "users-offboard", kind: "p", s: 588.6, e: 720.6 },
+            { child: "permissions", kind: "p", s: 593.4, e: 658.2 },
+            { child: "roles", kind: "p", s: 601.2, e: 675 },
+            { child: "profile", kind: "p", s: 622.8, e: 664.8 },
+            { child: "team-details", kind: "p", s: 734.4, e: 783.6 },
+            { child: "ui-kit", kind: "i", s: 945.6, e: 2662.2 },
+            { child: "ui-kit", kind: "t", s: 2688, e: 2865.6 },
+            { child: "users", kind: "i", s: 2895.6, e: 3066 },
+            { child: "team-details", kind: "i", s: 2903.4, e: 3305.4 },
+            { child: "users-offboard", kind: "i", s: 2910.6, e: 3164.4 },
+            { child: "teams", kind: "i", s: 2919, e: 3264.6 },
+            { child: "billing", kind: "i", s: 2926.2, e: 3306 },
+            { child: "permissions", kind: "i", s: 2933.4, e: 3047.4 },
+            { child: "permissions", kind: "f", s: 3055.8, e: 3457.2 },
+            { child: "users", kind: "f", s: 3074.4, e: 4011.6 },
+            { child: "users-offboard", kind: "f", s: 3175.8, e: 3633.6 },
+            { child: "teams", kind: "f", s: 3273.6, e: 3716.4 },
+            { child: "team-details", kind: "t", s: 3313.8, e: 3768.6 },
+            { child: "billing", kind: "f", s: 3319.8, e: 4120.8 },
+            { child: "roles", kind: "i", s: 3480, e: 3617.4 },
+            { child: "roles", kind: "f", s: 3626.4, e: 4657.8 },
+            { child: "users-offboard", kind: "i", s: 3646.2, e: 3654.6 },
+            { child: "users-offboard", kind: "t", s: 3665.4, e: 4213.2 },
+            { child: "teams", kind: "i", s: 3727.8, e: 3736.2 },
+            { child: "teams", kind: "t", s: 3746.4, e: 4135.8 },
+            { child: "user-details", kind: "i", s: 3787.8, e: 3949.2 },
+            { child: "user-details", kind: "f", s: 3957, e: 4446 },
+            { child: "users", kind: "i", s: 4027.8, e: 4038 },
+            { child: "profile", kind: "i", s: 4055.4, e: 4240.8 },
+            { child: "billing", kind: "i", s: 4134, e: 4141.8 },
+            { child: "profile", kind: "f", s: 4249.2, e: 4630.2 },
+            { child: "integration", kind: "i", s: 4681.8, e: 5059.2 },
+            { child: "integration", kind: "t", s: 5070.6, e: 5459.4 },
+            { child: "integration", kind: "i", s: 5931.6, e: 7259.4 },
+            { child: "integration", kind: "t", s: 7271.4, e: 7402.8 },
           ],
           tests: [
             {
               t: 2845.2,
-              child: "web-app/setup",
+              child: "ui-kit",
               cmd: "pnpm install --frozen-lockfile",
               ok: true,
               cat: "ok",
               sum: "lockfile in sync",
             },
-            { t: 2845.2, child: "web-app/setup", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
-            { t: 2845.8, child: "web-app/setup", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
-            { t: 2845.8, child: "web-app/setup", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
+            { t: 2845.2, child: "ui-kit", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
+            { t: 2845.8, child: "ui-kit", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 2845.8, child: "ui-kit", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
             {
               t: 2845.8,
-              child: "web-app/setup",
+              child: "ui-kit",
               cmd: "pnpm build (scratch copy, the expected error cast)",
               ok: true,
               cat: "ok",
@@ -3103,15 +2994,15 @@
             },
             {
               t: 2846.4,
-              child: "web-app/setup",
-              cmd: "npx openfleet scope ui-migration/setup --check",
+              child: "ui-kit",
+              cmd: "npx openfleet scope ui-migration/ui-kit --check",
               ok: true,
               cat: "ok",
               sum: "every changed file inside the child’s paths",
             },
             {
               t: 2846.4,
-              child: "web-app/setup",
+              child: "ui-kit",
               cmd: "grep for old-library imports",
               ok: true,
               cat: "ok",
@@ -3119,33 +3010,33 @@
             },
             {
               t: 2847,
-              child: "web-app/setup",
+              child: "ui-kit",
               cmd: "formatjs extract, compile and diff",
               ok: true,
               cat: "ok",
               sum: "messages unchanged",
             },
-            { t: 3440.4, child: "web-app/permissions", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
+            { t: 3440.4, child: "permissions", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
             {
               t: 3441.6,
-              child: "web-app/permissions",
+              child: "permissions",
               cmd: "pnpm tsc",
               ok: false,
               cat: "x",
-              sum: "1 expected type error, in a file the users child owns",
+              sum: "1 expected type error, in a file the users repo owns",
             },
-            { t: 3442.2, child: "web-app/permissions", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 3442.2, child: "permissions", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
             {
               t: 3442.8,
-              child: "web-app/permissions",
+              child: "permissions",
               cmd: "pnpm build",
               ok: false,
               cat: "x",
-              sum: "1 expected type error, in a file the users child owns",
+              sum: "1 expected type error, in a file the users repo owns",
             },
             {
               t: 3443.4,
-              child: "web-app/permissions",
+              child: "permissions",
               cmd: "npx openfleet scope ui-migration/permissions --check",
               ok: true,
               cat: "ok",
@@ -3153,7 +3044,7 @@
             },
             {
               t: 3444.6,
-              child: "web-app/permissions",
+              child: "permissions",
               cmd: "grep for old-library imports",
               ok: true,
               cat: "ok",
@@ -3161,40 +3052,33 @@
             },
             {
               t: 3613.2,
-              child: "web-app/users-offboard",
+              child: "users-offboard",
               cmd: "pnpm tsc",
               ok: false,
               cat: "x",
-              sum: "1 expected type error, in a file the users child owns",
+              sum: "1 expected type error, in a file the users repo owns",
             },
-            { t: 3613.8, child: "web-app/users-offboard", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
-            {
-              t: 3615,
-              child: "web-app/users-offboard",
-              cmd: "pnpm test",
-              ok: true,
-              cat: "ok",
-              sum: "all tests passed",
-            },
+            { t: 3613.8, child: "users-offboard", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 3615, child: "users-offboard", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
             {
               t: 3615.6,
-              child: "web-app/users-offboard",
+              child: "users-offboard",
               cmd: "pnpm build",
               ok: false,
               cat: "x",
-              sum: "1 expected type error, in a file the users child owns",
+              sum: "1 expected type error, in a file the users repo owns",
             },
             {
               t: 3616.8,
-              child: "web-app/users-offboard",
+              child: "users-offboard",
               cmd: "npx openfleet scope ui-migration/users-offboard --check",
               ok: false,
               cat: "s",
-              sum: "scope guard: next build rewrote next-env.d.ts, outside every child’s paths",
+              sum: "scope guard: next build rewrote next-env.d.ts, outside the child’s paths",
             },
             {
               t: 3618,
-              child: "web-app/users-offboard",
+              child: "users-offboard",
               cmd: "grep for old-library imports",
               ok: true,
               cat: "ok",
@@ -3202,17 +3086,17 @@
             },
             {
               t: 3699,
-              child: "web-app/teams",
+              child: "teams",
               cmd: "pnpm tsc",
               ok: false,
               cat: "x",
-              sum: "1 expected type error, in a file the users child owns",
+              sum: "1 expected type error, in a file the users repo owns",
             },
-            { t: 3699.6, child: "web-app/teams", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
-            { t: 3700.8, child: "web-app/teams", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 3699.6, child: "teams", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
+            { t: 3700.8, child: "teams", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
             {
               t: 3701.4,
-              child: "web-app/teams",
+              child: "teams",
               cmd: "pnpm build (scratch copy, the expected error cast)",
               ok: true,
               cat: "ok",
@@ -3220,37 +3104,30 @@
             },
             {
               t: 3702.6,
-              child: "web-app/teams",
+              child: "teams",
               cmd: "npx openfleet scope ui-migration/teams --check",
               ok: false,
               cat: "s",
-              sum: "scope guard: next build rewrote next-env.d.ts, outside every child’s paths",
+              sum: "scope guard: next build rewrote next-env.d.ts, outside the child’s paths",
             },
-            { t: 3750, child: "web-app/team-details", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
-            { t: 3751.2, child: "web-app/team-details", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
-            {
-              t: 3752.4,
-              child: "web-app/team-details",
-              cmd: "pnpm test",
-              ok: true,
-              cat: "ok",
-              sum: "all tests passed",
-            },
-            { t: 3753.6, child: "web-app/team-details", cmd: "pnpm build", ok: true, cat: "ok", sum: "build ok" },
+            { t: 3750, child: "team-details", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
+            { t: 3751.2, child: "team-details", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 3752.4, child: "team-details", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
+            { t: 3753.6, child: "team-details", cmd: "pnpm build", ok: true, cat: "ok", sum: "build ok" },
             {
               t: 3754.2,
-              child: "web-app/team-details",
+              child: "team-details",
               cmd: "npx openfleet scope ui-migration/team-details --check",
               ok: true,
               cat: "ok",
               sum: "every changed file inside the child’s paths",
             },
-            { t: 3984.6, child: "web-app/users", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
-            { t: 3986.4, child: "web-app/users", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
-            { t: 3988.2, child: "web-app/users", cmd: "pnpm build", ok: true, cat: "ok", sum: "build ok" },
+            { t: 3984.6, child: "users", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
+            { t: 3986.4, child: "users", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 3988.2, child: "users", cmd: "pnpm build", ok: true, cat: "ok", sum: "build ok" },
             {
               t: 3990,
-              child: "web-app/users",
+              child: "users",
               cmd: "pnpm test (run 1 and 2)",
               ok: false,
               cat: "f",
@@ -3258,7 +3135,7 @@
             },
             {
               t: 3991.2,
-              child: "web-app/users",
+              child: "users",
               cmd: "npx vitest run (base branch, 2 runs)",
               ok: false,
               cat: "f",
@@ -3266,7 +3143,7 @@
             },
             {
               t: 3992.4,
-              child: "web-app/users",
+              child: "users",
               cmd: "npx vitest run (base + child changes)",
               ok: true,
               cat: "ok",
@@ -3274,7 +3151,7 @@
             },
             {
               t: 3994.2,
-              child: "web-app/users",
+              child: "users",
               cmd: "pnpm vitest run (users paths)",
               ok: true,
               cat: "ok",
@@ -3282,7 +3159,7 @@
             },
             {
               t: 3995.4,
-              child: "web-app/users",
+              child: "users",
               cmd: "npx openfleet scope ui-migration/users --check",
               ok: true,
               cat: "ok",
@@ -3290,7 +3167,7 @@
             },
             {
               t: 3997.2,
-              child: "web-app/users",
+              child: "users",
               cmd: "grep for old-library imports",
               ok: true,
               cat: "ok",
@@ -3298,17 +3175,17 @@
             },
             {
               t: 4089,
-              child: "web-app/billing",
+              child: "billing",
               cmd: "pnpm tsc",
               ok: false,
               cat: "x",
-              sum: "1 expected type error, in a file the users child owns",
+              sum: "1 expected type error, in a file the users repo owns",
             },
-            { t: 4092, child: "web-app/billing", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
-            { t: 4097.4, child: "web-app/billing", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
+            { t: 4092, child: "billing", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 4097.4, child: "billing", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
             {
               t: 4099.8,
-              child: "web-app/billing",
+              child: "billing",
               cmd: "pnpm vitest run (billing paths)",
               ok: true,
               cat: "ok",
@@ -3316,15 +3193,15 @@
             },
             {
               t: 4102.2,
-              child: "web-app/billing",
+              child: "billing",
               cmd: "pnpm build",
               ok: false,
               cat: "x",
-              sum: "1 expected type error, in a file the users child owns",
+              sum: "1 expected type error, in a file the users repo owns",
             },
             {
               t: 4104.6,
-              child: "web-app/billing",
+              child: "billing",
               cmd: "pnpm build (scratch copy, the expected error cast)",
               ok: true,
               cat: "ok",
@@ -3332,69 +3209,55 @@
             },
             {
               t: 4106.4,
-              child: "web-app/billing",
+              child: "billing",
               cmd: "npx openfleet scope ui-migration/billing --check",
               ok: false,
               cat: "s",
-              sum: "scope guard: next build rewrote next-env.d.ts, outside every child’s paths",
+              sum: "scope guard: next build rewrote next-env.d.ts, outside the child’s paths",
             },
             {
               t: 4126.2,
-              child: "web-app/teams",
+              child: "teams",
               cmd: "npx openfleet scope ui-migration/teams --check",
               ok: true,
               cat: "ok",
               sum: "every changed file inside the child’s paths",
             },
-            { t: 4126.8, child: "web-app/teams", cmd: "pnpm tsc --noEmit", ok: true, cat: "ok", sum: "no type errors" },
-            { t: 4128, child: "web-app/teams", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
-            { t: 4129.2, child: "web-app/teams", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
+            { t: 4126.8, child: "teams", cmd: "pnpm tsc --noEmit", ok: true, cat: "ok", sum: "no type errors" },
+            { t: 4128, child: "teams", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 4129.2, child: "teams", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
             {
               t: 4201.8,
-              child: "web-app/users-offboard",
+              child: "users-offboard",
               cmd: "npx openfleet scope ui-migration/users-offboard --check",
               ok: true,
               cat: "ok",
               sum: "every changed file inside the child’s paths",
             },
-            { t: 4203, child: "web-app/users-offboard", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
-            { t: 4203.6, child: "web-app/users-offboard", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
-            {
-              t: 4204.8,
-              child: "web-app/users-offboard",
-              cmd: "pnpm test",
-              ok: true,
-              cat: "ok",
-              sum: "all tests passed",
-            },
+            { t: 4203, child: "users-offboard", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
+            { t: 4203.6, child: "users-offboard", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 4204.8, child: "users-offboard", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
             {
               t: 4431.6,
-              child: "web-app/user-details",
+              child: "user-details",
               cmd: "pnpm tsc",
               ok: false,
               cat: "x",
-              sum: "1 expected type error, in a file the users child owns",
+              sum: "1 expected type error, in a file the users repo owns",
             },
-            { t: 4432.2, child: "web-app/user-details", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
-            {
-              t: 4432.8,
-              child: "web-app/user-details",
-              cmd: "pnpm test",
-              ok: true,
-              cat: "ok",
-              sum: "all tests passed",
-            },
+            { t: 4432.2, child: "user-details", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 4432.8, child: "user-details", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
             {
               t: 4433.4,
-              child: "web-app/user-details",
+              child: "user-details",
               cmd: "pnpm build",
               ok: false,
               cat: "x",
-              sum: "1 expected type error, in a file the users child owns",
+              sum: "1 expected type error, in a file the users repo owns",
             },
             {
               t: 4434,
-              child: "web-app/user-details",
+              child: "user-details",
               cmd: "npx openfleet scope ui-migration/user-details --check",
               ok: true,
               cat: "ok",
@@ -3402,17 +3265,17 @@
             },
             {
               t: 4434,
-              child: "web-app/user-details",
+              child: "user-details",
               cmd: "grep for old-library imports",
               ok: true,
               cat: "ok",
               sum: "no old-library imports",
             },
-            { t: 4619.4, child: "web-app/profile", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
-            { t: 4619.4, child: "web-app/profile", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 4619.4, child: "profile", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
+            { t: 4619.4, child: "profile", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
             {
               t: 4620,
-              child: "web-app/profile",
+              child: "profile",
               cmd: "pnpm test",
               ok: false,
               cat: "f",
@@ -3420,17 +3283,17 @@
             },
             {
               t: 4620,
-              child: "web-app/profile",
+              child: "profile",
               cmd: "pnpm vitest run (profile paths)",
               ok: true,
               cat: "ok",
               sum: "all tests passed",
             },
-            { t: 4620.6, child: "web-app/profile", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
-            { t: 4620.6, child: "web-app/profile", cmd: "pnpm build", ok: true, cat: "ok", sum: "build ok" },
+            { t: 4620.6, child: "profile", cmd: "pnpm test", ok: true, cat: "ok", sum: "all tests passed" },
+            { t: 4620.6, child: "profile", cmd: "pnpm build", ok: true, cat: "ok", sum: "build ok" },
             {
               t: 4620.6,
-              child: "web-app/profile",
+              child: "profile",
               cmd: "npx openfleet scope ui-migration/profile --check",
               ok: true,
               cat: "ok",
@@ -3438,17 +3301,17 @@
             },
             {
               t: 4621.2,
-              child: "web-app/profile",
+              child: "profile",
               cmd: "grep for old-library imports",
               ok: true,
               cat: "ok",
               sum: "no old-library imports",
             },
-            { t: 4641.6, child: "web-app/roles", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
-            { t: 4641.6, child: "web-app/roles", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 4641.6, child: "roles", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
+            { t: 4641.6, child: "roles", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
             {
               t: 4642.2,
-              child: "web-app/roles",
+              child: "roles",
               cmd: "pnpm test",
               ok: false,
               cat: "f",
@@ -3456,16 +3319,16 @@
             },
             {
               t: 4642.2,
-              child: "web-app/roles",
+              child: "roles",
               cmd: "pnpm vitest run (roles paths)",
               ok: true,
               cat: "ok",
               sum: "all tests passed",
             },
-            { t: 4642.2, child: "web-app/roles", cmd: "pnpm build", ok: true, cat: "ok", sum: "build ok" },
+            { t: 4642.2, child: "roles", cmd: "pnpm build", ok: true, cat: "ok", sum: "build ok" },
             {
               t: 4642.8,
-              child: "web-app/roles",
+              child: "roles",
               cmd: "npx openfleet scope ui-migration/roles --check",
               ok: true,
               cat: "ok",
@@ -3473,7 +3336,7 @@
             },
             {
               t: 5445,
-              child: "web-app",
+              child: "integration",
               cmd: "grep for old-library imports",
               ok: true,
               cat: "ok",
@@ -3481,37 +3344,37 @@
             },
             {
               t: 5445.6,
-              child: "web-app",
+              child: "integration",
               cmd: "pnpm install --frozen-lockfile",
               ok: true,
               cat: "ok",
               sum: "lockfile in sync",
             },
-            { t: 5445.6, child: "web-app", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
-            { t: 5446.2, child: "web-app", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
-            { t: 5446.8, child: "web-app", cmd: "pnpm test (x3)", ok: true, cat: "ok", sum: "all tests passed" },
-            { t: 5446.8, child: "web-app", cmd: "pnpm build", ok: true, cat: "ok", sum: "build ok" },
+            { t: 5445.6, child: "integration", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
+            { t: 5446.2, child: "integration", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 5446.8, child: "integration", cmd: "pnpm test (x3)", ok: true, cat: "ok", sum: "all tests passed" },
+            { t: 5446.8, child: "integration", cmd: "pnpm build", ok: true, cat: "ok", sum: "build ok" },
             {
               t: 5447.4,
-              child: "web-app",
-              cmd: "pnpm knip (integration vs main)",
+              child: "integration",
+              cmd: "pnpm knip (vs main)",
               ok: true,
               cat: "ok",
               sum: "nothing new unused",
             },
             {
               t: 7391.4,
-              child: "web-app",
+              child: "integration",
               cmd: "pnpm install --frozen-lockfile",
               ok: true,
               cat: "ok",
               sum: "lockfile in sync",
             },
-            { t: 7391.4, child: "web-app", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
-            { t: 7392, child: "web-app", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
+            { t: 7391.4, child: "integration", cmd: "pnpm tsc", ok: true, cat: "ok", sum: "no type errors" },
+            { t: 7392, child: "integration", cmd: "pnpm lint", ok: true, cat: "ok", sum: "0 warnings" },
             {
               t: 7392,
-              child: "web-app",
+              child: "integration",
               cmd: "pnpm test:coverage (run 1)",
               ok: true,
               cat: "ok",
@@ -3519,16 +3382,16 @@
             },
             {
               t: 7392,
-              child: "web-app",
+              child: "integration",
               cmd: "pnpm test:coverage (run 2)",
               ok: true,
               cat: "ok",
               sum: "1,298 passed; lines 99.08%, branches 95.82%",
             },
-            { t: 7392.6, child: "web-app", cmd: "pnpm build", ok: true, cat: "ok", sum: "build ok" },
+            { t: 7392.6, child: "integration", cmd: "pnpm build", ok: true, cat: "ok", sum: "build ok" },
             {
               t: 7392.6,
-              child: "web-app",
+              child: "integration",
               cmd: "grep for old-library imports",
               ok: true,
               cat: "ok",
@@ -3536,133 +3399,149 @@
             },
           ],
           files: [
-            ["web-app/setup", "177 files", 7056, 3810, false, 177],
-            ["web-app/billing", "5 files", 177, 224, false, 5],
-            ["web-app/teams", "11 files", 230, 271, false, 11],
-            ["web-app/team-details", "21 files", 524, 722, false, 21],
-            ["web-app/users", "9 files", 124, 87, false, 9],
-            ["web-app/user-details", "1 file", 2, 2, false, 1],
-            ["web-app/users-offboard", "16 files", 281, 387, false, 16],
-            ["web-app/permissions", "5 files", 14, 25, false, 5],
-            ["web-app/roles", "6 files", 14, 29, false, 6],
-            ["web-app/profile", "2 files", 2, 2, false, 2],
-            ["web-app", "integration · old packages removed", 21, 480, false, 0],
-            ["web-app", "integration · coverage tests", 2045, 2, true, 30],
+            ["ui-kit", "177 files", 7056, 3810, false, 177, 0],
+            ["billing", "5 files", 177, 224, false, 5, 0],
+            ["teams", "11 files", 230, 271, false, 11, 0],
+            ["team-details", "21 files", 524, 722, false, 21, 0],
+            ["users", "9 files", 124, 87, false, 9, 0],
+            ["user-details", "1 file", 2, 2, false, 1, 0],
+            ["users-offboard", "16 files", 281, 387, false, 16, 0],
+            ["permissions", "5 files", 14, 25, false, 5, 0],
+            ["roles", "6 files", 14, 29, false, 6, 0],
+            ["profile", "2 files", 2, 2, false, 2, 0],
+            ["integration", "old packages removed", 21, 480, false, 0, 0],
+            ["integration", "coverage tests", 2045, 2, true, 30, 1],
           ],
-          totals: { files: 283 },
           waits: {
-            "web-app/billing": [["web-app/setup"], "waits on setup"],
-            "web-app/teams": [["web-app/setup"], "waits on setup"],
-            "web-app/team-details": [["web-app/setup"], "waits on setup"],
-            "web-app/users": [["web-app/setup"], "waits on setup"],
-            "web-app/user-details": [["web-app/setup"], "waits on setup"],
-            "web-app/users-offboard": [["web-app/setup"], "waits on setup"],
-            "web-app/permissions": [["web-app/setup"], "waits on setup"],
-            "web-app/roles": [["web-app/setup"], "waits on setup"],
-            "web-app/profile": [["web-app/setup"], "waits on setup"],
+            billing: [["ui-kit"], "waits on ui-kit"],
+            teams: [["ui-kit"], "waits on ui-kit"],
+            "team-details": [["ui-kit"], "waits on ui-kit"],
+            users: [["ui-kit"], "waits on ui-kit"],
+            "user-details": [["ui-kit"], "waits on ui-kit"],
+            "users-offboard": [["ui-kit"], "waits on ui-kit"],
+            permissions: [["ui-kit"], "waits on ui-kit"],
+            roles: [["ui-kit"], "waits on ui-kit"],
+            profile: [["ui-kit"], "waits on ui-kit"],
+            integration: [
+              [
+                "billing",
+                "teams",
+                "team-details",
+                "users",
+                "user-details",
+                "users-offboard",
+                "permissions",
+                "roles",
+                "profile",
+                "ui-kit",
+              ],
+              "waits on every page",
+            ],
           },
-          mode: "draft-pr · 1 PR",
+          prs: 11,
           text: {
             pageTitle: "How it works: a UI library migration · OpenFleet",
-            title: "One app. Ten parts. One new UI library.",
-            dek: "The prompt: move a Next.js app from six old UI packages to one Tailwind component library. One repo coordinator ran ten children: a setup child that rebuilt the shared components first, then nine pages in parallel. Every plan was checked against the others before any code, one was sent back, every page was tested and merged on its own, and the push hook’s coverage bar became a call for you. Here is every step, straight from the event log.",
-            note: "A real run, with names changed. Its times leave out a four-hour stretch when nobody was at the keyboard.",
+            title: "Eleven repos. One new UI library.",
+            dek: "The prompt: move a Next.js app’s pages from six old UI packages to one Tailwind component library. Each part is its own repo: <code>ui-kit</code> for the shared components, nine page repos, and <code>integration</code> for the final checks. The coordinator ran all eleven. Every plan was checked against the others before any code, one was sent back, every repo was tested on its own, and the push hook’s coverage bar became a call for you. Here is every step, straight from the event log.",
+            note: "Based on a real run, with names changed. Its times leave out a four-hour stretch when nobody was at the keyboard.",
             byline: "project ui-migration · 0:00 → 2:05:15",
             stats:
-              '<div class="stat"><b>2:05</b><span>START TO DONE</span></div><div class="stat"><b>1 + 45</b><span>COORDINATOR + AGENTS</span></div><div class="stat"><b>1</b><span>PLAN SENT BACK, THEN AGREED</span></div><div class="stat"><b>16</b><span>RED CHECKS, ALL EXPLAINED</span></div><div class="stat"><b>0</b><span>THRESHOLDS LOWERED</span></div>',
-            toc: '<li><a href="#whole-h"><span>01</span>One conversation, then hands-off</a></li><li><a href="#state-h"><span>02</span>Ten children, the same path</a></li><li><a href="#messages-h"><span>03</span>One repo coordinator runs the parts</a></li><li><a href="#code-h"><span>04</span>283 files, +10,490 −6,041</a></li><li><a href="#decisions-h"><span>05</span>Six moments the coordinators stepped in</a></li><li><a href="#verify-h"><span>06</span>88 checks, every red explained</a></li><li><a href="#left-h"><span>07</span>One PR, and one call for you</a></li>',
-            s1: '<h2 id="whole-h"><small>01 · THE WHOLE RUN</small>One conversation, then hands-off</h2>\n<p>OpenFleet writes every step of a run to <code>events.jsonl</code>: who did what, to which child, and when. The <strong>coordinator</strong> is the agent you talk to. For the first four minutes it <strong>grills</strong> you, then writes a spec; once you approve it, the run is hands-off. Each unit of work is a <strong>child</strong> with its own git worktree and short-lived agents in turn: a <strong>planner</strong>, an <strong>implementer</strong> and a <strong>tester</strong>.</p>\n<p>Here one repo, <code>web-app</code>, is split into ten path-scoped children under a <strong>repo coordinator</strong>: <code>setup</code> for the shared components, then nine pages. Press replay to watch all 416 events land. Every planner runs first; the <strong>plans-ready gate</strong> opens at 0:15. Setup rebuilds the shared components on its own for half an hour, and the nine pages start together once it merges.</p>',
+              '<div class="stat"><b>2:05</b><span>START TO DONE</span></div><div class="stat"><b>1 + 44</b><span>COORDINATOR + AGENTS</span></div><div class="stat"><b>1</b><span>PLAN SENT BACK, THEN AGREED</span></div><div class="stat"><b>16</b><span>RED CHECKS, ALL EXPLAINED</span></div><div class="stat"><b>0</b><span>THRESHOLDS LOWERED</span></div>',
+            toc: '<li><a href="#whole-h"><span>01</span>One conversation, then hands-off</a></li><li><a href="#state-h"><span>02</span>Eleven repos, the same path</a></li><li><a href="#messages-h"><span>03</span>The coordinator talks, agents report back</a></li><li><a href="#code-h"><span>04</span>283 files, +10,490 −6,041</a></li><li><a href="#decisions-h"><span>05</span>Six moments the coordinator stepped in</a></li><li><a href="#verify-h"><span>06</span>88 checks, every red explained</a></li><li><a href="#left-h"><span>07</span>Eleven PRs, and one call for you</a></li>',
+            s1: '<h2 id="whole-h"><small>01 · THE WHOLE RUN</small>One conversation, then hands-off</h2>\n<p>OpenFleet writes every step of a run to <code>events.jsonl</code>: who did what, to which repo, and when. The <strong>coordinator</strong> is the agent you talk to. For the first four minutes it <strong>grills</strong> you, then writes a spec; once you approve it, the run is hands-off. Each unit of work is a <strong>child</strong>, here one per repo, with its own git worktree and short-lived agents in turn: a <strong>planner</strong>, an <strong>implementer</strong> and a <strong>tester</strong>.</p>\n<p>Press replay to watch all 415 events land. Every planner runs first; no code is written until the <strong>plans-ready gate</strong> opens at 0:15. Then <code>ui-kit</code> rebuilds the shared components on its own for half an hour, because every page builds on them. The nine page repos start together once it is done, and <code>integration</code> waits for all of them.</p>',
             f1title: '<span class="dot3"><i></i><i></i><i></i></span>EVENTS.JSONL · REPLAY 2:05:15 IN 24S',
             f1key:
-              '<span><i class="k k-cyan"></i>planner</span><span><i class="k k-mag"></i>implementer</span><span><i class="k k-yel"></i>tester</span><span><i class="k k-warn"></i>red check</span><span><i class="k k-int"></i>integration build</span><span><i class="k k-you"></i>you</span><span><i class="k k-tick"></i>coordinator event</span><span><i class="k" style="width: 3px; background: repeating-linear-gradient(180deg, #a8a6af 0 2px, transparent 2px 5px)"></i>left out</span>',
+              '<span><i class="k k-cyan"></i>planner</span><span><i class="k k-mag"></i>implementer</span><span><i class="k k-yel"></i>tester</span><span><i class="k k-warn"></i>red check</span><span><i class="k k-you"></i>you</span><span><i class="k k-tick"></i>coordinator event</span><span><i class="k" style="width: 3px; background: repeating-linear-gradient(180deg, #a8a6af 0 2px, transparent 2px 5px)"></i>left out</span>',
             f1sum:
-              "Finished run, 2:05:15 of active time. The grill and spec took 4 minutes 20, your approval 25 seconds. All ten children planned; one plan was sent back and resubmitted. At 0:15 every plan agreed and the plans-ready gate opened. setup implemented for half an hour and merged at 0:47; the nine pages then ran in parallel and merged between 0:57 and 1:17. The repo coordinator removed the old packages on the merged branch. A coverage check in the push hook stopped the run until you chose to add tests; the integration step added them and every bar passed at 2:03. Four hours with nobody at the keyboard are left out.",
+              "Finished run, 2:05:15 of active time. The grill and spec took 4 minutes 20, your approval 25 seconds. All eleven repos planned; one plan was sent back and resubmitted. At 0:15 every plan agreed and the plans-ready gate opened. ui-kit implemented for half an hour and was done at 0:48; the nine page repos then ran in parallel and were done between 0:58 and 1:18. The integration repo removed the old packages. Its push hook stopped the run on coverage until you chose to add tests; integration added them and every bar passed at 2:03. Four hours with nobody at the keyboard are left out.",
             f1cap:
-              "Bars are agents from start to stop; dots are file edits and checks. Ticks on the web-app lane are its repo coordinator sending agents, checking plans and merging; outlined bars are its integration work on the merged branch. Dashed segments are the two times the run waited on you; the dotted line marks four hours nobody was at the keyboard, left out of the timeline.",
-            f1label: "Swimlane timeline of the run, one lane per child, plus web-app's repo coordinator.",
-            s2: '<h2 id="state-h"><small>02 · STATE</small>Ten children, the same path</h2>\n<p>Each child moves through the same phases: pending, planning, <strong>plan-review</strong> (checked against the spec, then against every other plan), planned (waiting for the gate and for anything it depends on), implementing, testing, <strong>post-test</strong> and done. <code>team-details</code> goes back to planning once, when its plan is sent back. Four children go back from testing to implementing (the ↺): three because the scope guard caught a generated file, one for a flaky test. The nine pages spend over half an hour in planned, waiting for <code>setup</code>.</p>',
-            f2title: '<span class="dot3"><i></i><i></i><i></i></span>PHASE.CHANGED · 10 CHILDREN',
-            s3: '<h2 id="messages-h"><small>03 · MESSAGES</small>One repo coordinator runs the parts</h2>\n<p>Agents never talk to each other. Each one gets a single instruction, does its job in its child’s worktree, and ends with a structured <code>openfleet-report</code>. Here the coordinator hands the whole repo to one repo coordinator, which runs all ten children, checks their plans against each other, merges each into <code>openfleet/ui-migration</code> and reports back once. The coverage question still comes up to the coordinator, and from there to you.</p>',
+              "Bars are agents from start to stop; dots are file edits and checks. Dashed segments are the two times the run waited on you; the dotted line marks four hours nobody was at the keyboard, left out of the timeline.",
+            f1label: "Swimlane timeline of the run, one lane per repo.",
+            s2: '<h2 id="state-h"><small>02 · STATE</small>Eleven repos, the same path</h2>\n<p>Each child moves through the same phases: pending, planning, <strong>plan-review</strong> (checked against the spec, then against every other plan), planned (waiting for the gate and for anything it depends on), implementing, testing, <strong>post-test</strong> and done. <code>team-details</code> goes back to planning once, when its plan is sent back. Four repos go back from testing to implementing (the ↺): three because the scope guard caught a generated file, one for a flaky test. The nine pages spend over half an hour in planned, waiting for <code>ui-kit</code>.</p>',
+            f2title: '<span class="dot3"><i></i><i></i><i></i></span>PHASE.CHANGED · 11 CHILDREN',
+            s3: '<h2 id="messages-h"><small>03 · MESSAGES</small>The coordinator talks, agents report back</h2>\n<p>Agents never talk to each other. Each one gets a single instruction from the coordinator, does its job in its repo’s worktree, and ends with a structured <code>openfleet-report</code>: a status, a summary and, if it has one, a question. With every child its own repo, the coordinator runs all eleven itself, and the coverage question goes from it straight to you.</p>',
             f3sum:
-              "Finished run: the coordinator sent one instruction, to web-app's repo coordinator, which ran every agent for the ten children inside it and merged them. You answered the grill, approved the spec and made the coverage call. All ten children are merged.",
-            f3label: "Message hub: you, the coordinator and web-app, with its ten children inside it.",
-            s4: '<h2 id="code-h"><small>04 · THE CODE</small>283 files, +10,490 −6,041</h2>\n<p>Most of the change is the foundation: <code>setup</code> rewrote 177 files so every page could build on the same shared components. The nine pages changed 76 files between them, each inside its own paths; a tester fails any child whose diff leaves them. On the merged branch, the integration step removed the six old packages, then added 30 test files when the push hook asked for more coverage.</p>',
+              "Finished run: the coordinator sent every instruction to the agents of the eleven repos and read every report. You answered the grill, approved the spec and made the coverage call. All eleven repos are done.",
+            f3label: "Message hub: you, the coordinator in the middle and the eleven repos around it.",
+            s4: '<h2 id="code-h"><small>04 · THE CODE</small>283 files, +10,490 −6,041</h2>\n<p>Most of the change is the foundation: <code>ui-kit</code> rewrote 177 files so every page could build on the same shared components. The nine page repos changed 76 files between them, each inside its own paths; a tester fails any child whose diff leaves them. Last, <code>integration</code> removed the six old packages, then added 30 test files when the push hook asked for more coverage.</p>',
             f4cap:
-              "A row appears when its child’s first edit is logged. Rows here are per child, not per file: 283 files would not fit.",
-            s5: '<h2 id="decisions-h"><small>05 · THE DECISIONS</small>Six moments the coordinators stepped in</h2>\n<p>Most of a run is agents working alone. These six moments are where the coordinators stepped in: pinning a shared approach, sending a plan back, opening the gate, giving setup a file nobody owned, explaining reds that were not defects, and bringing you the one call the spec didn’t cover.</p>',
+              "A row appears when its first edit is logged. Rows here are per repo, not per file: 283 files would not fit.",
+            s5: '<h2 id="decisions-h"><small>05 · THE DECISIONS</small>Six moments the coordinator stepped in</h2>\n<p>Most of a run is agents working alone. These six moments are where the coordinator stepped in: pinning a shared approach, sending a plan back, opening the gate, giving <code>ui-kit</code> a file nobody owned, explaining reds that were not defects, and bringing you the one call the spec didn’t cover.</p>',
             f5title:
               '<span class="dot3"><i></i><i></i><i></i></span>PLAN.REJECTED · PLANS.CONSISTENT · QUESTION.ESCALATED',
             f5key:
-              '<span><i class="k k-gate"></i>plan checked</span><span><i class="k k-mag"></i>scope changed</span><span><i class="k k-warn"></i>sent back or red</span><span><i class="k k-done"></i>merged</span>',
+              '<span><i class="k k-gate"></i>plan checked</span><span><i class="k k-mag"></i>scope changed</span><span><i class="k k-warn"></i>sent back or red</span><span><i class="k k-done"></i>done</span>',
             f5label:
-              "Diagram: the spec's shared approach above the ten children. Steps show the shared approach, a plan sent back, every plan agreeing at the gate, setup taking an extra file, the reds that were not defects, and the coverage call that came to you.",
-            s6: '<h2 id="verify-h"><small>06 · VERIFY</small>88 checks, every red explained</h2>\n<p>Each tester ran the child’s own checks: type check, lint, tests, build, a scope check and a search for the old packages. <strong>72 passed first time.</strong> The 16 red cells are three kinds, and none is a defect in code a child wrote: the same expected type error in a file another child owned (9), the scope guard catching a file <code>next build</code> rewrites (3), and a flaky test that also fails on the base branch (4). Press run to replay them.</p>',
-            f6title: '<span class="dot3"><i></i><i></i><i></i></span>TEST.RUN · 10 CHILDREN + INTEGRATION',
+              "Diagram: the spec's shared approach above the eleven repos. Steps show the shared approach, a plan sent back, every plan agreeing at the gate, ui-kit taking an extra file, the reds that were not defects, and the coverage call that came to you.",
+            s6: '<h2 id="verify-h"><small>06 · VERIFY</small>88 checks, every red explained</h2>\n<p>Each tester ran its repo’s own checks: type check, lint, tests, build, a scope check and a search for the old packages. <strong>72 passed first time.</strong> The 16 red cells are three kinds, and none is a defect in code a child wrote: the same expected type error in a file another repo owned (9), the scope guard catching a file <code>next build</code> rewrites (3), and a flaky test that also fails on the base branch (4). Press run to replay them.</p>',
+            f6title: '<span class="dot3"><i></i><i></i><i></i></span>TEST.RUN · 11 REPOS',
             f6key:
               '<span><i class="k k-pass"></i>passed</span><span><i class="k k-warn"></i>red, explained above</span>',
             f6cap:
-              "One cell per check, in the order it ran; hover a cell for the command and its result. The integration row is the repo coordinator’s two passes on the merged branch, the second with the new coverage tests.",
-            s7: '<h2 id="left-h"><small>07 · WHAT’S LEFT</small>One PR, and one call for you</h2>\n<p>The run ends in <strong>draft PR</strong> mode. The repo coordinator’s branch <code>openfleet/ui-migration</code> holds all ten children, so there is one PR, carrying the run summary and your coverage decision. Nothing merges until you do.</p>\n<p>Want to look before anything leaves your machine? Choose <strong>staged</strong> in the grill instead, and the changes wait uncommitted in the worktree.</p>',
-            cmds: '<div class="cmd"><b>1</b><div><h3>REVIEW THE DRAFT PR</h3><div class="cmd-chip"><code>gh pr list --author @me --draft</code><button class="cmd-copy" type="button" data-copy="gh pr list --author @me --draft" aria-label="Copy: gh pr list --author @me --draft">COPY</button></div></div></div><div class="cmd"><b>2</b><div><h3>MERGE, THEN CLEAN UP</h3><div class="cmd-chip"><code>npx openfleet clean ui-migration --branches</code><button class="cmd-copy" type="button" data-copy="npx openfleet clean ui-migration --branches" aria-label="Copy: npx openfleet clean ui-migration --branches">COPY</button></div></div></div><div class="cmd"><b>3</b><div><h3>FOUND A PROBLEM? PICK THE RUN BACK UP</h3><div class="cmd-chip"><code>npx openfleet resume ui-migration</code><button class="cmd-copy" type="button" data-copy="npx openfleet resume ui-migration" aria-label="Copy: npx openfleet resume ui-migration">COPY</button></div></div></div>',
+              "One cell per check, in the order it ran; hover a cell for the command and its result. The integration row is two testers: the second ran with the new coverage tests.",
+            s7: '<h2 id="left-h"><small>07 · WHAT’S LEFT</small>Eleven PRs, and one call for you</h2>\n<p>The run ends in <strong>draft PR</strong> mode, as agreed in the grill: one draft PR per repo, eleven in all. Every PR links to the other ten and carries the run summary, which records your coverage decision. Nothing merges until you do.</p>\n<p>Want to look before anything leaves your machine? Choose <strong>staged</strong> in the grill instead, and the changes wait uncommitted in each worktree.</p>',
+            cmds: '<div class="cmd"><b>1</b><div><h3>REVIEW THE DRAFT PRS</h3><div class="cmd-chip"><code>gh pr list --author @me --draft</code><button class="cmd-copy" type="button" data-copy="gh pr list --author @me --draft" aria-label="Copy: gh pr list --author @me --draft">COPY</button></div></div></div><div class="cmd"><b>2</b><div><h3>MERGE, THEN CLEAN UP</h3><div class="cmd-chip"><code>npx openfleet clean ui-migration --branches</code><button class="cmd-copy" type="button" data-copy="npx openfleet clean ui-migration --branches" aria-label="Copy: npx openfleet clean ui-migration --branches">COPY</button></div></div></div><div class="cmd"><b>3</b><div><h3>FOUND A PROBLEM? PICK THE RUN BACK UP</h3><div class="cmd-chip"><code>npx openfleet resume ui-migration</code><button class="cmd-copy" type="button" data-copy="npx openfleet resume ui-migration" aria-label="Copy: npx openfleet resume ui-migration">COPY</button></div></div></div>',
           },
           decisions: {
             nodes: [
-              "web-app/setup",
-              "web-app/billing",
-              "web-app/teams",
-              "web-app/team-details",
-              "web-app/users",
-              "web-app/user-details",
-              "web-app/users-offboard",
-              "web-app/permissions",
-              "web-app/roles",
-              "web-app/profile",
+              "ui-kit",
+              "billing",
+              "teams",
+              "team-details",
+              "users",
+              "user-details",
+              "users-offboard",
+              "permissions",
+              "roles",
+              "profile",
+              "integration",
             ],
             box: ["spec.md · the shared approach", "one library · one Toast wrapper", "coverage 94.4% → 99.1%"],
             steps: [
               {
                 title: "The spec pins a shared approach",
-                text: "During the grill you agreed on one component library, a shared Toast wrapper and one rule: setup owns every shared component, and the pages only use them. The coordinator split web-app into setup and nine page children under a repo coordinator, with every page after setup.",
-                all: ["line", "after setup"],
-                nodes: { "web-app/setup": ["fg", "goes first"] },
+                text: "During the grill you agreed on one component library, a shared Toast wrapper and one rule: ui-kit owns every shared component, and the pages only use it. The coordinator ordered the work: ui-kit first, then the nine page repos, then integration.",
+                all: ["line", "after ui-kit"],
+                nodes: { "ui-kit": ["fg", "goes first"], integration: ["line", "goes last"] },
               },
               {
                 title: "A plan is sent back",
-                text: "team-details’ plan called the toast library directly instead of the shared wrapper. The repo coordinator sent it back; the planner resubmitted it against the spec.",
+                text: "team-details’ plan called the toast library directly instead of the shared wrapper. The coordinator sent it back; the planner resubmitted it against the spec.",
                 all: ["fg", "plan agrees"],
-                nodes: { "web-app/team-details": ["warn", "plan sent back"] },
+                nodes: { "team-details": ["warn", "plan sent back"] },
                 hi: "all",
               },
               {
                 title: "Every plan agrees before any code",
-                text: "At 0:15 all ten plans agreed and the plans-ready gate opened. Setup started on its own; the nine pages waited for it, because they build on what it makes.",
+                text: "At 0:15 all eleven plans agreed and the plans-ready gate opened. ui-kit started on its own; the nine page repos waited for it, because they build on what it makes.",
                 all: ["fg", "plan agrees"],
                 hi: "all",
               },
               {
                 title: "A file nobody owned",
-                text: "Setup’s implementer found a constants file that still used the old icons and belonged to no child. The coordinator added it to setup’s paths and updated the spec, and setup moved it over with the rest.",
-                nodes: { "web-app/setup": ["mag", "took one more file"] },
-                hi: ["web-app/setup"],
-                lit: ["web-app/setup"],
+                text: "ui-kit’s implementer found a constants file that still used the old icons and belonged to no child. The coordinator added it to ui-kit’s paths and updated the spec, and ui-kit moved it over with the rest.",
+                nodes: { "ui-kit": ["mag", "took one more file"] },
+                hi: ["ui-kit"],
+                lit: ["ui-kit"],
               },
               {
                 title: "Reds that were not defects",
-                text: "Pages built before users merged each reported the same type error, in a cell users owns; testers proved it was the only one. And next build rewrote next-env.d.ts, outside every child’s paths: the scope guard caught it in three pages, the file was restored and each went back once.",
+                text: "Pages tested before users was done each reported the same type error, in a cell the users repo owns; testers proved it was the only one. And next build rewrote next-env.d.ts, outside every child’s paths: the scope guard caught it in three repos, the file was restored and each went back once.",
                 nodes: {
-                  "web-app/users": ["fg", "owns the cell"],
-                  "web-app/billing": ["warn", "scope guard"],
-                  "web-app/teams": ["warn", "scope guard"],
-                  "web-app/users-offboard": ["warn", "scope guard"],
+                  users: ["fg", "owns the cell"],
+                  billing: ["warn", "scope guard"],
+                  teams: ["warn", "scope guard"],
+                  "users-offboard": ["warn", "scope guard"],
                 },
-                hi: ["web-app/users", "web-app/billing", "web-app/teams", "web-app/users-offboard"],
+                hi: ["users", "billing", "teams", "users-offboard"],
               },
               {
                 title: "Coverage blocks the push, and you decide",
-                text: "Every page merged into openfleet/ui-migration. The repo’s pre-push hook then refused the branch: coverage under its thresholds. The question came to you, and you chose more tests over lower thresholds. The integration step added 30 test files until every bar was cleared.",
-                all: ["done", "merged"],
+                text: "Every page was done. integration’s pre-push hook then refused its branch: coverage under the thresholds. The coordinator brought the question to you, and you chose more tests over lower thresholds. integration added 30 test files until every bar was cleared.",
+                all: ["done", "done"],
+                nodes: { integration: ["you", "your call: more tests"] },
                 dep: true,
-                hi: "all",
+                hi: ["integration"],
               },
             ],
           },
@@ -3670,180 +3549,32 @@
         "photo-app": {
           project: "glimpse",
           greenfield: true,
-          repos: ["glimpse"],
-          groups: {
-            glimpse: [
-              "glimpse/setup",
-              "glimpse/contracts",
-              "glimpse/accounts",
-              "glimpse/media",
-              "glimpse/posts",
-              "glimpse/feed",
-              "glimpse/notifications",
-              "glimpse/web",
-              "glimpse/system",
-            ],
-          },
-          children: [
-            "glimpse/setup",
-            "glimpse/contracts",
-            "glimpse/accounts",
-            "glimpse/media",
-            "glimpse/posts",
-            "glimpse/feed",
-            "glimpse/notifications",
-            "glimpse/web",
-            "glimpse/system",
-          ],
+          repos: ["platform", "contracts", "accounts", "media", "posts", "feed", "notifications", "web", "system"],
+          children: ["platform", "contracts", "accounts", "media", "posts", "feed", "notifications", "web", "system"],
           end: 12885,
           spec: 474,
           approved: 516,
           gate: 1452,
-          groupCheck: { glimpse: 1434 },
-          rejected: [["glimpse/notifications", 1176, "web push is a follow-up"]],
-          merges: [
-            ["glimpse/setup", 2829],
-            ["glimpse/contracts", 4077],
-            ["glimpse/accounts", 7998],
-            ["glimpse/media", 8838],
-            ["glimpse/posts", 9165],
-            ["glimpse/feed", 9195],
-            ["glimpse/notifications", 9219],
-            ["glimpse/web", 9717],
-            ["glimpse/system", 12159],
-          ],
-          integrate: { glimpse: [[12177, 12573]] },
+          rejected: [["notifications", 1176, "web push is a follow-up"]],
           you: [],
           cuts: [[4095, "PAUSED 52 MIN · LEFT OUT"]],
-          guard: ["glimpse/web", 8088, ".env.local in the repo root"],
           finalizing: 12585,
           done: 12837,
           sessions: [
+            { child: "platform", kind: "p", s: 636, e: 900, host: "claude", model: "Claude Opus 5.5" },
+            { child: "contracts", kind: "p", s: 642, e: 996, host: "claude", model: "Claude Opus 5.5" },
+            { child: "accounts", kind: "p", s: 654, e: 1032, host: "claude", model: "Claude Opus 5.5" },
+            { child: "media", kind: "p", s: 660, e: 1074, host: "claude", model: "Claude Opus 5.5" },
+            { child: "posts", kind: "p", s: 672, e: 1086, host: "claude", model: "Claude Opus 5.5" },
+            { child: "feed", kind: "p", s: 678, e: 1110, host: "claude", model: "Claude Opus 5.5" },
+            { child: "notifications", kind: "p", s: 912, e: 1164, host: "claude", model: "Claude Opus 5.5" },
+            { child: "web", kind: "p", s: 1008, e: 1386, host: "claude", model: "Claude Opus 5.5" },
+            { child: "system", kind: "p", s: 1044, e: 1356, host: "claude", model: "Claude Opus 5.5" },
+            { child: "notifications", kind: "p", s: 1200, e: 1404, host: "claude", model: "Claude Opus 5.5" },
+            { child: "platform", kind: "i", s: 1464, e: 1674, host: "ollama", model: "qwen3.8", step: "1/5" },
+            { child: "platform", kind: "i", s: 1683, e: 1881, host: "ollama", model: "qwen3.8", step: "2/5" },
             {
-              actor: "glimpse/setup",
-              child: "glimpse/setup",
-              kind: "p",
-              s: 636,
-              e: 900,
-              host: "claude",
-              model: "Claude Opus 5.5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/contracts",
-              child: "glimpse/contracts",
-              kind: "p",
-              s: 642,
-              e: 996,
-              host: "claude",
-              model: "Claude Opus 5.5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/accounts",
-              child: "glimpse/accounts",
-              kind: "p",
-              s: 654,
-              e: 1032,
-              host: "claude",
-              model: "Claude Opus 5.5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/media",
-              child: "glimpse/media",
-              kind: "p",
-              s: 660,
-              e: 1074,
-              host: "claude",
-              model: "Claude Opus 5.5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/posts",
-              child: "glimpse/posts",
-              kind: "p",
-              s: 672,
-              e: 1086,
-              host: "claude",
-              model: "Claude Opus 5.5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/feed",
-              child: "glimpse/feed",
-              kind: "p",
-              s: 678,
-              e: 1110,
-              host: "claude",
-              model: "Claude Opus 5.5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/notifications",
-              child: "glimpse/notifications",
-              kind: "p",
-              s: 912,
-              e: 1164,
-              host: "claude",
-              model: "Claude Opus 5.5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/web",
-              child: "glimpse/web",
-              kind: "p",
-              s: 1008,
-              e: 1386,
-              host: "claude",
-              model: "Claude Opus 5.5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/system",
-              child: "glimpse/system",
-              kind: "p",
-              s: 1044,
-              e: 1356,
-              host: "claude",
-              model: "Claude Opus 5.5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/notifications",
-              child: "glimpse/notifications",
-              kind: "p",
-              s: 1200,
-              e: 1404,
-              host: "claude",
-              model: "Claude Opus 5.5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/setup",
-              child: "glimpse/setup",
-              kind: "i",
-              s: 1464,
-              e: 1674,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "1/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/setup",
-              child: "glimpse/setup",
-              kind: "i",
-              s: 1683,
-              e: 1881,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "2/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/setup",
-              child: "glimpse/setup",
+              child: "platform",
               kind: "i",
               s: 1890,
               e: 2034,
@@ -3851,306 +3582,36 @@
               model: "Claude Opus 5.5",
               fb: 1,
               step: "3/5",
-              integ: false,
             },
+            { child: "platform", kind: "i", s: 2043, e: 2307, host: "ollama", model: "qwen3.8", step: "4/5" },
+            { child: "platform", kind: "i", s: 2316, e: 2568, host: "ollama", model: "qwen3.8", step: "5/5" },
+            { child: "platform", kind: "t", s: 2595, e: 2817, host: "copilot", model: "GPT-5" },
+            { child: "contracts", kind: "i", s: 2853, e: 3051, host: "ollama", model: "qwen3.8", step: "1/4" },
+            { child: "contracts", kind: "i", s: 3060, e: 3336, host: "ollama", model: "qwen3.8", step: "2/4" },
+            { child: "contracts", kind: "i", s: 3345, e: 3609, host: "ollama", model: "qwen3.8", step: "3/4" },
+            { child: "contracts", kind: "i", s: 3618, e: 3870, host: "ollama", model: "qwen3.8", step: "4/4" },
+            { child: "contracts", kind: "t", s: 3897, e: 4065, host: "copilot", model: "GPT-5" },
+            { child: "accounts", kind: "i", s: 4107, e: 4353, host: "ollama", model: "qwen3.8", step: "1/6" },
+            { child: "media", kind: "i", s: 4125, e: 4335, host: "ollama", model: "qwen3.8", step: "1/6" },
+            { child: "posts", kind: "i", s: 4341, e: 4551, host: "ollama", model: "qwen3.8", step: "1/7" },
+            { child: "feed", kind: "i", s: 4359, e: 4617, host: "ollama", model: "qwen3.8", step: "1/6" },
+            { child: "notifications", kind: "i", s: 4557, e: 4833, host: "ollama", model: "qwen3.8", step: "1/5" },
+            { child: "web", kind: "i", s: 4623, e: 4839, host: "ollama", model: "qwen3.8", step: "1/11" },
+            { child: "accounts", kind: "i", s: 4839, e: 5073, host: "ollama", model: "qwen3.8", step: "2/6" },
+            { child: "media", kind: "i", s: 4845, e: 5043, host: "ollama", model: "qwen3.8", step: "2/6" },
+            { child: "posts", kind: "i", s: 5049, e: 5247, host: "ollama", model: "qwen3.8", step: "2/7" },
+            { child: "feed", kind: "i", s: 5079, e: 5325, host: "ollama", model: "qwen3.8", step: "2/6" },
+            { child: "notifications", kind: "i", s: 5253, e: 5517, host: "ollama", model: "qwen3.8", step: "2/5" },
+            { child: "web", kind: "i", s: 5331, e: 5535, host: "ollama", model: "qwen3.8", step: "2/11" },
+            { child: "accounts", kind: "i", s: 5523, e: 5745, host: "ollama", model: "qwen3.8", step: "3/6" },
+            { child: "media", kind: "i", s: 5541, e: 5817, host: "ollama", model: "qwen3.8", step: "3/6" },
+            { child: "posts", kind: "i", s: 5751, e: 6027, host: "ollama", model: "qwen3.8", step: "3/7" },
+            { child: "feed", kind: "i", s: 5823, e: 6057, host: "ollama", model: "qwen3.8", step: "3/6" },
+            { child: "notifications", kind: "i", s: 6033, e: 6285, host: "ollama", model: "qwen3.8", step: "3/5" },
+            { child: "web", kind: "i", s: 6063, e: 6255, host: "ollama", model: "qwen3.8", step: "3/11" },
+            { child: "accounts", kind: "i", s: 6261, e: 6471, host: "ollama", model: "qwen3.8", step: "4/6" },
             {
-              actor: "glimpse/setup",
-              child: "glimpse/setup",
-              kind: "i",
-              s: 2043,
-              e: 2307,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "4/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/setup",
-              child: "glimpse/setup",
-              kind: "i",
-              s: 2316,
-              e: 2568,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "5/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/setup",
-              child: "glimpse/setup",
-              kind: "t",
-              s: 2595,
-              e: 2817,
-              host: "copilot",
-              model: "GPT-5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/contracts",
-              child: "glimpse/contracts",
-              kind: "i",
-              s: 2853,
-              e: 3051,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "1/4",
-              integ: false,
-            },
-            {
-              actor: "glimpse/contracts",
-              child: "glimpse/contracts",
-              kind: "i",
-              s: 3060,
-              e: 3336,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "2/4",
-              integ: false,
-            },
-            {
-              actor: "glimpse/contracts",
-              child: "glimpse/contracts",
-              kind: "i",
-              s: 3345,
-              e: 3609,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "3/4",
-              integ: false,
-            },
-            {
-              actor: "glimpse/contracts",
-              child: "glimpse/contracts",
-              kind: "i",
-              s: 3618,
-              e: 3870,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "4/4",
-              integ: false,
-            },
-            {
-              actor: "glimpse/contracts",
-              child: "glimpse/contracts",
-              kind: "t",
-              s: 3897,
-              e: 4065,
-              host: "copilot",
-              model: "GPT-5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/accounts",
-              child: "glimpse/accounts",
-              kind: "i",
-              s: 4107,
-              e: 4353,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "1/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/media",
-              child: "glimpse/media",
-              kind: "i",
-              s: 4125,
-              e: 4335,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "1/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/posts",
-              child: "glimpse/posts",
-              kind: "i",
-              s: 4341,
-              e: 4551,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "1/7",
-              integ: false,
-            },
-            {
-              actor: "glimpse/feed",
-              child: "glimpse/feed",
-              kind: "i",
-              s: 4359,
-              e: 4617,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "1/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/notifications",
-              child: "glimpse/notifications",
-              kind: "i",
-              s: 4557,
-              e: 4833,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "1/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/web",
-              child: "glimpse/web",
-              kind: "i",
-              s: 4623,
-              e: 4839,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "1/11",
-              integ: false,
-            },
-            {
-              actor: "glimpse/accounts",
-              child: "glimpse/accounts",
-              kind: "i",
-              s: 4839,
-              e: 5073,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "2/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/media",
-              child: "glimpse/media",
-              kind: "i",
-              s: 4845,
-              e: 5043,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "2/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/posts",
-              child: "glimpse/posts",
-              kind: "i",
-              s: 5049,
-              e: 5247,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "2/7",
-              integ: false,
-            },
-            {
-              actor: "glimpse/feed",
-              child: "glimpse/feed",
-              kind: "i",
-              s: 5079,
-              e: 5325,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "2/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/notifications",
-              child: "glimpse/notifications",
-              kind: "i",
-              s: 5253,
-              e: 5517,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "2/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/web",
-              child: "glimpse/web",
-              kind: "i",
-              s: 5331,
-              e: 5535,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "2/11",
-              integ: false,
-            },
-            {
-              actor: "glimpse/accounts",
-              child: "glimpse/accounts",
-              kind: "i",
-              s: 5523,
-              e: 5745,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "3/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/media",
-              child: "glimpse/media",
-              kind: "i",
-              s: 5541,
-              e: 5817,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "3/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/posts",
-              child: "glimpse/posts",
-              kind: "i",
-              s: 5751,
-              e: 6027,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "3/7",
-              integ: false,
-            },
-            {
-              actor: "glimpse/feed",
-              child: "glimpse/feed",
-              kind: "i",
-              s: 5823,
-              e: 6057,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "3/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/notifications",
-              child: "glimpse/notifications",
-              kind: "i",
-              s: 6033,
-              e: 6285,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "3/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/web",
-              child: "glimpse/web",
-              kind: "i",
-              s: 6063,
-              e: 6255,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "3/11",
-              integ: false,
-            },
-            {
-              actor: "glimpse/accounts",
-              child: "glimpse/accounts",
-              kind: "i",
-              s: 6261,
-              e: 6471,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "4/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/web",
-              child: "glimpse/web",
+              child: "web",
               kind: "i",
               s: 6264,
               e: 6408,
@@ -4158,55 +3619,13 @@
               model: "Claude Opus 5.5",
               fb: 1,
               step: "4/11",
-              integ: false,
             },
+            { child: "media", kind: "i", s: 6291, e: 6555, host: "ollama", model: "qwen3.8", step: "4/6" },
+            { child: "posts", kind: "i", s: 6477, e: 6741, host: "ollama", model: "qwen3.8", step: "4/7" },
+            { child: "feed", kind: "i", s: 6561, e: 6783, host: "ollama", model: "qwen3.8", step: "4/6" },
+            { child: "notifications", kind: "i", s: 6747, e: 6987, host: "ollama", model: "qwen3.8", step: "4/5" },
             {
-              actor: "glimpse/media",
-              child: "glimpse/media",
-              kind: "i",
-              s: 6291,
-              e: 6555,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "4/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/posts",
-              child: "glimpse/posts",
-              kind: "i",
-              s: 6477,
-              e: 6741,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "4/7",
-              integ: false,
-            },
-            {
-              actor: "glimpse/feed",
-              child: "glimpse/feed",
-              kind: "i",
-              s: 6561,
-              e: 6783,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "4/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/notifications",
-              child: "glimpse/notifications",
-              kind: "i",
-              s: 6747,
-              e: 6987,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "4/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/posts",
-              child: "glimpse/posts",
+              child: "posts",
               kind: "i",
               s: 6750,
               e: 6894,
@@ -4214,204 +3633,27 @@
               model: "Claude Opus 5.5",
               fb: 1,
               step: "5/7",
-              integ: false,
             },
+            { child: "accounts", kind: "i", s: 6789, e: 6987, host: "ollama", model: "qwen3.8", step: "5/6" },
+            { child: "media", kind: "i", s: 6993, e: 7245, host: "ollama", model: "qwen3.8", step: "5/6" },
+            { child: "feed", kind: "i", s: 6993, e: 7203, host: "ollama", model: "qwen3.8", step: "5/6" },
+            { child: "notifications", kind: "i", s: 7209, e: 7437, host: "ollama", model: "qwen3.8", step: "5/5" },
+            { child: "web", kind: "i", s: 7251, e: 7509, host: "ollama", model: "qwen3.8", step: "5/11" },
+            { child: "accounts", kind: "i", s: 7443, e: 7719, host: "ollama", model: "qwen3.8", step: "6/6" },
+            { child: "notifications", kind: "t", s: 7464, e: 7692, host: "copilot", model: "GPT-5" },
+            { child: "media", kind: "i", s: 7515, e: 7755, host: "ollama", model: "qwen3.8", step: "6/6" },
+            { child: "posts", kind: "i", s: 7725, e: 7965, host: "ollama", model: "qwen3.8", step: "6/7" },
+            { child: "accounts", kind: "t", s: 7746, e: 7986, host: "copilot", model: "GPT-5" },
+            { child: "feed", kind: "i", s: 7761, e: 7959, host: "ollama", model: "qwen3.8", step: "6/6" },
+            { child: "media", kind: "f", s: 7782, e: 8016, host: "copilot", model: "GPT-5" },
+            { child: "web", kind: "i", s: 7965, e: 8211, host: "ollama", model: "qwen3.8", step: "6/11" },
+            { child: "posts", kind: "i", s: 7974, e: 8202, host: "ollama", model: "qwen3.8", step: "7/7" },
+            { child: "feed", kind: "t", s: 7986, e: 8232, host: "copilot", model: "GPT-5" },
+            { child: "media", kind: "i", s: 8208, e: 8418, host: "ollama", model: "qwen3.8", step: "1/2" },
+            { child: "web", kind: "i", s: 8220, e: 8454, host: "ollama", model: "qwen3.8", step: "7/11" },
+            { child: "posts", kind: "f", s: 8229, e: 8487, host: "copilot", model: "GPT-5" },
             {
-              actor: "glimpse/accounts",
-              child: "glimpse/accounts",
-              kind: "i",
-              s: 6789,
-              e: 6987,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "5/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/media",
-              child: "glimpse/media",
-              kind: "i",
-              s: 6993,
-              e: 7245,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "5/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/feed",
-              child: "glimpse/feed",
-              kind: "i",
-              s: 6993,
-              e: 7203,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "5/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/notifications",
-              child: "glimpse/notifications",
-              kind: "i",
-              s: 7209,
-              e: 7437,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "5/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/web",
-              child: "glimpse/web",
-              kind: "i",
-              s: 7251,
-              e: 7509,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "5/11",
-              integ: false,
-            },
-            {
-              actor: "glimpse/accounts",
-              child: "glimpse/accounts",
-              kind: "i",
-              s: 7443,
-              e: 7719,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "6/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/notifications",
-              child: "glimpse/notifications",
-              kind: "t",
-              s: 7464,
-              e: 7692,
-              host: "copilot",
-              model: "GPT-5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/media",
-              child: "glimpse/media",
-              kind: "i",
-              s: 7515,
-              e: 7755,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "6/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/posts",
-              child: "glimpse/posts",
-              kind: "i",
-              s: 7725,
-              e: 7965,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "6/7",
-              integ: false,
-            },
-            {
-              actor: "glimpse/accounts",
-              child: "glimpse/accounts",
-              kind: "t",
-              s: 7746,
-              e: 7986,
-              host: "copilot",
-              model: "GPT-5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/feed",
-              child: "glimpse/feed",
-              kind: "i",
-              s: 7761,
-              e: 7959,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "6/6",
-              integ: false,
-            },
-            {
-              actor: "glimpse/media",
-              child: "glimpse/media",
-              kind: "f",
-              s: 7782,
-              e: 8016,
-              host: "copilot",
-              model: "GPT-5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/web",
-              child: "glimpse/web",
-              kind: "i",
-              s: 7965,
-              e: 8211,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "6/11",
-              integ: false,
-            },
-            {
-              actor: "glimpse/posts",
-              child: "glimpse/posts",
-              kind: "i",
-              s: 7974,
-              e: 8202,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "7/7",
-              integ: false,
-            },
-            {
-              actor: "glimpse/feed",
-              child: "glimpse/feed",
-              kind: "t",
-              s: 7986,
-              e: 8232,
-              host: "copilot",
-              model: "GPT-5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/media",
-              child: "glimpse/media",
-              kind: "i",
-              s: 8208,
-              e: 8418,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "1/2",
-              integ: false,
-            },
-            {
-              actor: "glimpse/web",
-              child: "glimpse/web",
-              kind: "i",
-              s: 8220,
-              e: 8454,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "7/11",
-              integ: false,
-            },
-            {
-              actor: "glimpse/posts",
-              child: "glimpse/posts",
-              kind: "f",
-              s: 8229,
-              e: 8487,
-              host: "copilot",
-              model: "GPT-5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/media",
-              child: "glimpse/media",
+              child: "media",
               kind: "i",
               s: 8427,
               e: 8571,
@@ -4419,43 +3661,12 @@
               model: "Claude Opus 5.5",
               fb: 1,
               step: "2/2",
-              integ: false,
             },
+            { child: "web", kind: "i", s: 8463, e: 8685, host: "ollama", model: "qwen3.8", step: "8/11" },
+            { child: "posts", kind: "i", s: 8511, e: 8721, host: "ollama", model: "qwen3.8", step: "1/2" },
+            { child: "media", kind: "t", s: 8598, e: 8826, host: "copilot", model: "GPT-5" },
             {
-              actor: "glimpse/web",
-              child: "glimpse/web",
-              kind: "i",
-              s: 8463,
-              e: 8685,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "8/11",
-              integ: false,
-            },
-            {
-              actor: "glimpse/posts",
-              child: "glimpse/posts",
-              kind: "i",
-              s: 8511,
-              e: 8721,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "1/2",
-              integ: false,
-            },
-            {
-              actor: "glimpse/media",
-              child: "glimpse/media",
-              kind: "t",
-              s: 8598,
-              e: 8826,
-              host: "copilot",
-              model: "GPT-5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/web",
-              child: "glimpse/web",
+              child: "web",
               kind: "i",
               s: 8694,
               e: 8838,
@@ -4463,179 +3674,38 @@
               model: "Claude Opus 5.5",
               fb: 1,
               step: "9/11",
-              integ: false,
             },
-            {
-              actor: "glimpse/posts",
-              child: "glimpse/posts",
-              kind: "i",
-              s: 8730,
-              e: 8928,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "2/2",
-              integ: false,
-            },
-            {
-              actor: "glimpse/web",
-              child: "glimpse/web",
-              kind: "i",
-              s: 8847,
-              e: 9045,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "10/11",
-              integ: false,
-            },
-            {
-              actor: "glimpse/posts",
-              child: "glimpse/posts",
-              kind: "t",
-              s: 8955,
-              e: 9153,
-              host: "copilot",
-              model: "GPT-5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/web",
-              child: "glimpse/web",
-              kind: "i",
-              s: 9054,
-              e: 9330,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "11/11",
-              integ: false,
-            },
-            {
-              actor: "glimpse/web",
-              child: "glimpse/web",
-              kind: "t",
-              s: 9357,
-              e: 9705,
-              host: "copilot",
-              model: "GPT-5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/system",
-              child: "glimpse/system",
-              kind: "i",
-              s: 9741,
-              e: 9993,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "1/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/system",
-              child: "glimpse/system",
-              kind: "i",
-              s: 10002,
-              e: 10242,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "2/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/system",
-              child: "glimpse/system",
-              kind: "i",
-              s: 10251,
-              e: 10479,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "3/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/system",
-              child: "glimpse/system",
-              kind: "i",
-              s: 10488,
-              e: 10704,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "4/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/system",
-              child: "glimpse/system",
-              kind: "i",
-              s: 10713,
-              e: 10917,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "5/5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/system",
-              child: "glimpse/system",
-              kind: "f",
-              s: 10944,
-              e: 11400,
-              host: "copilot",
-              model: "GPT-5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/system",
-              child: "glimpse/system",
-              kind: "i",
-              s: 11424,
-              e: 11676,
-              host: "ollama",
-              model: "qwen3.8",
-              step: "1/1",
-              integ: false,
-            },
-            {
-              actor: "glimpse/system",
-              child: "glimpse/system",
-              kind: "t",
-              s: 11703,
-              e: 12147,
-              host: "copilot",
-              model: "GPT-5",
-              integ: false,
-            },
-            {
-              actor: "glimpse/repo-coordinator",
-              child: "glimpse",
-              kind: "t",
-              s: 12177,
-              e: 12573,
-              host: "copilot",
-              model: "GPT-5",
-              integ: true,
-            },
-          ],
-          wakes: [
-            906, 1002, 1038, 1080, 1092, 1116, 1170, 1218, 1362, 1392, 1410, 1434, 2829, 2829, 4077, 4077, 7704, 7998,
-            7998, 8028, 8244, 8499, 8838, 8838, 9165, 9165, 9195, 9219, 9717, 9717, 11412, 12159, 12159, 12585, 12645,
-            12729,
+            { child: "posts", kind: "i", s: 8730, e: 8928, host: "ollama", model: "qwen3.8", step: "2/2" },
+            { child: "web", kind: "i", s: 8847, e: 9045, host: "ollama", model: "qwen3.8", step: "10/11" },
+            { child: "posts", kind: "t", s: 8955, e: 9153, host: "copilot", model: "GPT-5" },
+            { child: "web", kind: "i", s: 9054, e: 9330, host: "ollama", model: "qwen3.8", step: "11/11" },
+            { child: "web", kind: "t", s: 9357, e: 9705, host: "copilot", model: "GPT-5" },
+            { child: "system", kind: "i", s: 9741, e: 9993, host: "ollama", model: "qwen3.8", step: "1/5" },
+            { child: "system", kind: "i", s: 10002, e: 10242, host: "ollama", model: "qwen3.8", step: "2/5" },
+            { child: "system", kind: "i", s: 10251, e: 10479, host: "ollama", model: "qwen3.8", step: "3/5" },
+            { child: "system", kind: "i", s: 10488, e: 10704, host: "ollama", model: "qwen3.8", step: "4/5" },
+            { child: "system", kind: "i", s: 10713, e: 10917, host: "ollama", model: "qwen3.8", step: "5/5" },
+            { child: "system", kind: "f", s: 10944, e: 11400, host: "copilot", model: "GPT-5" },
+            { child: "system", kind: "i", s: 11424, e: 11676, host: "ollama", model: "qwen3.8", step: "1/1" },
+            { child: "system", kind: "t", s: 11703, e: 12147, host: "copilot", model: "GPT-5" },
+            { child: "system", kind: "t", s: 12177, e: 12573, host: "copilot", model: "GPT-5" },
           ],
           tests: [
-            { t: 2632.2, child: "glimpse/setup", cmd: "pnpm install --frozen-lockfile", ok: true, cat: "ok", sum: "" },
-            { t: 2668.8, child: "glimpse/setup", cmd: "pnpm lint", ok: true, cat: "ok", sum: "" },
-            { t: 2706, child: "glimpse/setup", cmd: "pnpm tsc -b", ok: true, cat: "ok", sum: "" },
-            { t: 2743.2, child: "glimpse/setup", cmd: "pnpm test", ok: true, cat: "ok", sum: "" },
+            { t: 2632.2, child: "platform", cmd: "pnpm install --frozen-lockfile", ok: true, cat: "ok", sum: "" },
+            { t: 2668.8, child: "platform", cmd: "pnpm lint", ok: true, cat: "ok", sum: "" },
+            { t: 2706, child: "platform", cmd: "pnpm tsc -b", ok: true, cat: "ok", sum: "" },
+            { t: 2743.2, child: "platform", cmd: "pnpm test", ok: true, cat: "ok", sum: "" },
             {
               t: 2779.8,
-              child: "glimpse/setup",
-              cmd: "npx openfleet scope glimpse setup --check",
+              child: "platform",
+              cmd: "npx openfleet scope glimpse platform --check",
               ok: true,
               cat: "ok",
               sum: "",
             },
             {
               t: 3925.2,
-              child: "glimpse/contracts",
+              child: "contracts",
               cmd: "pnpm --filter @glimpse/contracts build",
               ok: true,
               cat: "ok",
@@ -4643,24 +3713,17 @@
             },
             {
               t: 3952.8,
-              child: "glimpse/contracts",
+              child: "contracts",
               cmd: "redocly lint contracts/openapi/*.yaml",
               ok: true,
               cat: "ok",
               sum: "",
             },
-            {
-              t: 3981,
-              child: "glimpse/contracts",
-              cmd: "pnpm --filter @glimpse/contracts test",
-              ok: true,
-              cat: "ok",
-              sum: "",
-            },
-            { t: 4009.2, child: "glimpse/contracts", cmd: "pnpm tsc -b", ok: true, cat: "ok", sum: "" },
+            { t: 3981, child: "contracts", cmd: "pnpm --filter @glimpse/contracts test", ok: true, cat: "ok", sum: "" },
+            { t: 4009.2, child: "contracts", cmd: "pnpm tsc -b", ok: true, cat: "ok", sum: "" },
             {
               t: 4036.8,
-              child: "glimpse/contracts",
+              child: "contracts",
               cmd: "npx openfleet scope glimpse contracts --check",
               ok: true,
               cat: "ok",
@@ -4668,23 +3731,16 @@
             },
             {
               t: 7496.4,
-              child: "glimpse/notifications",
+              child: "notifications",
               cmd: "pnpm --filter notifications lint",
               ok: true,
               cat: "ok",
               sum: "",
             },
-            {
-              t: 7529.4,
-              child: "glimpse/notifications",
-              cmd: "pnpm --filter notifications tsc",
-              ok: true,
-              cat: "ok",
-              sum: "",
-            },
+            { t: 7529.4, child: "notifications", cmd: "pnpm --filter notifications tsc", ok: true, cat: "ok", sum: "" },
             {
               t: 7561.8,
-              child: "glimpse/notifications",
+              child: "notifications",
               cmd: "pnpm --filter notifications test",
               ok: true,
               cat: "ok",
@@ -4692,7 +3748,7 @@
             },
             {
               t: 7594.2,
-              child: "glimpse/notifications",
+              child: "notifications",
               cmd: "pnpm --filter notifications test:contracts",
               ok: true,
               cat: "ok",
@@ -4700,7 +3756,7 @@
             },
             {
               t: 7626.6,
-              child: "glimpse/notifications",
+              child: "notifications",
               cmd: "docker build services/notifications",
               ok: true,
               cat: "ok",
@@ -4708,20 +3764,20 @@
             },
             {
               t: 7659.6,
-              child: "glimpse/notifications",
+              child: "notifications",
               cmd: "npx openfleet scope glimpse notifications --check",
               ok: true,
               cat: "ok",
               sum: "",
             },
-            { t: 7780.2, child: "glimpse/accounts", cmd: "pnpm --filter accounts lint", ok: true, cat: "ok", sum: "" },
-            { t: 7814.4, child: "glimpse/accounts", cmd: "pnpm --filter accounts tsc", ok: true, cat: "ok", sum: "" },
-            { t: 7821, child: "glimpse/media", cmd: "pnpm --filter media lint", ok: true, cat: "ok", sum: "" },
-            { t: 7848.6, child: "glimpse/accounts", cmd: "pnpm --filter accounts test", ok: true, cat: "ok", sum: "" },
-            { t: 7860, child: "glimpse/media", cmd: "pnpm --filter media tsc", ok: true, cat: "ok", sum: "" },
+            { t: 7780.2, child: "accounts", cmd: "pnpm --filter accounts lint", ok: true, cat: "ok", sum: "" },
+            { t: 7814.4, child: "accounts", cmd: "pnpm --filter accounts tsc", ok: true, cat: "ok", sum: "" },
+            { t: 7821, child: "media", cmd: "pnpm --filter media lint", ok: true, cat: "ok", sum: "" },
+            { t: 7848.6, child: "accounts", cmd: "pnpm --filter accounts test", ok: true, cat: "ok", sum: "" },
+            { t: 7860, child: "media", cmd: "pnpm --filter media tsc", ok: true, cat: "ok", sum: "" },
             {
               t: 7883.4,
-              child: "glimpse/accounts",
+              child: "accounts",
               cmd: "pnpm --filter accounts test:contracts",
               ok: true,
               cat: "ok",
@@ -4729,23 +3785,16 @@
             },
             {
               t: 7899,
-              child: "glimpse/media",
+              child: "media",
               cmd: "pnpm --filter media test",
               ok: false,
               cat: "b",
               sum: "sharp has no prebuilt binary for linux-arm64 musl in the image",
             },
-            {
-              t: 7917.6,
-              child: "glimpse/accounts",
-              cmd: "docker build services/accounts",
-              ok: true,
-              cat: "ok",
-              sum: "",
-            },
+            { t: 7917.6, child: "accounts", cmd: "docker build services/accounts", ok: true, cat: "ok", sum: "" },
             {
               t: 7938,
-              child: "glimpse/media",
+              child: "media",
               cmd: "docker build services/media",
               ok: false,
               cat: "b",
@@ -4753,282 +3802,219 @@
             },
             {
               t: 7951.8,
-              child: "glimpse/accounts",
+              child: "accounts",
               cmd: "npx openfleet scope glimpse accounts --check",
               ok: true,
               cat: "ok",
               sum: "",
             },
-            {
-              t: 7977,
-              child: "glimpse/media",
-              cmd: "npx openfleet scope glimpse media --check",
-              ok: true,
-              cat: "ok",
-              sum: "",
-            },
-            { t: 8021.4, child: "glimpse/feed", cmd: "pnpm --filter feed lint", ok: true, cat: "ok", sum: "" },
-            { t: 8056.2, child: "glimpse/feed", cmd: "pnpm --filter feed tsc", ok: true, cat: "ok", sum: "" },
-            { t: 8091.6, child: "glimpse/feed", cmd: "pnpm --filter feed test", ok: true, cat: "ok", sum: "" },
-            {
-              t: 8126.4,
-              child: "glimpse/feed",
-              cmd: "pnpm --filter feed test:contracts",
-              ok: true,
-              cat: "ok",
-              sum: "",
-            },
-            { t: 8161.8, child: "glimpse/feed", cmd: "docker build services/feed", ok: true, cat: "ok", sum: "" },
-            {
-              t: 8196.6,
-              child: "glimpse/feed",
-              cmd: "npx openfleet scope glimpse feed --check",
-              ok: true,
-              cat: "ok",
-              sum: "",
-            },
-            { t: 8265.6, child: "glimpse/posts", cmd: "pnpm --filter posts lint", ok: true, cat: "ok", sum: "" },
-            { t: 8302.8, child: "glimpse/posts", cmd: "pnpm --filter posts tsc", ok: true, cat: "ok", sum: "" },
-            { t: 8339.4, child: "glimpse/posts", cmd: "pnpm --filter posts test", ok: true, cat: "ok", sum: "" },
+            { t: 7977, child: "media", cmd: "npx openfleet scope glimpse media --check", ok: true, cat: "ok", sum: "" },
+            { t: 8021.4, child: "feed", cmd: "pnpm --filter feed lint", ok: true, cat: "ok", sum: "" },
+            { t: 8056.2, child: "feed", cmd: "pnpm --filter feed tsc", ok: true, cat: "ok", sum: "" },
+            { t: 8091.6, child: "feed", cmd: "pnpm --filter feed test", ok: true, cat: "ok", sum: "" },
+            { t: 8126.4, child: "feed", cmd: "pnpm --filter feed test:contracts", ok: true, cat: "ok", sum: "" },
+            { t: 8161.8, child: "feed", cmd: "docker build services/feed", ok: true, cat: "ok", sum: "" },
+            { t: 8196.6, child: "feed", cmd: "npx openfleet scope glimpse feed --check", ok: true, cat: "ok", sum: "" },
+            { t: 8265.6, child: "posts", cmd: "pnpm --filter posts lint", ok: true, cat: "ok", sum: "" },
+            { t: 8302.8, child: "posts", cmd: "pnpm --filter posts tsc", ok: true, cat: "ok", sum: "" },
+            { t: 8339.4, child: "posts", cmd: "pnpm --filter posts test", ok: true, cat: "ok", sum: "" },
             {
               t: 8376.6,
-              child: "glimpse/posts",
+              child: "posts",
               cmd: "pnpm --filter posts test:contracts",
               ok: false,
               cat: "c",
               sum: "post.liked.createdAt sent as epoch ms; the contract says ISO 8601",
             },
-            { t: 8413.2, child: "glimpse/posts", cmd: "docker build services/posts", ok: true, cat: "ok", sum: "" },
+            { t: 8413.2, child: "posts", cmd: "docker build services/posts", ok: true, cat: "ok", sum: "" },
             {
               t: 8450.4,
-              child: "glimpse/posts",
+              child: "posts",
               cmd: "npx openfleet scope glimpse posts --check",
               ok: true,
               cat: "ok",
               sum: "",
             },
-            { t: 8630.4, child: "glimpse/media", cmd: "pnpm --filter media lint", ok: true, cat: "ok", sum: "" },
-            { t: 8663.4, child: "glimpse/media", cmd: "pnpm --filter media tsc", ok: true, cat: "ok", sum: "" },
-            { t: 8695.8, child: "glimpse/media", cmd: "pnpm --filter media test", ok: true, cat: "ok", sum: "" },
-            {
-              t: 8728.2,
-              child: "glimpse/media",
-              cmd: "pnpm --filter media test:contracts",
-              ok: true,
-              cat: "ok",
-              sum: "",
-            },
-            { t: 8760.6, child: "glimpse/media", cmd: "docker build services/media", ok: true, cat: "ok", sum: "" },
+            { t: 8630.4, child: "media", cmd: "pnpm --filter media lint", ok: true, cat: "ok", sum: "" },
+            { t: 8663.4, child: "media", cmd: "pnpm --filter media tsc", ok: true, cat: "ok", sum: "" },
+            { t: 8695.8, child: "media", cmd: "pnpm --filter media test", ok: true, cat: "ok", sum: "" },
+            { t: 8728.2, child: "media", cmd: "pnpm --filter media test:contracts", ok: true, cat: "ok", sum: "" },
+            { t: 8760.6, child: "media", cmd: "docker build services/media", ok: true, cat: "ok", sum: "" },
             {
               t: 8793.6,
-              child: "glimpse/media",
+              child: "media",
               cmd: "npx openfleet scope glimpse media --check",
               ok: true,
               cat: "ok",
               sum: "",
             },
-            { t: 8983.2, child: "glimpse/posts", cmd: "pnpm --filter posts lint", ok: true, cat: "ok", sum: "" },
-            { t: 9011.4, child: "glimpse/posts", cmd: "pnpm --filter posts tsc", ok: true, cat: "ok", sum: "" },
-            { t: 9039.6, child: "glimpse/posts", cmd: "pnpm --filter posts test", ok: true, cat: "ok", sum: "" },
-            {
-              t: 9068.4,
-              child: "glimpse/posts",
-              cmd: "pnpm --filter posts test:contracts",
-              ok: true,
-              cat: "ok",
-              sum: "",
-            },
-            { t: 9096.6, child: "glimpse/posts", cmd: "docker build services/posts", ok: true, cat: "ok", sum: "" },
+            { t: 8983.2, child: "posts", cmd: "pnpm --filter posts lint", ok: true, cat: "ok", sum: "" },
+            { t: 9011.4, child: "posts", cmd: "pnpm --filter posts tsc", ok: true, cat: "ok", sum: "" },
+            { t: 9039.6, child: "posts", cmd: "pnpm --filter posts test", ok: true, cat: "ok", sum: "" },
+            { t: 9068.4, child: "posts", cmd: "pnpm --filter posts test:contracts", ok: true, cat: "ok", sum: "" },
+            { t: 9096.6, child: "posts", cmd: "docker build services/posts", ok: true, cat: "ok", sum: "" },
             {
               t: 9124.8,
-              child: "glimpse/posts",
+              child: "posts",
               cmd: "npx openfleet scope glimpse posts --check",
               ok: true,
               cat: "ok",
               sum: "",
             },
-            { t: 9415.2, child: "glimpse/web", cmd: "pnpm --filter web lint", ok: true, cat: "ok", sum: "" },
-            { t: 9472.8, child: "glimpse/web", cmd: "pnpm --filter web tsc", ok: true, cat: "ok", sum: "" },
-            { t: 9531, child: "glimpse/web", cmd: "pnpm --filter web test", ok: true, cat: "ok", sum: "" },
-            { t: 9589.2, child: "glimpse/web", cmd: "pnpm --filter web build", ok: true, cat: "ok", sum: "" },
-            {
-              t: 9646.8,
-              child: "glimpse/web",
-              cmd: "npx openfleet scope glimpse web --check",
-              ok: true,
-              cat: "ok",
-              sum: "",
-            },
-            { t: 11035.2, child: "glimpse/system", cmd: "docker compose up --wait", ok: true, cat: "ok", sum: "" },
-            { t: 11126.4, child: "glimpse/system", cmd: "pnpm seed", ok: true, cat: "ok", sum: "" },
+            { t: 9415.2, child: "web", cmd: "pnpm --filter web lint", ok: true, cat: "ok", sum: "" },
+            { t: 9472.8, child: "web", cmd: "pnpm --filter web tsc", ok: true, cat: "ok", sum: "" },
+            { t: 9531, child: "web", cmd: "pnpm --filter web test", ok: true, cat: "ok", sum: "" },
+            { t: 9589.2, child: "web", cmd: "pnpm --filter web build", ok: true, cat: "ok", sum: "" },
+            { t: 9646.8, child: "web", cmd: "npx openfleet scope glimpse web --check", ok: true, cat: "ok", sum: "" },
+            { t: 11035.2, child: "system", cmd: "docker compose up --wait", ok: true, cat: "ok", sum: "" },
+            { t: 11126.4, child: "system", cmd: "pnpm seed", ok: true, cat: "ok", sum: "" },
             {
               t: 11217.6,
-              child: "glimpse/system",
+              child: "system",
               cmd: "pnpm e2e",
               ok: false,
               cat: "e",
               sum: "feed.spec: the new post is not in the follower's feed yet; fan-out is async",
             },
-            { t: 11308.8, child: "glimpse/system", cmd: "pnpm test:coverage", ok: true, cat: "ok", sum: "" },
-            { t: 11776.8, child: "glimpse/system", cmd: "docker compose up --wait", ok: true, cat: "ok", sum: "" },
-            { t: 11851.2, child: "glimpse/system", cmd: "pnpm seed", ok: true, cat: "ok", sum: "" },
-            { t: 11925, child: "glimpse/system", cmd: "pnpm e2e", ok: true, cat: "ok", sum: "" },
-            { t: 11998.8, child: "glimpse/system", cmd: "pnpm e2e --repeat-each 3", ok: true, cat: "ok", sum: "" },
-            { t: 12073.2, child: "glimpse/system", cmd: "pnpm test:coverage", ok: true, cat: "ok", sum: "" },
-            { t: 12226.8, child: "glimpse", cmd: "pnpm install --frozen-lockfile", ok: true, cat: "ok", sum: "" },
-            { t: 12276, child: "glimpse", cmd: "pnpm lint", ok: true, cat: "ok", sum: "" },
-            { t: 12325.8, child: "glimpse", cmd: "pnpm tsc -b", ok: true, cat: "ok", sum: "" },
-            { t: 12375, child: "glimpse", cmd: "pnpm test:coverage", ok: true, cat: "ok", sum: "" },
-            { t: 12424.8, child: "glimpse", cmd: "pnpm test:contracts", ok: true, cat: "ok", sum: "" },
-            { t: 12474, child: "glimpse", cmd: "docker compose build", ok: true, cat: "ok", sum: "" },
-            { t: 12523.8, child: "glimpse", cmd: "pnpm e2e", ok: true, cat: "ok", sum: "" },
+            { t: 11308.8, child: "system", cmd: "pnpm test:coverage", ok: true, cat: "ok", sum: "" },
+            { t: 11776.8, child: "system", cmd: "docker compose up --wait", ok: true, cat: "ok", sum: "" },
+            { t: 11851.2, child: "system", cmd: "pnpm seed", ok: true, cat: "ok", sum: "" },
+            { t: 11925, child: "system", cmd: "pnpm e2e", ok: true, cat: "ok", sum: "" },
+            { t: 11998.8, child: "system", cmd: "pnpm e2e --repeat-each 3", ok: true, cat: "ok", sum: "" },
+            { t: 12073.2, child: "system", cmd: "pnpm test:coverage", ok: true, cat: "ok", sum: "" },
+            { t: 12226.8, child: "system", cmd: "pnpm install --frozen-lockfile", ok: true, cat: "ok", sum: "" },
+            { t: 12276, child: "system", cmd: "pnpm lint", ok: true, cat: "ok", sum: "" },
+            { t: 12325.8, child: "system", cmd: "pnpm tsc -b", ok: true, cat: "ok", sum: "" },
+            { t: 12375, child: "system", cmd: "pnpm test:coverage", ok: true, cat: "ok", sum: "" },
+            { t: 12424.8, child: "system", cmd: "pnpm test:contracts", ok: true, cat: "ok", sum: "" },
+            { t: 12474, child: "system", cmd: "docker compose build", ok: true, cat: "ok", sum: "" },
+            { t: 12523.8, child: "system", cmd: "pnpm e2e", ok: true, cat: "ok", sum: "" },
           ],
           files: [
-            ["glimpse/setup", "64 files", 3120, 0, true, 64],
-            ["glimpse/contracts", "44 files", 2690, 0, true, 44],
-            ["glimpse/accounts", "41 files", 2980, 12, true, 41],
-            ["glimpse/media", "36 files", 2540, 96, true, 36],
-            ["glimpse/posts", "44 files", 3310, 41, true, 44],
-            ["glimpse/feed", "33 files", 2260, 18, true, 33],
-            ["glimpse/notifications", "29 files", 1980, 14, true, 29],
-            ["glimpse/web", "98 files", 7240, 205, true, 98],
-            ["glimpse/system", "29 files", 1760, 37, true, 29],
+            ["platform", "64 files", 3120, 0, true, 64, 0],
+            ["contracts", "44 files", 2690, 0, true, 44, 0],
+            ["accounts", "41 files", 2980, 12, true, 41, 0],
+            ["media", "36 files", 2540, 96, true, 36, 0],
+            ["posts", "44 files", 3310, 41, true, 44, 0],
+            ["feed", "33 files", 2260, 18, true, 33, 0],
+            ["notifications", "29 files", 1980, 14, true, 29, 0],
+            ["web", "98 files", 7240, 205, true, 98, 0],
+            ["system", "29 files", 1760, 37, true, 29, 0],
           ],
-          totals: {},
-          mode: "draft-pr · 9 stacked PRs",
           localModel: "qwen3.8",
           waits: {
-            "glimpse/contracts": [["glimpse/setup"], "waits on setup"],
-            "glimpse/accounts": [["glimpse/contracts"], "waits on contracts"],
-            "glimpse/media": [["glimpse/contracts"], "waits on contracts"],
-            "glimpse/posts": [["glimpse/contracts"], "waits on contracts"],
-            "glimpse/feed": [["glimpse/contracts"], "waits on contracts"],
-            "glimpse/notifications": [["glimpse/contracts"], "waits on contracts"],
-            "glimpse/web": [["glimpse/contracts"], "waits on contracts"],
-            "glimpse/system": [
-              [
-                "glimpse/accounts",
-                "glimpse/media",
-                "glimpse/posts",
-                "glimpse/feed",
-                "glimpse/notifications",
-                "glimpse/web",
-              ],
-              "waits on the services",
-            ],
+            contracts: [["platform"], "waits on platform"],
+            accounts: [["contracts"], "waits on contracts"],
+            media: [["contracts"], "waits on contracts"],
+            posts: [["contracts"], "waits on contracts"],
+            feed: [["contracts"], "waits on contracts"],
+            notifications: [["contracts"], "waits on contracts"],
+            web: [["contracts"], "waits on contracts"],
+            system: [["accounts", "media", "posts", "feed", "notifications", "web"], "waits on the services"],
           },
+          prs: 9,
           text: {
             pageTitle: "How it works: a photo app from scratch · OpenFleet",
             title: "One prompt. An empty folder. A working app.",
-            dek: "The prompt: build an Instagram-style photo app from scratch. The grill cut it to a first slice of five services, a contracts package and a Next.js web app, and OpenFleet created the repo. Claude planned every part, a model on the laptop wrote most of the code in small steps, and GPT-5 on Copilot tested it. A contract test caught a bug before it merged, and an end-to-end test signs up, posts, follows, likes and checks the bell. Here is every step, straight from the event log.",
+            dek: "The prompt: build an Instagram-style photo app from scratch. The grill cut it to a first slice of nine new repos: five services, a contracts package, a Next.js web app, a shared platform and the system that runs it all, and OpenFleet created them. Claude planned every part, a model on the laptop wrote most of the code in small steps, and GPT-5 on Copilot tested it. A contract test caught a bug before it spread, and an end-to-end test signs up, posts, follows, likes and checks the bell. Here is every step, straight from the event log.",
             note: null,
             byline: "project glimpse · greenfield · 0:00 → 3:33:57",
             stats:
-              '<div class="stat"><b>3:34</b><span>START TO DONE</span></div><div class="stat"><b>1 + 84</b><span>COORDINATOR + AGENTS</span></div><div class="stat"><b>55</b><span>STEPS ON THE LAPTOP</span></div><div class="stat"><b>1</b><span>CONTRACT BUG CAUGHT BEFORE MERGE</span></div><div class="stat"><b>9</b><span>STACKED DRAFT PRS</span></div>',
-            toc: '<li><a href="#whole-h"><span>01</span>One conversation, then hands-off</a></li><li><a href="#state-h"><span>02</span>Nine children, a fixed order</a></li><li><a href="#messages-h"><span>03</span>Three providers, one coordinator</a></li><li><a href="#code-h"><span>04</span>418 files, all new</a></li><li><a href="#decisions-h"><span>05</span>Six moments the coordinators stepped in</a></li><li><a href="#verify-h"><span>06</span>72 checks, four red</a></li><li><a href="#left-h"><span>07</span>Nine stacked PRs</a></li>',
-            s1: '<h2 id="whole-h"><small>01 · THE WHOLE RUN</small>One conversation, then hands-off</h2>\n<p>OpenFleet writes every step of a run to <code>events.jsonl</code>: who did what, to which child, and when. The <strong>coordinator</strong> is the agent you talk to. For the first eight minutes it <strong>grills</strong> you: no repo fits, so it proposes the services, the contracts between them and one monorepo, and cuts the request to a first slice. Once you approve the spec, OpenFleet creates the repo, checks the toolchains and the run is hands-off.</p>\n<p><code>glimpse</code> is one new repo, split into nine children by kind: <code>setup</code>, <code>contracts</code>, five services, the <code>web</code> app and the <code>system</code> that wires them together. Press replay to watch all 549 events land. No code is written until the <strong>plans-ready gate</strong> opens at 0:24. Each bar carries the mark of the provider it ran on, and the dotted line is a 52-minute pause, left out.</p>',
+              '<div class="stat"><b>3:34</b><span>START TO DONE</span></div><div class="stat"><b>1 + 83</b><span>COORDINATOR + AGENTS</span></div><div class="stat"><b>55</b><span>STEPS ON THE LAPTOP</span></div><div class="stat"><b>1</b><span>CONTRACT BUG CAUGHT BEFORE IT SPREAD</span></div><div class="stat"><b>9</b><span>NEW REPOS, ONE PR EACH</span></div>',
+            toc: '<li><a href="#whole-h"><span>01</span>One conversation, then hands-off</a></li><li><a href="#state-h"><span>02</span>Nine repos, a fixed order</a></li><li><a href="#messages-h"><span>03</span>Three providers, one coordinator</a></li><li><a href="#code-h"><span>04</span>418 files, all new</a></li><li><a href="#decisions-h"><span>05</span>Six moments the coordinator stepped in</a></li><li><a href="#verify-h"><span>06</span>72 checks, four red</a></li><li><a href="#left-h"><span>07</span>Nine linked PRs</a></li>',
+            s1: '<h2 id="whole-h"><small>01 · THE WHOLE RUN</small>One conversation, then hands-off</h2>\n<p>OpenFleet writes every step of a run to <code>events.jsonl</code>: who did what, to which repo, and when. The <strong>coordinator</strong> is the agent you talk to. For the first eight minutes it <strong>grills</strong> you: no repo fits, so it proposes the services, the contracts between them and a repo for each, and cuts the request to a first slice. Once you approve the spec, OpenFleet creates the nine repos, checks the toolchains, and the run is hands-off.</p>\n<p>Each repo is one child: <code>platform</code>, <code>contracts</code>, five services, <code>web</code> and the <code>system</code> that runs them together. Press replay to watch all 543 events land. No code is written until the <strong>plans-ready gate</strong> opens at 0:24. Each bar carries the mark of the provider it ran on, and the dotted line is a 52-minute pause, left out.</p>',
             f1title: '<span class="dot3"><i></i><i></i><i></i></span>EVENTS.JSONL · REPLAY 3:33:57 IN 24S',
             f1key:
-              '<span><i class="k k-cyan"></i>planner</span><span><i class="k k-mag"></i>implementer</span><span><i class="k k-yel"></i>tester</span><span><i class="k k-warn"></i>red check</span><span><i class="k k-int"></i>integration build</span><span><i class="k k-you"></i>you</span><span><i class="k k-tick"></i>coordinator event</span><span><i class="k" style="width: 3px; background: repeating-linear-gradient(180deg, #a8a6af 0 2px, transparent 2px 5px)"></i>left out</span><span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align: -2px; margin-right: 6px"><path fill="#D97757" d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg>Claude</span><span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align: -2px; margin-right: 6px"><path fill="#F4F4F6" d="M16.361 10.26a.894.894 0 0 0-.558.47l-.072.148.001.207c0 .193.004.217.059.353.076.193.152.312.291.448.24.238.51.3.872.205a.86.86 0 0 0 .517-.436.752.752 0 0 0 .08-.498c-.064-.453-.33-.782-.724-.897a1.06 1.06 0 0 0-.466 0zm-9.203.005c-.305.096-.533.32-.65.639a1.187 1.187 0 0 0-.06.52c.057.309.31.59.598.667.362.095.632.033.872-.205.14-.136.215-.255.291-.448.055-.136.059-.16.059-.353l.001-.207-.072-.148a.894.894 0 0 0-.565-.472 1.02 1.02 0 0 0-.474.007Zm4.184 2c-.131.071-.223.25-.195.383.031.143.157.288.353.407.105.063.112.072.117.136.004.038-.01.146-.029.243-.02.094-.036.194-.036.222.002.074.07.195.143.253.064.052.076.054.255.059.164.005.198.001.264-.03.169-.082.212-.234.15-.525-.052-.243-.042-.28.087-.355.137-.08.281-.219.324-.314a.365.365 0 0 0-.175-.48.394.394 0 0 0-.181-.033c-.126 0-.207.03-.355.124l-.085.053-.053-.032c-.219-.13-.259-.145-.391-.143a.396.396 0 0 0-.193.032zm.39-2.195c-.373.036-.475.05-.654.086-.291.06-.68.195-.951.328-.94.46-1.589 1.226-1.787 2.114-.04.176-.045.234-.045.53 0 .294.005.357.043.524.264 1.16 1.332 2.017 2.714 2.173.3.033 1.596.033 1.896 0 1.11-.125 2.064-.727 2.493-1.571.114-.226.169-.372.22-.602.039-.167.044-.23.044-.523 0-.297-.005-.355-.045-.531-.288-1.29-1.539-2.304-3.072-2.497a6.873 6.873 0 0 0-.855-.031zm.645.937a3.283 3.283 0 0 1 1.44.514c.223.148.537.458.671.662.166.251.26.508.303.82.02.143.01.251-.043.482-.08.345-.332.705-.672.957a3.115 3.115 0 0 1-.689.348c-.382.122-.632.144-1.525.138-.582-.006-.686-.01-.853-.042-.57-.107-1.022-.334-1.35-.68-.264-.28-.385-.535-.45-.946-.03-.192.025-.509.137-.776.136-.326.488-.73.836-.963.403-.269.934-.46 1.422-.512.187-.02.586-.02.773-.002zm-5.503-11a1.653 1.653 0 0 0-.683.298C5.617.74 5.173 1.666 4.985 2.819c-.07.436-.119 1.04-.119 1.503 0 .544.064 1.24.155 1.721.02.107.031.202.023.208a8.12 8.12 0 0 1-.187.152 5.324 5.324 0 0 0-.949 1.02 5.49 5.49 0 0 0-.94 2.339 6.625 6.625 0 0 0-.023 1.357c.091.78.325 1.438.727 2.04l.13.195-.037.064c-.269.452-.498 1.105-.605 1.732-.084.496-.095.629-.095 1.294 0 .67.009.803.088 1.266.095.555.288 1.143.503 1.534.071.128.243.393.264.407.007.003-.014.067-.046.141a7.405 7.405 0 0 0-.548 1.873c-.062.417-.071.552-.071.991 0 .56.031.832.148 1.279L3.42 24h1.478l-.05-.091c-.297-.552-.325-1.575-.068-2.597.117-.472.25-.819.498-1.296l.148-.29v-.177c0-.165-.003-.184-.057-.293a.915.915 0 0 0-.194-.25 1.74 1.74 0 0 1-.385-.543c-.424-.92-.506-2.286-.208-3.451.124-.486.329-.918.544-1.154a.787.787 0 0 0 .223-.531c0-.195-.07-.355-.224-.522a3.136 3.136 0 0 1-.817-1.729c-.14-.96.114-2.005.69-2.834.563-.814 1.353-1.336 2.237-1.475.199-.033.57-.028.776.01.226.04.367.028.512-.041.179-.085.268-.19.374-.431.093-.215.165-.333.36-.576.234-.29.46-.489.822-.729.413-.27.884-.467 1.352-.561.17-.035.25-.04.569-.04.319 0 .398.005.569.04a4.07 4.07 0 0 1 1.914.997c.117.109.398.457.488.602.034.057.095.177.132.267.105.241.195.346.374.43.14.068.286.082.503.045.343-.058.607-.053.943.016 1.144.23 2.14 1.173 2.581 2.437.385 1.108.276 2.267-.296 3.153-.097.15-.193.27-.333.419-.301.322-.301.722-.001 1.053.493.539.801 1.866.708 3.036-.062.772-.26 1.463-.533 1.854a2.096 2.096 0 0 1-.224.258.916.916 0 0 0-.194.25c-.054.109-.057.128-.057.293v.178l.148.29c.248.476.38.823.498 1.295.253 1.008.231 2.01-.059 2.581a.845.845 0 0 0-.044.098c0 .006.329.009.732.009h.73l.02-.074.036-.134c.019-.076.057-.3.088-.516.029-.217.029-1.016 0-1.258-.11-.875-.295-1.57-.597-2.226-.032-.074-.053-.138-.046-.141.008-.005.057-.074.108-.152.376-.569.607-1.284.724-2.228.031-.26.031-1.378 0-1.628-.083-.645-.182-1.082-.348-1.525a6.083 6.083 0 0 0-.329-.7l-.038-.064.131-.194c.402-.604.636-1.262.727-2.04a6.625 6.625 0 0 0-.024-1.358 5.512 5.512 0 0 0-.939-2.339 5.325 5.325 0 0 0-.95-1.02 8.097 8.097 0 0 1-.186-.152.692.692 0 0 1 .023-.208c.208-1.087.201-2.443-.017-3.503-.19-.924-.535-1.658-.98-2.082-.354-.338-.716-.482-1.15-.455-.996.059-1.8 1.205-2.116 3.01a6.805 6.805 0 0 0-.097.726c0 .036-.007.066-.015.066a.96.96 0 0 1-.149-.078A4.857 4.857 0 0 0 12 3.03c-.832 0-1.687.243-2.456.698a.958.958 0 0 1-.148.078c-.008 0-.015-.03-.015-.066a6.71 6.71 0 0 0-.097-.725C8.997 1.392 8.337.319 7.46.048a2.096 2.096 0 0 0-.585-.041Zm.293 1.402c.248.197.523.759.682 1.388.03.113.06.244.069.292.007.047.026.152.041.233.067.365.098.76.102 1.24l.002.475-.12.175-.118.178h-.278c-.324 0-.646.041-.954.124l-.238.06c-.033.007-.038-.003-.057-.144a8.438 8.438 0 0 1 .016-2.323c.124-.788.413-1.501.696-1.711.067-.05.079-.049.157.013zm9.825-.012c.17.126.358.46.498.888.28.854.36 2.028.212 3.145-.019.14-.024.151-.057.144l-.238-.06a3.693 3.693 0 0 0-.954-.124h-.278l-.119-.178-.119-.175.002-.474c.004-.669.066-1.19.214-1.772.157-.623.434-1.185.68-1.382.078-.062.09-.063.159-.012z"/></svg>Ollama, on the laptop</span><span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align: -2px; margin-right: 6px"><path fill="#F4F4F6" d="M23.922 16.997C23.061 18.492 18.063 22.02 12 22.02 5.937 22.02.939 18.492.078 16.997A.641.641 0 0 1 0 16.741v-2.869a.883.883 0 0 1 .053-.22c.372-.935 1.347-2.292 2.605-2.656.167-.429.414-1.055.644-1.517a10.098 10.098 0 0 1-.052-1.086c0-1.331.282-2.499 1.132-3.368.397-.406.89-.717 1.474-.952C7.255 2.937 9.248 1.98 11.978 1.98c2.731 0 4.767.957 6.166 2.093.584.235 1.077.546 1.474.952.85.869 1.132 2.037 1.132 3.368 0 .368-.014.733-.052 1.086.23.462.477 1.088.644 1.517 1.258.364 2.233 1.721 2.605 2.656a.841.841 0 0 1 .053.22v2.869a.641.641 0 0 1-.078.256Zm-11.75-5.992h-.344a4.359 4.359 0 0 1-.355.508c-.77.947-1.918 1.492-3.508 1.492-1.725 0-2.989-.359-3.782-1.259a2.137 2.137 0 0 1-.085-.104L4 11.746v6.585c1.435.779 4.514 2.179 8 2.179 3.486 0 6.565-1.4 8-2.179v-6.585l-.098-.104s-.033.045-.085.104c-.793.9-2.057 1.259-3.782 1.259-1.59 0-2.738-.545-3.508-1.492a4.359 4.359 0 0 1-.355-.508Zm2.328 3.25c.549 0 1 .451 1 1v2c0 .549-.451 1-1 1-.549 0-1-.451-1-1v-2c0-.549.451-1 1-1Zm-5 0c.549 0 1 .451 1 1v2c0 .549-.451 1-1 1-.549 0-1-.451-1-1v-2c0-.549.451-1 1-1Zm3.313-6.185c.136 1.057.403 1.913.878 2.497.442.544 1.134.938 2.344.938 1.573 0 2.292-.337 2.657-.751.384-.435.558-1.15.558-2.361 0-1.14-.243-1.847-.705-2.319-.477-.488-1.319-.862-2.824-1.025-1.487-.161-2.192.138-2.533.529-.269.307-.437.808-.438 1.578v.021c0 .265.021.562.063.893Zm-1.626 0c.042-.331.063-.628.063-.894v-.02c-.001-.77-.169-1.271-.438-1.578-.341-.391-1.046-.69-2.533-.529-1.505.163-2.347.537-2.824 1.025-.462.472-.705 1.179-.705 2.319 0 1.211.175 1.926.558 2.361.365.414 1.084.751 2.657.751 1.21 0 1.902-.394 2.344-.938.475-.584.742-1.44.878-2.497Z"/></svg>GitHub Copilot</span>',
+              '<span><i class="k k-cyan"></i>planner</span><span><i class="k k-mag"></i>implementer</span><span><i class="k k-yel"></i>tester</span><span><i class="k k-warn"></i>red check</span><span><i class="k k-you"></i>you</span><span><i class="k k-tick"></i>coordinator event</span><span><i class="k" style="width: 3px; background: repeating-linear-gradient(180deg, #a8a6af 0 2px, transparent 2px 5px)"></i>left out</span><span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align: -2px; margin-right: 6px"><path fill="#D97757" d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg>Claude</span><span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align: -2px; margin-right: 6px"><path fill="#F4F4F6" d="M16.361 10.26a.894.894 0 0 0-.558.47l-.072.148.001.207c0 .193.004.217.059.353.076.193.152.312.291.448.24.238.51.3.872.205a.86.86 0 0 0 .517-.436.752.752 0 0 0 .08-.498c-.064-.453-.33-.782-.724-.897a1.06 1.06 0 0 0-.466 0zm-9.203.005c-.305.096-.533.32-.65.639a1.187 1.187 0 0 0-.06.52c.057.309.31.59.598.667.362.095.632.033.872-.205.14-.136.215-.255.291-.448.055-.136.059-.16.059-.353l.001-.207-.072-.148a.894.894 0 0 0-.565-.472 1.02 1.02 0 0 0-.474.007Zm4.184 2c-.131.071-.223.25-.195.383.031.143.157.288.353.407.105.063.112.072.117.136.004.038-.01.146-.029.243-.02.094-.036.194-.036.222.002.074.07.195.143.253.064.052.076.054.255.059.164.005.198.001.264-.03.169-.082.212-.234.15-.525-.052-.243-.042-.28.087-.355.137-.08.281-.219.324-.314a.365.365 0 0 0-.175-.48.394.394 0 0 0-.181-.033c-.126 0-.207.03-.355.124l-.085.053-.053-.032c-.219-.13-.259-.145-.391-.143a.396.396 0 0 0-.193.032zm.39-2.195c-.373.036-.475.05-.654.086-.291.06-.68.195-.951.328-.94.46-1.589 1.226-1.787 2.114-.04.176-.045.234-.045.53 0 .294.005.357.043.524.264 1.16 1.332 2.017 2.714 2.173.3.033 1.596.033 1.896 0 1.11-.125 2.064-.727 2.493-1.571.114-.226.169-.372.22-.602.039-.167.044-.23.044-.523 0-.297-.005-.355-.045-.531-.288-1.29-1.539-2.304-3.072-2.497a6.873 6.873 0 0 0-.855-.031zm.645.937a3.283 3.283 0 0 1 1.44.514c.223.148.537.458.671.662.166.251.26.508.303.82.02.143.01.251-.043.482-.08.345-.332.705-.672.957a3.115 3.115 0 0 1-.689.348c-.382.122-.632.144-1.525.138-.582-.006-.686-.01-.853-.042-.57-.107-1.022-.334-1.35-.68-.264-.28-.385-.535-.45-.946-.03-.192.025-.509.137-.776.136-.326.488-.73.836-.963.403-.269.934-.46 1.422-.512.187-.02.586-.02.773-.002zm-5.503-11a1.653 1.653 0 0 0-.683.298C5.617.74 5.173 1.666 4.985 2.819c-.07.436-.119 1.04-.119 1.503 0 .544.064 1.24.155 1.721.02.107.031.202.023.208a8.12 8.12 0 0 1-.187.152 5.324 5.324 0 0 0-.949 1.02 5.49 5.49 0 0 0-.94 2.339 6.625 6.625 0 0 0-.023 1.357c.091.78.325 1.438.727 2.04l.13.195-.037.064c-.269.452-.498 1.105-.605 1.732-.084.496-.095.629-.095 1.294 0 .67.009.803.088 1.266.095.555.288 1.143.503 1.534.071.128.243.393.264.407.007.003-.014.067-.046.141a7.405 7.405 0 0 0-.548 1.873c-.062.417-.071.552-.071.991 0 .56.031.832.148 1.279L3.42 24h1.478l-.05-.091c-.297-.552-.325-1.575-.068-2.597.117-.472.25-.819.498-1.296l.148-.29v-.177c0-.165-.003-.184-.057-.293a.915.915 0 0 0-.194-.25 1.74 1.74 0 0 1-.385-.543c-.424-.92-.506-2.286-.208-3.451.124-.486.329-.918.544-1.154a.787.787 0 0 0 .223-.531c0-.195-.07-.355-.224-.522a3.136 3.136 0 0 1-.817-1.729c-.14-.96.114-2.005.69-2.834.563-.814 1.353-1.336 2.237-1.475.199-.033.57-.028.776.01.226.04.367.028.512-.041.179-.085.268-.19.374-.431.093-.215.165-.333.36-.576.234-.29.46-.489.822-.729.413-.27.884-.467 1.352-.561.17-.035.25-.04.569-.04.319 0 .398.005.569.04a4.07 4.07 0 0 1 1.914.997c.117.109.398.457.488.602.034.057.095.177.132.267.105.241.195.346.374.43.14.068.286.082.503.045.343-.058.607-.053.943.016 1.144.23 2.14 1.173 2.581 2.437.385 1.108.276 2.267-.296 3.153-.097.15-.193.27-.333.419-.301.322-.301.722-.001 1.053.493.539.801 1.866.708 3.036-.062.772-.26 1.463-.533 1.854a2.096 2.096 0 0 1-.224.258.916.916 0 0 0-.194.25c-.054.109-.057.128-.057.293v.178l.148.29c.248.476.38.823.498 1.295.253 1.008.231 2.01-.059 2.581a.845.845 0 0 0-.044.098c0 .006.329.009.732.009h.73l.02-.074.036-.134c.019-.076.057-.3.088-.516.029-.217.029-1.016 0-1.258-.11-.875-.295-1.57-.597-2.226-.032-.074-.053-.138-.046-.141.008-.005.057-.074.108-.152.376-.569.607-1.284.724-2.228.031-.26.031-1.378 0-1.628-.083-.645-.182-1.082-.348-1.525a6.083 6.083 0 0 0-.329-.7l-.038-.064.131-.194c.402-.604.636-1.262.727-2.04a6.625 6.625 0 0 0-.024-1.358 5.512 5.512 0 0 0-.939-2.339 5.325 5.325 0 0 0-.95-1.02 8.097 8.097 0 0 1-.186-.152.692.692 0 0 1 .023-.208c.208-1.087.201-2.443-.017-3.503-.19-.924-.535-1.658-.98-2.082-.354-.338-.716-.482-1.15-.455-.996.059-1.8 1.205-2.116 3.01a6.805 6.805 0 0 0-.097.726c0 .036-.007.066-.015.066a.96.96 0 0 1-.149-.078A4.857 4.857 0 0 0 12 3.03c-.832 0-1.687.243-2.456.698a.958.958 0 0 1-.148.078c-.008 0-.015-.03-.015-.066a6.71 6.71 0 0 0-.097-.725C8.997 1.392 8.337.319 7.46.048a2.096 2.096 0 0 0-.585-.041Zm.293 1.402c.248.197.523.759.682 1.388.03.113.06.244.069.292.007.047.026.152.041.233.067.365.098.76.102 1.24l.002.475-.12.175-.118.178h-.278c-.324 0-.646.041-.954.124l-.238.06c-.033.007-.038-.003-.057-.144a8.438 8.438 0 0 1 .016-2.323c.124-.788.413-1.501.696-1.711.067-.05.079-.049.157.013zm9.825-.012c.17.126.358.46.498.888.28.854.36 2.028.212 3.145-.019.14-.024.151-.057.144l-.238-.06a3.693 3.693 0 0 0-.954-.124h-.278l-.119-.178-.119-.175.002-.474c.004-.669.066-1.19.214-1.772.157-.623.434-1.185.68-1.382.078-.062.09-.063.159-.012z"/></svg>Ollama, on the laptop</span><span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align: -2px; margin-right: 6px"><path fill="#F4F4F6" d="M23.922 16.997C23.061 18.492 18.063 22.02 12 22.02 5.937 22.02.939 18.492.078 16.997A.641.641 0 0 1 0 16.741v-2.869a.883.883 0 0 1 .053-.22c.372-.935 1.347-2.292 2.605-2.656.167-.429.414-1.055.644-1.517a10.098 10.098 0 0 1-.052-1.086c0-1.331.282-2.499 1.132-3.368.397-.406.89-.717 1.474-.952C7.255 2.937 9.248 1.98 11.978 1.98c2.731 0 4.767.957 6.166 2.093.584.235 1.077.546 1.474.952.85.869 1.132 2.037 1.132 3.368 0 .368-.014.733-.052 1.086.23.462.477 1.088.644 1.517 1.258.364 2.233 1.721 2.605 2.656a.841.841 0 0 1 .053.22v2.869a.641.641 0 0 1-.078.256Zm-11.75-5.992h-.344a4.359 4.359 0 0 1-.355.508c-.77.947-1.918 1.492-3.508 1.492-1.725 0-2.989-.359-3.782-1.259a2.137 2.137 0 0 1-.085-.104L4 11.746v6.585c1.435.779 4.514 2.179 8 2.179 3.486 0 6.565-1.4 8-2.179v-6.585l-.098-.104s-.033.045-.085.104c-.793.9-2.057 1.259-3.782 1.259-1.59 0-2.738-.545-3.508-1.492a4.359 4.359 0 0 1-.355-.508Zm2.328 3.25c.549 0 1 .451 1 1v2c0 .549-.451 1-1 1-.549 0-1-.451-1-1v-2c0-.549.451-1 1-1Zm-5 0c.549 0 1 .451 1 1v2c0 .549-.451 1-1 1-.549 0-1-.451-1-1v-2c0-.549.451-1 1-1Zm3.313-6.185c.136 1.057.403 1.913.878 2.497.442.544 1.134.938 2.344.938 1.573 0 2.292-.337 2.657-.751.384-.435.558-1.15.558-2.361 0-1.14-.243-1.847-.705-2.319-.477-.488-1.319-.862-2.824-1.025-1.487-.161-2.192.138-2.533.529-.269.307-.437.808-.438 1.578v.021c0 .265.021.562.063.893Zm-1.626 0c.042-.331.063-.628.063-.894v-.02c-.001-.77-.169-1.271-.438-1.578-.341-.391-1.046-.69-2.533-.529-1.505.163-2.347.537-2.824 1.025-.462.472-.705 1.179-.705 2.319 0 1.211.175 1.926.558 2.361.365.414 1.084.751 2.657.751 1.21 0 1.902-.394 2.344-.938.475-.584.742-1.44.878-2.497Z"/></svg>GitHub Copilot</span>',
             f1sum:
-              "Finished run, 3:33:57 of active time. The grill took 7 minutes 55; you approved the spec at 8:36. OpenFleet created the repo and checked the toolchains. Ten planners ran on Claude; one plan was sent back for building past the slice. At 0:24 every plan agreed. setup merged at 0:47 and contracts at 1:08; you then paused the run for 52 minutes, left out. The five services and the web app shared two slots on the laptop from 1:08 to 2:42, with testers on Copilot alongside. media, posts and system each needed one retry. The system's end-to-end flow passed at 3:22 and the run finished in nine stacked draft PRs.",
+              "Finished run, 3:33:57 of active time. The grill took 7 minutes 55; you approved the spec at 8:36, and OpenFleet created the nine repos and checked the toolchains. Ten planners ran on Claude; one plan was sent back for building past the slice. At 0:24 every plan agreed. platform was done at 0:47 and contracts at 1:08; you then paused the run for 52 minutes, left out. The five services and web shared two slots on the laptop from 1:08 to 2:42, with testers on Copilot alongside. media, posts and system each needed one retry. The system's end-to-end flow passed at 3:29, and the run finished with nine linked draft PRs.",
             f1cap:
               "Bars are agents from start to stop, with the mark of the provider they ran on: Claude for planners and the steps handed to Opus, Ollama for implementer steps on the laptop, Copilot for testers. Each implementer is a row of short steps, one fresh session each, two at a time on the laptop. Dots are file edits and checks; the dotted line is the pause.",
-            f1label: "Swimlane timeline of the run, one lane per child, plus glimpse's repo coordinator.",
-            s2: '<h2 id="state-h"><small>02 · STATE</small>Nine children, a fixed order</h2>\n<p>Each child moves through the same phases: pending, planning, <strong>plan-review</strong>, planned, implementing, testing, <strong>post-test</strong> and done. A new system is built in a fixed order: setup first, then contracts, then the five services and the web app side by side, then the system. That is why the services sit in planned for over 40 minutes. <code>notifications</code> goes back to planning once, and <code>media</code>, <code>posts</code> and <code>system</code> each go back from testing to implementing (the ↺).</p>',
+            f1label: "Swimlane timeline of the run, one lane per repo.",
+            s2: '<h2 id="state-h"><small>02 · STATE</small>Nine repos, a fixed order</h2>\n<p>Each child moves through the same phases: pending, planning, <strong>plan-review</strong>, planned, implementing, testing, <strong>post-test</strong> and done. A new system is built in a fixed order: <code>platform</code> first, then <code>contracts</code>, then the five services and <code>web</code> side by side, then <code>system</code>. That is why the services sit in planned for over 40 minutes. <code>notifications</code> goes back to planning once, and <code>media</code>, <code>posts</code> and <code>system</code> each go back from testing to implementing (the ↺).</p>',
             f2title: '<span class="dot3"><i></i><i></i><i></i></span>PHASE.CHANGED · 9 CHILDREN',
-            s3: '<h2 id="messages-h"><small>03 · MESSAGES</small>Three providers, one coordinator</h2>\n<p>The coordinator and the repo coordinator run on Claude Code. Every other agent is its own session: planners on Claude Code with Opus, implementer steps on Claude Code pointed at Ollama on the laptop (with Opus for a step the local model can’t finish), and testers on Copilot CLI with GPT-5. None of them talk to each other: each ends with an <code>openfleet-report</code> to the repo coordinator, which merges the work and reports back once.</p>',
+            s3: '<h2 id="messages-h"><small>03 · MESSAGES</small>Three providers, one coordinator</h2>\n<p>The coordinator runs on Claude Code and runs all nine repos itself. Every agent it starts is its own session: planners on Claude Code with Opus, implementer steps on Claude Code pointed at Ollama on the laptop (with Opus for a step the local model can’t finish), and testers on Copilot CLI with GPT-5. None of them talk to each other: each ends with an <code>openfleet-report</code> to the coordinator.</p>',
             f3sum:
-              "Finished run: the coordinator sent one instruction, to glimpse's repo coordinator, which ran every agent for the nine children and merged them. You answered the grill and approved the spec. All nine children are merged.",
-            f3label: "Message hub: you, the coordinator and glimpse, with its nine children inside it.",
-            s4: '<h2 id="code-h"><small>04 · THE CODE</small>418 files, all new</h2>\n<p>Everything here is new. <code>setup</code> scaffolded the monorepo with the official generators and wired up lint, tests and builds. <code>contracts</code> wrote the OpenAPI specs and the event schemas and generated typed clients from them, so every service and the web app build against the same types. The web app is the biggest child at 7,240 lines.</p>',
+              "Finished run: the coordinator sent every instruction to the agents of the nine repos and read every report. You answered the grill and approved the spec. All nine repos are done.",
+            f3label: "Message hub: you, the coordinator in the middle and the nine repos around it.",
+            s4: '<h2 id="code-h"><small>04 · THE CODE</small>418 files, all new</h2>\n<p>Everything here is new. <code>platform</code> set up the shared tooling with the official generators: lint, tests, builds and Docker. <code>contracts</code> wrote the OpenAPI specs and the event schemas and generated typed clients from them, so every service and the web app build against the same types. <code>web</code> is the biggest repo at 7,240 lines.</p>',
             f4cap:
-              "A row appears when its child’s first step lands. Rows here are per child; every file in this run is new.",
-            s5: '<h2 id="decisions-h"><small>05 · THE DECISIONS</small>Six moments the coordinators stepped in</h2>\n<p>Most of a run is agents working alone. These six moments are where the coordinators stepped in: cutting the request to a slice that can ship whole, sending a plan back for building past it, opening the gate, catching a contract bug before it spread, handing a step from the laptop to Opus, and holding the order until the whole system passed end to end.</p>',
-            f5title: '<span class="dot3"><i></i><i></i><i></i></span>PLAN.REJECTED · TEST.RUN · CHILD.MERGED',
+              "A row appears when its repo’s first step lands. Rows here are per repo; every file in this run is new.",
+            s5: '<h2 id="decisions-h"><small>05 · THE DECISIONS</small>Six moments the coordinator stepped in</h2>\n<p>Most of a run is agents working alone. These six moments are where the coordinator stepped in: cutting the request to a slice that can ship whole, sending a plan back for building past it, opening the gate, catching a contract bug before it spread, handing a step from the laptop to Opus, and holding the order until the whole system passed end to end.</p>',
+            f5title: '<span class="dot3"><i></i><i></i><i></i></span>PLAN.REJECTED · TEST.RUN · RUN.COMPLETED',
             f5key:
-              '<span><i class="k k-gate"></i>plan checked</span><span><i class="k k-mag"></i>handed to Opus</span><span><i class="k k-warn"></i>sent back or red</span><span><i class="k k-done"></i>merged</span>',
+              '<span><i class="k k-gate"></i>plan checked</span><span><i class="k k-mag"></i>handed to Opus</span><span><i class="k k-warn"></i>sent back or red</span><span><i class="k k-done"></i>done</span>',
             f5label:
-              "Diagram: the contracts package above the nine children. Steps show the slice the grill cut, a plan sent back, every plan agreeing at the gate, a contract bug caught in posts, steps handed from the laptop to Opus, and the system shipping end to end.",
-            s6: '<h2 id="verify-h"><small>06 · VERIFY</small>72 checks, four red</h2>\n<p>Each tester ran the child’s checks: lint, type checks, unit tests, contract tests over the shared fixtures (in blue), Docker builds, scope checks and the end-to-end flow. <strong>68 passed first time.</strong> The four red ones were real: the contract mismatch in <code>posts</code>, an image library missing from the <code>media</code> Docker image (2) and a race in the end-to-end flow. Each was fixed by a retry before the child merged. Press run to replay them.</p>',
-            f6title: '<span class="dot3"><i></i><i></i><i></i></span>TEST.RUN · 9 CHILDREN + INTEGRATION',
+              "Diagram: the contracts above the nine repos. Steps show the slice the grill cut, a plan sent back, every plan agreeing at the gate, a contract bug caught in posts, steps handed from the laptop to Opus, and the system shipping end to end.",
+            s6: '<h2 id="verify-h"><small>06 · VERIFY</small>72 checks, four red</h2>\n<p>Each tester ran its repo’s checks: lint, type checks, unit tests, contract tests over the shared fixtures (in blue), Docker builds, scope checks and the end-to-end flow. <strong>68 passed first time.</strong> The four red ones were real: the contract mismatch in <code>posts</code>, an image library missing from the <code>media</code> Docker image (2) and a race in the end-to-end flow. Each was fixed by a retry before the repo was done. Press run to replay them.</p>',
+            f6title: '<span class="dot3"><i></i><i></i><i></i></span>TEST.RUN · 9 REPOS',
             f6key:
               '<span><i class="k k-pass"></i>passed</span><span><i class="k k-contract"></i>contract test</span><span><i class="k k-warn"></i>red, fixed by a retry</span>',
             f6cap:
-              "One cell per check, in the order it ran; hover a cell for the command. A retry’s checks follow the red ones in the same row.",
-            s7: '<h2 id="left-h"><small>07 · WHAT’S LEFT</small>Nine stacked PRs</h2>\n<p>The run ends in <strong>draft PR</strong> mode with stacked PRs: one PR per child, in build order from setup to system, so each is small enough to review on its own and the stack merges in order. Nothing merges until you do.</p>\n<p>The next slice is already written down: the grill’s follow-ups (stories, messages, video, explore, push). <code>npx openfleet continue glimpse</code> starts it from that list, reusing the repo, the stack and the contracts.</p>',
-            cmds: '<div class="cmd"><b>1</b><div><h3>REVIEW THE STACK</h3><div class="cmd-chip"><code>gh pr list --author @me --draft</code><button class="cmd-copy" type="button" data-copy="gh pr list --author @me --draft" aria-label="Copy: gh pr list --author @me --draft">COPY</button></div></div></div><div class="cmd"><b>2</b><div><h3>MERGE, THEN CLEAN UP</h3><div class="cmd-chip"><code>npx openfleet clean glimpse --branches</code><button class="cmd-copy" type="button" data-copy="npx openfleet clean glimpse --branches" aria-label="Copy: npx openfleet clean glimpse --branches">COPY</button></div></div></div><div class="cmd"><b>3</b><div><h3>BUILD THE NEXT SLICE</h3><div class="cmd-chip"><code>npx openfleet continue glimpse</code><button class="cmd-copy" type="button" data-copy="npx openfleet continue glimpse" aria-label="Copy: npx openfleet continue glimpse">COPY</button></div></div></div>',
+              "One cell per check, in the order it ran; hover a cell for the command. A retry’s checks follow the red ones in the same row; system’s last cells are the whole stack, tested together.",
+            s7: '<h2 id="left-h"><small>07 · WHAT’S LEFT</small>Nine linked PRs</h2>\n<p>The run ends in <strong>draft PR</strong> mode: one draft PR per new repo, nine in all, each linking to the other eight and carrying the run summary. Merge them in build order, platform first and system last. Nothing merges until you do.</p>\n<p>The next slice is already written down: the grill’s follow-ups (stories, messages, video, explore, push). <code>npx openfleet continue glimpse</code> starts it from that list, reusing the repos, the stack and the contracts.</p>',
+            cmds: '<div class="cmd"><b>1</b><div><h3>REVIEW THE DRAFT PRS</h3><div class="cmd-chip"><code>gh pr list --author @me --draft</code><button class="cmd-copy" type="button" data-copy="gh pr list --author @me --draft" aria-label="Copy: gh pr list --author @me --draft">COPY</button></div></div></div><div class="cmd"><b>2</b><div><h3>MERGE, THEN CLEAN UP</h3><div class="cmd-chip"><code>npx openfleet clean glimpse --branches</code><button class="cmd-copy" type="button" data-copy="npx openfleet clean glimpse --branches" aria-label="Copy: npx openfleet clean glimpse --branches">COPY</button></div></div></div><div class="cmd"><b>3</b><div><h3>BUILD THE NEXT SLICE</h3><div class="cmd-chip"><code>npx openfleet continue glimpse</code><button class="cmd-copy" type="button" data-copy="npx openfleet continue glimpse" aria-label="Copy: npx openfleet continue glimpse">COPY</button></div></div></div>',
           },
           decisions: {
-            nodes: [
-              "glimpse/setup",
-              "glimpse/contracts",
-              "glimpse/accounts",
-              "glimpse/media",
-              "glimpse/posts",
-              "glimpse/feed",
-              "glimpse/notifications",
-              "glimpse/web",
-              "glimpse/system",
-            ],
+            nodes: ["platform", "contracts", "accounts", "media", "posts", "feed", "notifications", "web", "system"],
             box: [
-              "contracts/ · OpenAPI + events",
+              "contracts · OpenAPI + events",
               "post.liked { createdAt: ISO 8601 }",
               "read by feed and notifications",
             ],
             steps: [
               {
                 title: "The grill cuts a first slice",
-                text: "You asked for an Instagram-style app. The grill proposed five services, a contracts package, a web app and one monorepo, asked once about the stack, and cut stories, messages, video, explore and push to the follow-ups. Five services is the most a greenfield spec allows.",
+                text: "You asked for an Instagram-style app. The grill proposed five services, a contracts package, a web app, a shared platform and a repo for each, asked once about the stack, and cut stories, messages, video, explore and push to the follow-ups. Five services is the most a greenfield spec allows.",
                 all: ["line", "service"],
                 nodes: {
-                  "glimpse/setup": ["fg", "goes first"],
-                  "glimpse/contracts": ["line", "after setup"],
-                  "glimpse/web": ["line", "frontend"],
-                  "glimpse/system": ["line", "goes last"],
+                  platform: ["fg", "goes first"],
+                  contracts: ["line", "after platform"],
+                  web: ["line", "frontend"],
+                  system: ["line", "goes last"],
                 },
               },
               {
                 title: "A plan builds past the slice",
                 text: "The first notifications plan added web push, with service workers and keys. The spec lists push as a follow-up, so the plan was sent back as out of scope and resubmitted without it.",
                 all: ["fg", "plan agrees"],
-                nodes: { "glimpse/notifications": ["warn", "sent back: push"] },
+                nodes: { notifications: ["warn", "sent back: push"] },
                 hi: "all",
               },
               {
                 title: "Every plan agrees before any code",
-                text: "At 0:24 all nine plans agreed and the plans-ready gate opened. Setup and contracts went first; then the five services and the web app took turns on the laptop’s two slots, while testers on Copilot kept going.",
+                text: "At 0:24 all nine plans agreed and the plans-ready gate opened. platform and contracts went first; then the five services and web took turns on the laptop’s two slots, while testers on Copilot kept going.",
                 all: ["fg", "plan agrees"],
                 hi: "all",
               },
               {
                 title: "A contract test catches a bug",
-                text: "posts sent createdAt as epoch milliseconds; the event schema says ISO 8601. The contract tests over the shared fixtures failed before posts merged. feed and notifications read that event, so they merged after the fix and never saw a bad one.",
+                text: "posts sent createdAt as epoch milliseconds; the event schema says ISO 8601. The contract tests over the shared fixtures failed in posts, the repo that sends the event, before anything read a bad one. feed and notifications test against the same fixtures, so the fix in posts was the only change needed.",
                 nodes: {
-                  "glimpse/posts": ["warn", "contract test red"],
-                  "glimpse/feed": ["fg", "protected"],
-                  "glimpse/notifications": ["fg", "protected"],
+                  posts: ["warn", "contract test red"],
+                  feed: ["fg", "protected"],
+                  notifications: ["fg", "protected"],
                 },
-                hi: ["glimpse/posts", "glimpse/feed", "glimpse/notifications"],
-                lit: ["glimpse/contracts", "glimpse/posts", "glimpse/feed", "glimpse/notifications"],
+                hi: ["posts", "feed", "notifications"],
+                lit: ["contracts", "posts", "feed", "notifications"],
                 dep: true,
               },
               {
                 title: "The laptop hands a step to Opus",
-                text: "Each implementer step ran on qwen3.8 on the laptop, in a fresh session that sees only its own step. Five of the 60 steps were too much for it, and Opus finished them. One web step also tried to write .env.local in the repo root; the guard refused, and the step used its own worktree.",
+                text: "Each implementer step ran on qwen3.8 on the laptop, in a fresh session that sees only its own step. Five of the 60 steps were too much for it, and Opus finished them. One web step also tried to write .env.local outside its worktree; the guard refused, and the step used its own.",
                 nodes: {
-                  "glimpse/setup": ["mag", "1 step to Opus"],
-                  "glimpse/media": ["mag", "1 step to Opus"],
-                  "glimpse/posts": ["mag", "1 step to Opus"],
-                  "glimpse/web": ["mag", "2 steps to Opus"],
+                  platform: ["mag", "1 step to Opus"],
+                  media: ["mag", "1 step to Opus"],
+                  posts: ["mag", "1 step to Opus"],
+                  web: ["mag", "2 steps to Opus"],
                 },
-                hi: ["glimpse/setup", "glimpse/media", "glimpse/posts", "glimpse/web"],
+                hi: ["platform", "media", "posts", "web"],
               },
               {
                 title: "The system ships, end to end",
-                text: "The system child wired everything into docker-compose with seed data and the end-to-end flow. Its first run looked for a new post before the feed had it; the retry waits for the feed instead, and the flow passed three runs in a row. Then the work went out as nine stacked draft PRs.",
-                all: ["done", "merged"],
-                nodes: { "glimpse/system": ["done", "e2e green ×3"] },
+                text: "system wired every repo into one docker-compose with seed data and the end-to-end flow. Its first run looked for a new post before the feed had it; the retry waits for the feed instead, and the flow passed three runs in a row. The run finished with nine linked draft PRs, one per repo.",
+                all: ["done", "done"],
+                nodes: { system: ["done", "e2e green ×3"] },
                 hi: "all",
                 dep: true,
               },
@@ -5060,31 +4046,32 @@
           if (extra) for (var k in extra) if (extra[k] != null) e[k] = extra[k];
           E.push(e);
         };
-        var repo = R.repos[0];
-        var RC = repo + "/repo-coordinator";
-        var slug = function (c) {
-          return c.split("/").pop();
-        };
+        var CO = "coordinator";
         add(0, "cli", "project.created", null, "project " + R.project);
-        add(4, "coordinator", "session.started", null, "new session");
-        add(R.spec, "coordinator", "spec.written", null, "spec.md · 1 repo · " + R.children.length + " children");
-        add(R.spec + 0.5, "coordinator", "phase.changed", null, "specifying → awaiting-approval");
+        add(4, CO, "session.started", null, "new session");
+        add(
+          R.spec,
+          CO,
+          "spec.written",
+          null,
+          "spec.md · " + R.repos.length + " repos · " + R.children.length + " children",
+        );
+        add(R.spec + 0.5, CO, "phase.changed", null, "specifying → awaiting-approval");
         R.children.forEach(function (c, k) {
-          add(R.spec + 0.6 + k * 0.01, "coordinator", "phase.changed", c, "→ pending");
+          add(R.spec + 0.6 + k * 0.01, CO, "phase.changed", c, "→ pending");
         });
-        add(R.approved, "coordinator", "spec.approved", null, "you approved the spec");
-        add(R.approved + 0.4, "coordinator", "phase.changed", null, "awaiting-approval → running");
+        add(R.approved, CO, "spec.approved", null, "you approved the spec");
+        add(R.approved + 0.4, CO, "phase.changed", null, "awaiting-approval → running");
         var t0 = R.approved + 6;
         if (R.greenfield) {
-          add(R.approved + 6, "cli", "repo.created", repo, "repos/" + repo + " · empty initial commit on main");
+          R.repos.forEach(function (r, k) {
+            add(R.approved + 6 + k * 2, "cli", "repo.created", r, "repos/" + r + " · empty initial commit on main");
+          });
           add(R.approved + 40, "cli", "preflight.passed", null, "node, pnpm, docker and the registries reachable");
           t0 = R.approved + 50;
         }
-        add(t0, "coordinator", "worktree.created", repo, "branch openfleet/" + R.project);
-        add(t0 + 1, "coordinator", "message.sent", repo, "→ " + RC);
-        add(t0 + 2, RC, "agent.spawned", repo, "openfleet-repo-coordinator");
-        R.children.forEach(function (c, k) {
-          add(t0 + 3 + k * 0.2, RC, "worktree.created", c, "branch openfleet/" + R.project + "--" + slug(c));
+        R.repos.forEach(function (r, k) {
+          add(t0 + k * 0.3, CO, "worktree.created", r, "branch openfleet/" + R.project);
         });
         var rejected = {};
         (R.rejected || []).forEach(function (r) {
@@ -5105,14 +4092,14 @@
         R.children.forEach(function (c, ci) {
           var phase = "pending",
             retries = 0,
-            files = false;
+            job = -1;
           var cut = function (to, t, note) {
-            add(t, RC, "phase.changed", c, phase + " → " + to + (note || ""));
+            add(t, CO, "phase.changed", c, phase + " → " + to + (note || ""));
             phase = to;
           };
           var mine = R.sessions
             .filter(function (s) {
-              return s.child === c && !s.integ;
+              return s.child === c;
             })
             .sort(function (a, b) {
               return a.s - b.s;
@@ -5122,25 +4109,26 @@
           });
           plans.forEach(function (s, k) {
             if (phase !== "planning") cut("planning", s.s - 0.4);
-            add(s.s - 0.3, RC, "message.sent", c, "→ " + c + "/planner");
+            add(s.s - 0.3, CO, "message.sent", c, "→ " + c + "/planner");
             spawn(s, "planner", c + "/planner", c);
             add(s.e, c + "/planner", "agent.stopped", c, "plan ready");
             add(s.e + 0.01, c + "/planner", "worktree.snapshot", c, "0 files changed");
             // A planner stopped right after it started was replaced at once; only real plans are submitted.
             var aborted = plans[k + 1] && plans[k + 1].s - s.e < 30 && s.e - s.s < 30;
             if (aborted) return;
-            add(s.e + 0.3, RC, "plan.submitted", c, "plans/" + c.replace("/", "-") + ".md");
+            add(s.e + 0.3, CO, "plan.submitted", c, "plans/" + c + ".md");
             var rj = rejected[c];
             if (rj && plans[k + 1]) {
-              add(rj[1], RC, "plan.rejected", c, rj[2]);
+              add(rj[1], CO, "plan.rejected", c, rj[2]);
               cut("planning", rj[1] + 0.2, " (sent back)");
               return;
             }
-            add(s.e + 0.5, RC, "plan.validated", c, "plans/" + c.replace("/", "-") + ".md");
+            add(s.e + 0.5, CO, "plan.validated", c, "plans/" + c + ".md");
             cut("plan-review", s.e + 0.7);
           });
-          cut("planned", R.gate + 0.2 + ci * 0.02);
-          var last = null;
+          if (plans.length) cut("planned", R.gate + 0.2 + ci * 0.02);
+          var last = null,
+            prevKind = null;
           mine
             .filter(function (s) {
               return s.kind !== "p";
@@ -5153,20 +4141,22 @@
                   retries++;
                   cut("implementing", s.s - 1, " (retry " + retries + "/3)");
                 } else if (phase !== "implementing") cut("implementing", s.s - 0.6);
+                // a new implementer job starts after a tester, or with step 1
+                if (prevKind !== "i" || (s.step && /^1\//.test(s.step))) job++;
               } else if (phase !== "testing") cut("testing", s.s - 1);
+              prevKind = s.kind;
               add(
                 s.s - 0.3,
-                RC,
+                CO,
                 "message.sent",
                 c,
                 "→ " + actor + (s.step ? " · step " + s.step : "") + (retries && s.kind === "i" ? " + findings" : ""),
               );
               var extra = spawn(s, role, actor, c, s.step ? " · step " + s.step : "");
-              if (s.kind === "i" && !files) {
-                files = true;
+              if (s.kind === "i" && (!s.step || /^1\//.test(s.step)))
                 R.files
                   .filter(function (f) {
-                    return f[0] === c;
+                    return f[0] === c && (f[6] || 0) === job;
                   })
                   .forEach(function (f) {
                     add(
@@ -5177,7 +4167,6 @@
                       f[1] + " +" + f[2] + (f[3] ? " −" + f[3] : ""),
                     );
                   });
-              }
               var red = [];
               if (s.kind !== "i")
                 R.tests
@@ -5203,55 +4192,15 @@
               add(s.e + 0.01, actor, "worktree.snapshot", c, "diff snapshot");
               last = s;
             });
-          var merged = R.merges.filter(function (m) {
-            return m[0] === c;
-          })[0];
-          if (last) cut("post-test", last.e + 1);
-          if (merged) {
-            add(merged[1], RC, "child.merged", c, "into openfleet/" + R.project);
-            cut("done", merged[1] + 0.5);
+          if (last) {
+            cut("post-test", last.e + 1);
+            cut("done", last.e + 2);
           }
         });
-        add(R.groupCheck[repo], RC, "plans.consistent", repo, R.children.length + " plans agree");
-        add(
-          R.gate,
-          "coordinator",
-          "plans.consistent",
-          null,
-          R.children.length + " plans agree · plans-ready gate open",
-        );
-        // integration: the repo coordinator's own agents, on the merged branch
-        R.sessions
-          .filter(function (s) {
-            return s.integ;
-          })
-          .forEach(function (s) {
-            var role = s.kind === "i" ? "implementer" : "tester";
-            var actor = repo + "/" + role;
-            add(s.s - 0.3, RC, "message.sent", repo, "→ integration " + role);
-            var extra = spawn(s, role, actor, repo);
-            var red = 0;
-            if (s.kind !== "i")
-              R.tests
-                .filter(function (x) {
-                  return x.child === repo && x.t >= s.s - 1 && x.t <= s.e + 1;
-                })
-                .forEach(function (x) {
-                  if (!x.ok) red++;
-                  add(x.t, actor, "test.run", repo, x.cmd + (x.ok ? " · pass" : " · red: " + x.sum), { ok: x.ok });
-                });
-            add(
-              s.e,
-              actor,
-              "agent.stopped",
-              repo,
-              s.kind === "i" ? "done" : red ? red + " red" : "integration green",
-              extra,
-            );
-          });
+        add(R.gate, CO, "plans.consistent", null, R.children.length + " plans agree · plans-ready gate open");
         (R.you || []).forEach(function (y) {
-          add(y[0], RC, "question.escalated", repo, "the push hook blocked the branch: coverage under the thresholds");
-          add(y[1], "coordinator", "question.answered", repo, "you: add tests, keep every threshold");
+          add(y[0], CO, "question.escalated", y[2], "the push hook blocked the branch: coverage under the thresholds");
+          add(y[1], CO, "question.answered", y[2], "you: add tests, keep every threshold");
         });
         (R.cuts || []).forEach(function (cu) {
           if (/PAUSED/.test(cu[1])) {
@@ -5259,18 +4208,9 @@
             add(cu[0] + 1, "cli", "run.resumed", null, "resumed");
           }
         });
-        var rcEnd = Math.max.apply(
-          null,
-          R.integrate[repo].map(function (r) {
-            return r[1];
-          }),
-        );
-        add(rcEnd + 2, RC, "agent.stopped", repo, repo + " done · 1 integration branch");
-        add(R.finalizing, "coordinator", "phase.changed", null, "running → finalizing");
-        if (/stacked/.test(R.mode))
-          add(R.finalizing + 60, "coordinator", "stack.created", repo, "9 layers, one per child");
-        add(R.done - 40, "coordinator", "run.completed", null, "mode " + R.mode);
-        add(R.done, "coordinator", "phase.changed", null, "finalizing → done");
+        add(R.finalizing, CO, "phase.changed", null, "running → finalizing");
+        add(R.done - 40, CO, "run.completed", null, "mode draft-pr · " + R.prs + " PRs, linked");
+        add(R.done, CO, "phase.changed", null, "finalizing → done");
         E.sort(function (x, y) {
           return x.t - y.t;
         });
@@ -5303,11 +4243,11 @@
           E: buildGeneric(D),
           repos: D.repos,
           children: D.children,
-          groups: D.groups,
+          groups: {},
           gate: D.gate,
-          merges: D.merges,
-          integrate: D.integrate,
-          runningLabel: "1 REPO · " + D.children.length + " CHILDREN",
+          merges: [],
+          integrate: {},
+          runningLabel: D.repos.length + " REPOS · " + D.children.length + " CHILDREN",
           cuts: D.cuts || [],
           you: D.you || [],
         };
@@ -6084,75 +5024,44 @@
         (function () {
           var svg = document.getElementById("hub");
           var rep = document.getElementById("report");
-          var SINGLE = REPOS_.length === 1;
-          var LAYOUT = SINGLE
-            ? {
-                wide: {
-                  w: 1000,
-                  h: 540,
-                  minW: 680,
-                  C: { x: 500, y: 196, r: 70 },
-                  nodeW: 900,
-                  youW: 120,
-                  cols: 5,
-                  P: { you: [500, 50] },
-                },
-                narrow: {
-                  w: 400,
-                  h: 700,
-                  minW: 0,
-                  C: { x: 200, y: 170, r: 56 },
-                  nodeW: 380,
-                  youW: 140,
-                  cols: 2,
-                  P: { you: [200, 40] },
-                },
-              }
-            : {
-                wide: {
-                  w: 1000,
-                  h: 500,
-                  minW: 680,
-                  C: { x: 500, y: 270, r: 70 },
-                  nodeW: 210,
-                  youW: 120,
-                  cols: 3,
-                  P: {
-                    you: [500, 50],
-                    api: [150, 150],
-                    "sdk-js": [150, 270],
-                    "sdk-python": [150, 390],
-                    billing: [850, 150],
-                    web: [850, 280],
-                    mobile: [850, 410],
-                  },
-                },
-                narrow: {
-                  w: 400,
-                  h: 610,
-                  minW: 0,
-                  C: { x: 200, y: 180, r: 56 },
-                  nodeW: 180,
-                  youW: 140,
-                  cols: 3,
-                  P: {
-                    you: [200, 40],
-                    api: [100, 340],
-                    "sdk-js": [300, 340],
-                    "sdk-python": [100, 420],
-                    billing: [300, 420],
-                    web: [100, 528],
-                    mobile: [300, 520],
-                  },
-                },
-              };
-          if (SINGLE) {
-            var kids0 = GROUPS[REPOS_[0]].length;
-            LAYOUT.wide.P[REPOS_[0]] = [500, 340];
-            LAYOUT.wide.h = 340 + 58 + Math.ceil(kids0 / LAYOUT.wide.cols) * 34 + 10;
-            LAYOUT.narrow.P[REPOS_[0]] = [200, 300];
-            LAYOUT.narrow.h = 300 + 58 + Math.ceil(kids0 / LAYOUT.narrow.cols) * 34 + 10;
-          }
+          var LAYOUT = {
+            wide: {
+              w: 1000,
+              h: 500,
+              minW: 680,
+              C: { x: 500, y: 270, r: 70 },
+              nodeW: 210,
+              youW: 120,
+              cols: 3,
+              P: {
+                you: [500, 50],
+                api: [150, 150],
+                "sdk-js": [150, 270],
+                "sdk-python": [150, 390],
+                billing: [850, 150],
+                web: [850, 280],
+                mobile: [850, 410],
+              },
+            },
+            narrow: {
+              w: 400,
+              h: 610,
+              minW: 0,
+              C: { x: 200, y: 180, r: 56 },
+              nodeW: 180,
+              youW: 140,
+              cols: 3,
+              P: {
+                you: [200, 40],
+                api: [100, 340],
+                "sdk-js": [300, 340],
+                "sdk-python": [100, 420],
+                billing: [300, 420],
+                web: [100, 528],
+                mobile: [300, 520],
+              },
+            },
+          };
           var kidLabel = function (c) {
             return c.split("/").pop();
           };
@@ -6317,7 +5226,7 @@
               '" y="' +
               (C.y + 20) +
               '" text-anchor="middle" font-size="18" class="mono-t" style="fill:#1632E6">' +
-              (SINGLE ? CHILDREN_.length + " / " + CHILDREN_.length : "6 / 6") +
+              "6 / 6" +
               "</text>";
             h +=
               '<text x="' +
@@ -6325,7 +5234,7 @@
               '" y="' +
               (C.y + 38) +
               '" text-anchor="middle" font-size="12" class="disp-t" style="fill:#5F5754">' +
-              (SINGLE ? "CHILDREN MERGED" : "REPOS DONE") +
+              "REPOS DONE" +
               "</text>";
             packets.forEach(function (p, i) {
               h +=
@@ -6457,7 +5366,7 @@
                   );
                 }
               });
-              count.textContent = SINGLE ? mergedN + " / " + CHILDREN_.length : doneN + " / 6";
+              count.textContent = doneN + " / 6";
               var latest = null;
               RUNS.concat(
                 Object.keys(GROUPS).map(function (r) {
@@ -6511,8 +5420,6 @@
                 ": the files, the steps and the tests, checked against the spec and the shared approach."
               );
             if (r.role === "implementer") {
-              if (GROUPS[r.repo])
-                return "Integration: the changes on the merged branch are done and its tests pass locally.";
               if (r.fb)
                 return (
                   "Step " +
@@ -6530,19 +5437,17 @@
             if (red.length) return checks.length + " checks, " + red.length + " red: " + red[0].sum + ".";
             return checks.length + "/" + checks.length + " checks pass. All acceptance criteria met.";
           }
-          // ---- one repo: the repo coordinator sits in the middle, its children around it ----
+          // ---- every child its own repo: the coordinator in the middle, the repos around it ----
           function buildSingle() {
             var N = isNarrow();
-            var REPO = REPOS_[0],
-              RC = rcActor(REPO),
-              KIDS = GROUPS[REPO],
+            var KIDS = CHILDREN_,
               D = RUN.data;
             var half = Math.ceil(KIDS.length / 2);
             var P = {},
               L;
             if (!N) {
-              var gapY = 100,
-                top0 = 250;
+              var gapY = 96,
+                top0 = 170;
               L = {
                 w: 1000,
                 h: top0 + (half - 1) * gapY + 60,
@@ -6553,7 +5458,6 @@
               };
               L.C.y = top0 + ((half - 1) * gapY) / 2;
               P.you = [500, 50];
-              P.coord = [500, 150];
               KIDS.forEach(function (c, i) {
                 var left = i < half;
                 var j = left ? i : i - half;
@@ -6561,13 +5465,12 @@
                 P[c] = [left ? 150 : 850, L.C.y + (j - (n - 1) / 2) * gapY];
               });
             } else {
-              L = { w: 400, h: 0, minW: 0, C: { x: 200, y: 250, r: 60 }, nodeW: 176, nh: 52 };
+              L = { w: 400, h: 0, minW: 0, C: { x: 200, y: 170, r: 60 }, nodeW: 176, nh: 52 };
               P.you = [200, 40];
-              P.coord = [200, 130];
               KIDS.forEach(function (c, i) {
-                P[c] = [100 + (i % 2) * 200, 380 + Math.floor(i / 2) * 76];
+                P[c] = [100 + (i % 2) * 200, 300 + Math.floor(i / 2) * 76];
               });
-              L.h = 380 + (Math.ceil(KIDS.length / 2) - 1) * 76 + 46;
+              L.h = 300 + (Math.ceil(KIDS.length / 2) - 1) * 76 + 46;
             }
             var C = L.C;
             var pos = function (k) {
@@ -6576,24 +5479,14 @@
             var h = "";
             h +=
               '<line x1="' +
-              P.you[0] +
-              '" y1="' +
-              P.you[1] +
-              '" x2="' +
-              P.coord[0] +
-              '" y2="' +
-              P.coord[1] +
-              '" class="s-line" stroke-width="2" stroke-dasharray="4 6"/>';
-            h +=
-              '<line x1="' +
-              P.coord[0] +
-              '" y1="' +
-              P.coord[1] +
-              '" x2="' +
               C.x +
-              '" y2="' +
+              '" y1="' +
               C.y +
-              '" class="s-line" stroke-width="2"/>';
+              '" x2="' +
+              P.you[0] +
+              '" y2="' +
+              P.you[1] +
+              '" class="s-line" stroke-width="2" stroke-dasharray="4 6"/>';
             KIDS.forEach(function (c) {
               h +=
                 '<line x1="' +
@@ -6606,7 +5499,7 @@
                 P[c][1] +
                 '" class="s-line" stroke-width="2"/>';
             });
-            var node = function (k, w, label, cls) {
+            var node = function (k, w, label, disp) {
               var n = pos(k);
               return (
                 '<g class="node" data-k="' +
@@ -6624,9 +5517,9 @@
                 '" y="' +
                 (n.y - 2) +
                 '" text-anchor="middle" font-size="' +
-                (cls === "disp" ? 14 : N ? 15 : 17) +
+                (disp ? 14 : N ? 15 : 17) +
                 '" class="t-fg ' +
-                (cls === "disp" ? "disp-t" : "mono-t") +
+                (disp ? "disp-t" : "mono-t") +
                 ' nl">' +
                 label +
                 '</text><text x="' +
@@ -6636,32 +5529,19 @@
                 '" text-anchor="middle" font-size="12" class="t-muted mono-t ns">idle</text></g>'
               );
             };
-            h += node("you", N ? 140 : 120, "YOU", "disp");
-            h += node("coord", N ? 176 : 210, "COORDINATOR", "disp");
+            h += node("you", N ? 140 : 120, "YOU", true);
             KIDS.forEach(function (c) {
-              h += node(c, L.nodeW, c.split("/").pop(), "mono");
+              h += node(c, L.nodeW, c, false);
             });
             h += '<circle cx="' + C.x + '" cy="' + C.y + '" r="' + C.r + '" class="f-card s-ink" stroke-width="3"/>';
             h +=
               '<text x="' +
               C.x +
               '" y="' +
-              (C.y - 22) +
-              '" text-anchor="middle" font-size="' +
-              (N ? 14 : 16) +
-              '" class="t-ink mono-t">' +
-              esc(REPO) +
-              "</text>";
-            h +=
-              '<text x="' +
-              C.x +
-              '" y="' +
               (C.y - 6) +
               '" text-anchor="middle" font-size="' +
-              (N ? 8 : 10) +
-              '" letter-spacing="' +
-              (N ? 0.5 : 1) +
-              '" class="disp-t" style="fill:#5F5754">REPO COORDINATOR</text>';
+              (N ? 12 : 15) +
+              '" class="t-ink disp-t">COORDINATOR</text>';
             h +=
               '<text id="hub-count" x="' +
               C.x +
@@ -6677,15 +5557,13 @@
               C.x +
               '" y="' +
               (C.y + 38) +
-              '" text-anchor="middle" font-size="12" class="disp-t" style="fill:#5F5754">MERGED</text>';
-            // Every instruction from the repo coordinator flies out; every report flies back.
+              '" text-anchor="middle" font-size="12" class="disp-t" style="fill:#5F5754">REPOS DONE</text>';
+            // Every instruction from the coordinator flies out; every report flies back.
             var packets = [];
             E.forEach(function (e) {
-              if (e.type === "spec.written") packets.push({ t: e.t, from: "coord", to: "you", cls: "fg" });
-              if (e.type === "spec.approved") packets.push({ t: e.t - 6, from: "you", to: "coord", cls: "fg" });
-              if (e.type === "message.sent" && e.actor === "coordinator")
-                packets.push({ t: e.t, from: "coord", to: "c", cls: "fg" });
-              if (e.type === "message.sent" && e.actor === RC && P[e.target])
+              if (e.type === "spec.written") packets.push({ t: e.t, from: "c", to: "you", cls: "fg" });
+              if (e.type === "spec.approved") packets.push({ t: e.t - 6, from: "you", to: "c", cls: "fg" });
+              if (e.type === "message.sent" && e.actor === "coordinator" && P[e.target])
                 packets.push({ t: e.t, from: "c", to: e.target, cls: "fg" });
               if (e.type === "agent.stopped" && P[e.target] && e.actor.indexOf(e.target + "/") === 0)
                 packets.push({
@@ -6696,14 +5574,8 @@
                     ? "warn"
                     : { planner: "cyan", implementer: "mag", tester: "yel" }[e.actor.split("/").pop()],
                 });
-              if (e.type === "child.merged") packets.push({ t: e.t, from: e.target, to: "c", cls: "card" });
-              if (e.type === "question.escalated") {
-                packets.push({ t: e.t, from: "c", to: "coord", cls: "warn" });
-                packets.push({ t: e.t + FLY, from: "coord", to: "you", cls: "warn" });
-              }
-              if (e.type === "question.answered") packets.push({ t: e.t - FLY, from: "you", to: "coord", cls: "fg" });
-              if (e.type === "agent.stopped" && e.actor === RC)
-                packets.push({ t: e.t, from: "c", to: "coord", cls: "card" });
+              if (e.type === "question.escalated") packets.push({ t: e.t, from: "c", to: "you", cls: "warn" });
+              if (e.type === "question.answered") packets.push({ t: e.t - FLY, from: "you", to: "c", cls: "fg" });
             });
             packets.forEach(function (p, i) {
               h +=
@@ -6720,19 +5592,16 @@
             var pk = [].slice.call(svg.querySelectorAll(".pk")),
               nodes = [].slice.call(svg.querySelectorAll(".node")),
               count = svg.querySelector("#hub-count");
-            var rcStart = E.find(function (e) {
-              return e.actor === RC && e.type === "agent.spawned";
-            }).t;
+            var mins = function (d) {
+              var m = Math.round(d / 60);
+              return m < 1 ? "<1m" : m + "m";
+            };
             // the next agent for this child is a step on the laptop's model
             var nextLocal = function (k, t) {
               var next = RUNS.filter(function (r) {
                 return r.repo === k && r.s > t;
               })[0];
               return next && next.role === "implementer" && next.host === "ollama";
-            };
-            var mins = function (d) {
-              var m = Math.round(d / 60);
-              return m < 1 ? "<1m" : m + "m";
             };
             lastRep = undefined;
             return function (t) {
@@ -6758,7 +5627,7 @@
                 pk[i].setAttribute("cy", a.y + (b.y - a.y) * e);
                 pk[i].style.opacity = 1;
               });
-              var merged = 0;
+              var done = 0;
               nodes.forEach(function (g) {
                 var k = g.dataset.k,
                   rect = g.querySelector(".nb"),
@@ -6785,25 +5654,10 @@
                   );
                   return;
                 }
-                if (k === "coord") {
-                  var fin = projT("→ finalizing");
-                  var text =
-                    t < projT("→ awaiting-approval")
-                      ? "grilling you"
-                      : t < projT("→ running")
-                        ? "spec written"
-                        : t < rcStart
-                          ? "starting the repo"
-                          : t >= fin
-                            ? "finalizing · " + D.mode.split("· ").pop()
-                            : "waiting on " + REPO;
-                  setNode("f-raised s-fg", "t-fg disp-t", "t-fg mono-t", text);
-                  return;
-                }
                 var s2 = runAt(k, t);
                 if (doneAt(k) <= t) {
-                  merged++;
-                  setNode("f-card s-ink", "t-ink mono-t", "t-ink mono-t", "merged");
+                  done++;
+                  setNode("f-card s-ink", "t-ink mono-t", "t-ink mono-t", "done");
                 } else if (s2.run) {
                   var cls = s2.run.failed ? "warn" : ROLE_CLS[s2.run.role];
                   var red = s2.run.failed && t >= s2.run.f - (s2.run.f - s2.run.s) / 2;
@@ -6848,13 +5702,11 @@
                   );
                 }
               });
-              count.textContent = merged + " / " + KIDS.length;
+              count.textContent = done + " / " + KIDS.length;
               var latest = null;
-              RUNS.concat([{ actor: RC, repo: REPO, role: "repo coordinator", f: RC_STOP[REPO] }]).forEach(
-                function (r) {
-                  if (r.f <= t && (!latest || r.f > latest.f)) latest = r;
-                },
-              );
+              RUNS.forEach(function (r) {
+                if (r.f <= t && (!latest || r.f > latest.f)) latest = r;
+              });
               var key = latest ? latest.actor + latest.f : null;
               if (key !== lastRep) {
                 lastRep = key;
@@ -6871,7 +5723,7 @@
             };
           }
           var FLY = LONG ? END * 0.012 : 5;
-          responsive(SINGLE ? buildSingle : build, document.getElementById("fig-hub"), {
+          responsive(RUN.id !== "account-id" ? buildSingle : build, document.getElementById("fig-hub"), {
             from: 0,
             to: END,
             ms: LONG ? 24000 : 16000,
@@ -6900,7 +5752,7 @@
             var D = RUN.data;
             rows0 = D.files.map(function (f) {
               var ev = E.find(function (e) {
-                return e.target === f[0] && /^file\./.test(e.type);
+                return e.target === f[0] && /^file\./.test(e.type) && e.detail.indexOf(f[1] + " ") === 0;
               });
               var integ = !!GROUPS[f[0]];
               // integration rows land when the integration step that made them finished
@@ -6911,7 +5763,7 @@
                   : 0;
               return {
                 child: f[0],
-                path: integ ? f[1] : f[0].split("/").pop() + " · " + f[1],
+                path: integ || REPOS_.indexOf(f[0]) >= 0 ? f[1] : f[0].split("/").pop() + " · " + f[1],
                 a: f[2],
                 r: f[3],
                 isNew: f[4],
@@ -7445,7 +6297,11 @@
           if (RUN.id !== "account-id") {
             // One cell per check a tester ran, in order. Red cells stay red: each is explained in the text.
             var D = RUN.data;
-            var LANES = CHILDREN_.concat(REPOS_);
+            var LANES = CHILDREN_.concat(
+              REPOS_.filter(function (r) {
+                return CHILDREN_.indexOf(r) < 0;
+              }),
+            );
             var rowsT = LANES.map(function (c) {
               return {
                 c: c,
