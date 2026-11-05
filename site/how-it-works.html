@@ -1782,6 +1782,51 @@
       .runpick a[aria-current="page"] span {
         color: var(--cyan);
       }
+      .flowfig .cb {
+        transition:
+          fill 0.35s ease 0.3s,
+          stroke 0.35s ease 0.3s;
+      }
+      .flowfig .cn,
+      .flowfig .cs {
+        transition: fill 0.35s ease 0.3s;
+      }
+      .flowfig .cdep {
+        transition: opacity 0.4s ease;
+      }
+      .flowfig .pk2 {
+        fill: var(--fg);
+      }
+      .flowfig .pulse {
+        fill: none;
+        stroke: var(--fg);
+        stroke-width: 2;
+        opacity: 0;
+        pointer-events: none;
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: of-pulse 0.9s ease-out both;
+      }
+      @keyframes of-pulse {
+        from {
+          opacity: 0.9;
+          transform: scale(1);
+        }
+        to {
+          opacity: 0;
+          transform: scale(1.14);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .flowfig .cb,
+        .flowfig .cn,
+        .flowfig .cs {
+          transition: none;
+        }
+        .flowfig .pulse {
+          animation: none;
+        }
+      }
       @media (max-width: 640px) {
         .runpick a {
           flex: 1 1 100%;
@@ -3496,6 +3541,21 @@
               "profile",
               "integration",
             ],
+            columns: [
+              ["ui-kit"],
+              [
+                "billing",
+                "teams",
+                "team-details",
+                "users",
+                "user-details",
+                "users-offboard",
+                "permissions",
+                "roles",
+                "profile",
+              ],
+              ["integration"],
+            ],
             box: ["spec.md · the shared approach", "one library · one Toast wrapper", "coverage 94.4% → 99.1%"],
             steps: [
               {
@@ -3957,6 +4017,12 @@
           },
           decisions: {
             nodes: ["platform", "contracts", "accounts", "media", "posts", "feed", "notifications", "web", "system"],
+            columns: [
+              ["platform"],
+              ["contracts"],
+              ["accounts", "media", "posts", "feed", "notifications", "web"],
+              ["system"],
+            ],
             box: [
               "contracts · OpenAPI + events",
               "post.liked { createdAt: ISO 8601 }",
@@ -5965,6 +6031,10 @@
 
         // ---------- 5. decisions ----------
         (function () {
+          if (RUN.id !== "account-id") {
+            flowDecisions();
+            return;
+          }
           var svg = document.getElementById("fix");
           var DEC = RUN.id === "account-id" ? accountDecisions() : dataDecisions(RUNDATA[RUN.id].decisions);
           var STEPS = DEC.steps;
@@ -6268,6 +6338,439 @@
               };
             },
           };
+        }
+
+        // The decisions for a run written as data: the repos in build order, left to right, under the
+        // spec. Each step sends signals from the spec to the repos it touches; a repo that changes pulses.
+        function flowDecisions() {
+          var svg = document.getElementById("fix");
+          svg.classList.add("flowfig");
+          var D = RUNDATA[RUN.id].decisions;
+          var DEC = dataDecisions(D);
+          var STEPS = D.steps;
+          var stepsEl = document.getElementById("fixsteps"),
+            cap = document.getElementById("fixcap");
+          stepsEl.innerHTML = STEPS.map(function (s, i) {
+            return (
+              '<button class="btn ghost" type="button" data-step="' +
+              i +
+              '" aria-pressed="false" aria-label="Step ' +
+              (i + 1) +
+              ": " +
+              esc(s.title) +
+              '">' +
+              (i + 1) +
+              "</button>"
+            );
+          }).join("");
+          var btns = [].slice.call(stepsEl.querySelectorAll("button"));
+          var cur = STEPS.length - 1;
+          var key = function (n) {
+            return n.replace(/[^a-z0-9-]/gi, "_");
+          };
+          var L,
+            prev = {},
+            raf = 0;
+          function layout() {
+            var N = isNarrow();
+            var pos = {},
+              wires = {},
+              groups = [];
+            var box = N ? { x: 24, y: 16, w: 352, h: 86 } : { x: 300, y: 18, w: 400, h: 86 };
+            var bx = box.x + box.w / 2,
+              by = box.y + box.h;
+            if (!N) {
+              var NH = 50,
+                GX = 12,
+                GY = 12,
+                CG = 52,
+                MAXR = 5;
+              var cols = D.columns.map(function (c) {
+                var sc = Math.ceil(c.length / MAXR);
+                return { nodes: c, sc: sc, rows: Math.ceil(c.length / sc) };
+              });
+              var units = cols.reduce(function (a, c) {
+                return a + c.sc;
+              }, 0);
+              var gaps =
+                cols.reduce(function (a, c) {
+                  return a + (c.sc - 1) * GX;
+                }, 0) +
+                CG * (cols.length - 1);
+              var NW = Math.min(176, (952 - gaps) / units);
+              var maxR = Math.max.apply(
+                null,
+                cols.map(function (c) {
+                  return c.rows;
+                }),
+              );
+              var maxH = maxR * NH + (maxR - 1) * GY;
+              var total = units * NW + gaps;
+              var x = (1000 - total) / 2,
+                top = 168,
+                bus = 138;
+              cols.forEach(function (c) {
+                var w = c.sc * NW + (c.sc - 1) * GX,
+                  h = c.rows * NH + (c.rows - 1) * GY,
+                  y0 = top + (maxH - h) / 2;
+                groups.push({ x: x, y: y0, w: w, h: h });
+                c.nodes.forEach(function (n, i) {
+                  var sub = Math.floor(i / c.rows),
+                    row = i % c.rows;
+                  var nx = x + sub * (NW + GX),
+                    ny = y0 + row * (NH + GY);
+                  pos[n] = { x: nx, y: ny, w: NW, h: NH };
+                  var cx = nx + NW / 2;
+                  // spec → bus → down the sub-column → the node
+                  wires[n] = [
+                    [bx, by],
+                    [bx, bus],
+                    [cx, bus],
+                    [cx, ny],
+                  ];
+                });
+                x += w + CG;
+              });
+              return {
+                w: 1000,
+                h: top + maxH + 28,
+                minW: 720,
+                box: box,
+                pos: pos,
+                wires: wires,
+                groups: groups,
+                bus: bus,
+                N: false,
+              };
+            }
+            var y = 150;
+            D.columns.forEach(function (c, gi) {
+              var rows = Math.ceil(c.length / 2);
+              var g = { x: 32, y: y, w: 344, h: rows * 62 - 12 };
+              groups.push(g);
+              c.forEach(function (n, i) {
+                var nx = 32 + (i % 2) * 180,
+                  ny = y + Math.floor(i / 2) * 62;
+                pos[n] = { x: nx, y: ny, w: 164, h: 50 };
+                wires[n] = [
+                  [box.x + 8, by],
+                  [box.x + 8, ny + 25],
+                  [nx, ny + 25],
+                ];
+              });
+              y += rows * 62 + (gi < D.columns.length - 1 ? 34 : 0);
+            });
+            return { w: 400, h: y + 10, minW: 0, box: box, pos: pos, wires: wires, groups: groups, N: true };
+          }
+          function build() {
+            L = layout();
+            var h = "",
+              b = L.box;
+            // the wiring: under everything else
+            if (!L.N) {
+              var xs = L.groups.map(function (g) {
+                return [g.x, g.x + g.w];
+              });
+              h +=
+                '<path d="M' +
+                (b.x + b.w / 2) +
+                " " +
+                (b.y + b.h) +
+                " V" +
+                L.bus +
+                '" class="s-line" stroke-width="2" fill="none"/>';
+              h +=
+                '<line x1="' +
+                (xs[0][0] + 20) +
+                '" x2="' +
+                (xs[xs.length - 1][1] - 20) +
+                '" y1="' +
+                L.bus +
+                '" y2="' +
+                L.bus +
+                '" class="s-line" stroke-width="2"/>';
+              Object.keys(L.wires).forEach(function (n) {
+                var w = L.wires[n];
+                h +=
+                  '<line x1="' +
+                  w[2][0] +
+                  '" x2="' +
+                  w[2][0] +
+                  '" y1="' +
+                  L.bus +
+                  '" y2="' +
+                  L.pos[n].y +
+                  '" class="s-line" stroke-width="2" opacity="0.55"/>';
+              });
+              // build order: an arrow from each column to the next
+              for (var g = 0; g + 1 < L.groups.length; g++) {
+                var a = L.groups[g],
+                  c = L.groups[g + 1];
+                var ay = Math.max(a.y, c.y) + Math.min(a.h, c.h) / 2;
+                h +=
+                  '<path d="M' +
+                  (a.x + a.w + 6) +
+                  " " +
+                  ay +
+                  " H" +
+                  (c.x - 10) +
+                  '" class="s-muted" stroke-width="2" fill="none" stroke-dasharray="4 4"/>';
+                h +=
+                  '<path d="M' +
+                  (c.x - 16) +
+                  " " +
+                  (ay - 5) +
+                  " L" +
+                  (c.x - 8) +
+                  " " +
+                  ay +
+                  " L" +
+                  (c.x - 16) +
+                  " " +
+                  (ay + 5) +
+                  '" class="s-muted" stroke-width="2" fill="none"/>';
+              }
+            } else {
+              var last = L.groups[L.groups.length - 1];
+              h +=
+                '<line x1="' +
+                (b.x + 8) +
+                '" x2="' +
+                (b.x + 8) +
+                '" y1="' +
+                (b.y + b.h) +
+                '" y2="' +
+                (last.y + last.h - 25) +
+                '" class="s-line" stroke-width="2"/>';
+              Object.keys(L.wires).forEach(function (n) {
+                var w = L.wires[n];
+                h +=
+                  '<line x1="' +
+                  w[1][0] +
+                  '" x2="' +
+                  w[2][0] +
+                  '" y1="' +
+                  w[1][1] +
+                  '" y2="' +
+                  w[2][1] +
+                  '" class="s-line" stroke-width="2" opacity="0.55"/>';
+              });
+            }
+            h +=
+              '<rect x="' +
+              b.x +
+              '" y="' +
+              b.y +
+              '" width="' +
+              b.w +
+              '" height="' +
+              b.h +
+              '" rx="16" class="f-raised s-fg cbox" stroke-width="2"/>';
+            h +=
+              '<text x="' +
+              (b.x + 18) +
+              '" y="' +
+              (b.y + 30) +
+              '" font-size="14" class="t-fg mono-t">' +
+              esc(D.box[0]) +
+              "</text>";
+            h +=
+              '<text x="' +
+              (b.x + 18) +
+              '" y="' +
+              (b.y + 56) +
+              '" font-size="14" class="t-fg mono-t">' +
+              esc(D.box[1]) +
+              "</text>";
+            h +=
+              '<text x="' +
+              (b.x + 18) +
+              '" y="' +
+              (b.y + 76) +
+              '" font-size="12" class="t-muted mono-t cdep">' +
+              esc(D.box[2]) +
+              "</text>";
+            D.nodes.forEach(function (n) {
+              var p = L.pos[n];
+              h +=
+                '<g class="chipbox" data-r="' +
+                key(n) +
+                '"><rect x="' +
+                p.x +
+                '" y="' +
+                p.y +
+                '" width="' +
+                p.w +
+                '" height="' +
+                p.h +
+                '" rx="12" class="f-raised s-line cb" stroke-width="2"/><text x="' +
+                (p.x + 12) +
+                '" y="' +
+                (p.y + 21) +
+                '" font-size="' +
+                (L.N ? 13 : 14) +
+                '" class="t-fg mono-t cn">' +
+                esc(n) +
+                '</text><text x="' +
+                (p.x + 12) +
+                '" y="' +
+                (p.y + 39) +
+                '" font-size="11" class="t-muted mono-t cs"></text></g>';
+            });
+            h += '<g class="pks"></g>';
+            setBox(svg, L.w, L.h, L.minW);
+            svg.innerHTML = h;
+            prev = {};
+            show(cur, true);
+          }
+          function show(i, still) {
+            cur = i;
+            btns.forEach(function (b, k) {
+              b.setAttribute("aria-pressed", k === i ? "true" : "false");
+            });
+            cap.innerHTML =
+              "<h3>" + (i + 1) + " · " + esc(STEPS[i].title.toUpperCase()) + "</h3><p>" + esc(STEPS[i].text) + "</p>";
+            var pks = svg.querySelector(".pks");
+            pks.innerHTML = "";
+            cancelAnimationFrame(raf);
+            var flights = [];
+            D.nodes.forEach(function (n, k) {
+              var st = DEC.state(i, n);
+              var g = svg.querySelector('.chipbox[data-r="' + key(n) + '"]');
+              var rect = g.querySelector(".cb");
+              var cls = st.cls || "f-raised s-line cb";
+              var changed = prev[n] && (prev[n].cls !== cls || prev[n].status !== st.status);
+              rect.setAttribute("class", cls);
+              var ink = cls.indexOf("f-warn") === 0 || cls.indexOf("f-card") === 0;
+              g.querySelector(".cn").setAttribute("class", "mono-t cn " + (ink ? "t-ink" : "t-fg"));
+              g.querySelector(".cs").setAttribute(
+                "class",
+                "mono-t cs " + (ink ? "t-ink" : cls.indexOf("s-dash") > 0 ? "t-fg" : "t-muted"),
+              );
+              g.querySelector(".cs").textContent = st.status || "";
+              prev[n] = { cls: cls, status: st.status };
+              if (still || reduce) return;
+              if (changed) {
+                var p = L.pos[n];
+                var ring = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                ring.setAttribute("x", p.x - 3);
+                ring.setAttribute("y", p.y - 3);
+                ring.setAttribute("width", p.w + 6);
+                ring.setAttribute("height", p.h + 6);
+                ring.setAttribute("rx", 14);
+                ring.setAttribute("class", "pulse");
+                ring.style.animationDelay = 380 + k * 40 + "ms";
+                g.appendChild(ring);
+                setTimeout(function () {
+                  ring.remove();
+                }, 1600);
+              }
+              if (st.hi) flights.push({ w: L.wires[n], d: k * 45 });
+            });
+            svg.querySelector(".cdep").style.opacity = DEC.dep(i) ? 1 : 0;
+            if (still || reduce || !flights.length) return;
+            // signals travel from the spec along each wire to the repos this step touches
+            var dots = flights.map(function () {
+              var c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+              c.setAttribute("r", 5);
+              c.setAttribute("class", "pk2");
+              c.style.opacity = 0;
+              pks.appendChild(c);
+              return c;
+            });
+            var lens = flights.map(function (f) {
+              var s = 0;
+              for (var q = 1; q < f.w.length; q++)
+                s += Math.abs(f.w[q][0] - f.w[q - 1][0]) + Math.abs(f.w[q][1] - f.w[q - 1][1]);
+              return s;
+            });
+            var t0 = performance.now(),
+              DUR = 700;
+            (function step(now) {
+              var alive = false;
+              flights.forEach(function (f, k) {
+                var u = (now - t0 - f.d) / DUR;
+                if (u < 0) {
+                  alive = true;
+                  return;
+                }
+                if (u >= 1) {
+                  dots[k].style.opacity = 0;
+                  return;
+                }
+                alive = true;
+                var e = 1 - Math.pow(1 - u, 3),
+                  go = e * lens[k];
+                for (var q = 1; q < f.w.length; q++) {
+                  var a = f.w[q - 1],
+                    b = f.w[q];
+                  var seg = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]);
+                  if (go <= seg || q === f.w.length - 1) {
+                    var r = seg ? Math.min(1, go / seg) : 1;
+                    dots[k].setAttribute("cx", a[0] + (b[0] - a[0]) * r);
+                    dots[k].setAttribute("cy", a[1] + (b[1] - a[1]) * r);
+                    break;
+                  }
+                  go -= seg;
+                }
+                dots[k].style.opacity = 1;
+              });
+              if (alive) raf = requestAnimationFrame(step);
+            })(t0);
+          }
+          btns.forEach(function (b, i) {
+            b.addEventListener("click", function () {
+              stopAuto();
+              show(i);
+            });
+          });
+          var timer = 0,
+            touched = false;
+          var playBtn = document.getElementById("fixplay");
+          function stopAuto() {
+            touched = true;
+            clearInterval(timer);
+            timer = 0;
+            playBtn.textContent = "▶ PLAY";
+          }
+          function autoplay() {
+            show(0);
+            playBtn.textContent = "❚❚ PAUSE";
+            timer = setInterval(
+              function () {
+                if (cur + 1 >= STEPS.length) {
+                  clearInterval(timer);
+                  timer = 0;
+                  playBtn.textContent = "▶ PLAY";
+                  return;
+                }
+                show(cur + 1);
+              },
+              reduce ? 4500 : 3200,
+            );
+          }
+          playBtn.addEventListener("click", function () {
+            if (timer) {
+              stopAuto();
+              return;
+            }
+            touched = true;
+            autoplay();
+          });
+          build();
+          onMode(build);
+          // The steps play once when the figure comes into view.
+          if (!reduce && "IntersectionObserver" in window) {
+            var io = new IntersectionObserver(
+              function (es) {
+                if (!es[0].isIntersecting) return;
+                io.disconnect();
+                if (!touched && !timer) autoplay();
+              },
+              { threshold: 0.5 },
+            );
+            io.observe(document.getElementById("fig-fix"));
+          }
         }
 
         // The six-repo run's decisions: six steps over the six repos.
