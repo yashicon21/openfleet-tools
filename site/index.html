@@ -2107,7 +2107,7 @@
                   id="rp-swim"
                   viewBox="0 0 1000 420"
                   role="img"
-                  aria-label="Swimlane of the example run: the project bar on top, then one lane per child showing plan, implement and test. No code starts until the plans-ready gate. sdk-python writes baseline tests first, breaks one once and retries. web's three children merge into one branch. mobile waits for sdk-js."
+                  aria-label="Swimlane of the example run: the project bar on top, then one lane per child showing plan, implement and test. No code starts until the plans-ready gate. sdk-python, billing, web/app and mobile write baseline tests first; sdk-python breaks one once and retries. web's three children merge into one branch. mobile waits for sdk-js."
                 ></svg>
               </div>
               <p class="rp-hint" aria-hidden="true">Swipe sideways to see the whole run →</p>
@@ -3610,14 +3610,15 @@
         var STEPS = [
           [1, 1, 1, 1, 1, 1],
           ["g", "g", "g", "g", 1, "g"],
-          [2, 2, "b", 2, 2, "w"],
-          [3, 2, 2, 3, 2, "w"],
+          [2, 2, "b", "b", 2, "w"],
+          [3, 2, 2, 2, 2, "w"],
           [4, 3, "r", 3, 2, "w"],
-          [4, 4, 2, 4, 3, 2],
-          [4, 4, 3, 4, "m", 3],
+          [4, 4, 2, 4, 3, "b"],
+          [4, 4, 3, 4, "m", 2],
+          [4, 4, 4, 4, 4, 3],
           [4, 4, 4, 4, 4, 4],
         ];
-        var EVENTS_AT_STEP = [0, 1, 2, 2, 3, 3, 4, 5];
+        var EVENTS_AT_STEP = [0, 1, 2, 2, 3, 3, 4, 4, 5];
         var EVENTS = [
           { color: "#F4F4F6", type: "plans.consistent", text: "8 plans agree, gate open" },
           { color: "#F4F4F6", type: "contract.changed", text: "contracts/account.json → 4 repos" },
@@ -3955,8 +3956,9 @@
             name: "billing",
             segs: [
               ["p", 51, 86],
-              ["i", 113, 170],
-              ["t", 172, 196],
+              ["b", 113, 128],
+              ["i", 129.5, 175],
+              ["t", 177, 196],
             ],
           },
           {
@@ -3981,8 +3983,9 @@
             segs: [
               ["p", 79, 104],
               ["w", 109, 156, "after setup"],
-              ["i", 157, 200],
-              ["t", 202, 222],
+              ["b", 157, 170],
+              ["i", 171.5, 205],
+              ["t", 207, 222],
             ],
           },
           {
@@ -3998,9 +4001,10 @@
             name: "mobile",
             segs: [
               ["p", 52, 80],
-              ["w", 109, 193, "after sdk-js"],
-              ["i", 194, 235],
-              ["t", 237, 255],
+              ["w", 109, 192, "after sdk-js"],
+              ["b", 192.5, 206],
+              ["i", 207.5, 238],
+              ["t", 240, 255],
             ],
           },
         ];
@@ -4025,7 +4029,10 @@
           { t: 46, type: "spec.approved", text: "you approved the spec" },
           { t: 109, type: "plans.consistent", text: "8 plans agree, gate open" },
           { t: 120, type: "contract.changed", text: "contracts/account.json → 4 repos" },
+          { t: 128, type: "baseline.passed", text: "billing · 2 tests protected" },
           { t: 135, type: "baseline.passed", text: "sdk-python · 3 tests protected" },
+          { t: 170, type: "baseline.passed", text: "web/app · 1 test protected" },
+          { t: 206, type: "baseline.passed", text: "mobile · 2 tests protected" },
           { t: 196, type: "assumption", text: "sdk-python keeps user_id as an alias" },
           { t: 264, type: "run.completed", text: "6 draft PRs, cross-linked" },
         ];

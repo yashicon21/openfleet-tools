@@ -2767,8 +2767,8 @@
       <div class="marquee" aria-hidden="true">
         <div class="band c">
           <span
-            >ACCOUNT-ID · 6 REPOS · 8 CHILDREN · 28 AGENTS · 254 EVENTS · ACCOUNT-ID · 6 REPOS · 8 CHILDREN · 28 AGENTS
-            · 254 EVENTS ·</span
+            >ACCOUNT-ID · 6 REPOS · 8 CHILDREN · 30 AGENTS · 278 EVENTS · ACCOUNT-ID · 6 REPOS · 8 CHILDREN · 30 AGENTS
+            · 278 EVENTS ·</span
           >
         </div>
         <div class="band m">
@@ -2779,9 +2779,9 @@
         </div>
         <div class="band y">
           <span
-            >1 BASELINE TEST CAUGHT A BREAK · 1 RETRY · 1 ASSUMPTION FOR YOU · 6 DRAFT PRS · NOTHING MERGED WITHOUT YOU
-            · 1 BASELINE TEST CAUGHT A BREAK · 1 RETRY · 1 ASSUMPTION FOR YOU · 6 DRAFT PRS · NOTHING MERGED WITHOUT YOU
-            ·</span
+            >4 BASELINES · 1 BASELINE TEST CAUGHT A BREAK · 1 RETRY · 1 ASSUMPTION FOR YOU · 6 DRAFT PRS · NOTHING
+            MERGED WITHOUT YOU · 4 BASELINES · 1 BASELINE TEST CAUGHT A BREAK · 1 RETRY · 1 ASSUMPTION FOR YOU · 6 DRAFT
+            PRS · NOTHING MERGED WITHOUT YOU ·</span
           >
         </div>
       </div>
@@ -5170,6 +5170,8 @@
       // ---------- per-run extras: the retry the loop figure shows, and the moments that went off plan ----------
       var EXTRA = {
         "account-id": {
+          marquee:
+            "4 BASELINES · 1 BASELINE TEST CAUGHT A BREAK · 1 RETRY · 1 ASSUMPTION FOR YOU · 6 DRAFT PRS · NOTHING MERGED WITHOUT YOU",
           coordinator: "default model",
           loop: {
             child: "sdk-python",
@@ -5204,6 +5206,8 @@
           ],
         },
         "ui-migration": {
+          marquee:
+            "1 PLAN SENT BACK · 16 RED CHECKS, ALL EXPLAINED · 0 THRESHOLDS LOWERED · 11 DRAFT PRS · NOTHING MERGED WITHOUT YOU",
           coordinator: "default model",
           loop: {
             child: "billing",
@@ -5259,6 +5263,8 @@
           ],
         },
         "photo-app": {
+          marquee:
+            "55 STEPS ON THE LAPTOP · 5 HANDED TO OPUS · 1 CONTRACT BUG CAUGHT · 9 DRAFT PRS · NOTHING MERGED WITHOUT YOU",
           coordinator: "Claude Opus 5.5",
           loop: {
             child: "posts",
@@ -7872,6 +7878,26 @@
             announce("Running " + TOTAL_TESTS + " tests across 8 children.");
           });
         })();
+        // ---------- 6b. the banner: this run's numbers, worked out from the log ----------
+        (function () {
+          var c = document.querySelector(".marquee .band.c span"),
+            y = document.querySelector(".marquee .band.y span");
+          var line =
+            (RUN.data ? RUN.data.project : "account-id").toUpperCase() +
+            " · " +
+            REPOS_.length +
+            " REPOS · " +
+            CHILDREN_.length +
+            " CHILDREN · " +
+            RUNS.length +
+            " AGENTS · " +
+            E.length +
+            " EVENTS · ";
+          if (c) c.textContent = line + line;
+          var hi = (EXTRA[RUN.id] || {}).marquee;
+          if (y && hi) y.textContent = hi + " · " + hi + " ·";
+        })();
+
         // ---------- 7. your time ----------
         var YOU_SPANS = [
           [
