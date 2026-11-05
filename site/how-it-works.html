@@ -3550,6 +3550,17 @@
             ["web-app", "integration · coverage tests", 2045, 2, true, 30],
           ],
           totals: { files: 283 },
+          waits: {
+            "web-app/billing": [["web-app/setup"], "waits on setup"],
+            "web-app/teams": [["web-app/setup"], "waits on setup"],
+            "web-app/team-details": [["web-app/setup"], "waits on setup"],
+            "web-app/users": [["web-app/setup"], "waits on setup"],
+            "web-app/user-details": [["web-app/setup"], "waits on setup"],
+            "web-app/users-offboard": [["web-app/setup"], "waits on setup"],
+            "web-app/permissions": [["web-app/setup"], "waits on setup"],
+            "web-app/roles": [["web-app/setup"], "waits on setup"],
+            "web-app/profile": [["web-app/setup"], "waits on setup"],
+          },
           mode: "draft-pr · 1 PR",
           text: {
             pageTitle: "How it works: a UI library migration · OpenFleet",
@@ -4886,6 +4897,26 @@
           totals: {},
           mode: "draft-pr · 9 stacked PRs",
           localModel: "qwen3.8",
+          waits: {
+            "glimpse/contracts": [["glimpse/setup"], "waits on setup"],
+            "glimpse/accounts": [["glimpse/contracts"], "waits on contracts"],
+            "glimpse/media": [["glimpse/contracts"], "waits on contracts"],
+            "glimpse/posts": [["glimpse/contracts"], "waits on contracts"],
+            "glimpse/feed": [["glimpse/contracts"], "waits on contracts"],
+            "glimpse/notifications": [["glimpse/contracts"], "waits on contracts"],
+            "glimpse/web": [["glimpse/contracts"], "waits on contracts"],
+            "glimpse/system": [
+              [
+                "glimpse/accounts",
+                "glimpse/media",
+                "glimpse/posts",
+                "glimpse/feed",
+                "glimpse/notifications",
+                "glimpse/web",
+              ],
+              "waits on the services",
+            ],
+          },
           text: {
             pageTitle: "How it works: a photo app from scratch · OpenFleet",
             title: "One prompt. An empty folder. A working app.",
@@ -6499,7 +6530,352 @@
             if (red.length) return checks.length + " checks, " + red.length + " red: " + red[0].sum + ".";
             return checks.length + "/" + checks.length + " checks pass. All acceptance criteria met.";
           }
-          responsive(build, document.getElementById("fig-hub"), { from: 0, to: END, ms: LONG ? 24000 : 16000 });
+          // ---- one repo: the repo coordinator sits in the middle, its children around it ----
+          function buildSingle() {
+            var N = isNarrow();
+            var REPO = REPOS_[0],
+              RC = rcActor(REPO),
+              KIDS = GROUPS[REPO],
+              D = RUN.data;
+            var half = Math.ceil(KIDS.length / 2);
+            var P = {},
+              L;
+            if (!N) {
+              var gapY = 100,
+                top0 = 250;
+              L = {
+                w: 1000,
+                h: top0 + (half - 1) * gapY + 60,
+                minW: 680,
+                C: { x: 500, y: 0, r: 76 },
+                nodeW: 210,
+                nh: 52,
+              };
+              L.C.y = top0 + ((half - 1) * gapY) / 2;
+              P.you = [500, 50];
+              P.coord = [500, 150];
+              KIDS.forEach(function (c, i) {
+                var left = i < half;
+                var j = left ? i : i - half;
+                var n = left ? half : KIDS.length - half;
+                P[c] = [left ? 150 : 850, L.C.y + (j - (n - 1) / 2) * gapY];
+              });
+            } else {
+              L = { w: 400, h: 0, minW: 0, C: { x: 200, y: 250, r: 60 }, nodeW: 176, nh: 52 };
+              P.you = [200, 40];
+              P.coord = [200, 130];
+              KIDS.forEach(function (c, i) {
+                P[c] = [100 + (i % 2) * 200, 380 + Math.floor(i / 2) * 76];
+              });
+              L.h = 380 + (Math.ceil(KIDS.length / 2) - 1) * 76 + 46;
+            }
+            var C = L.C;
+            var pos = function (k) {
+              return k === "c" ? C : { x: P[k][0], y: P[k][1] };
+            };
+            var h = "";
+            h +=
+              '<line x1="' +
+              P.you[0] +
+              '" y1="' +
+              P.you[1] +
+              '" x2="' +
+              P.coord[0] +
+              '" y2="' +
+              P.coord[1] +
+              '" class="s-line" stroke-width="2" stroke-dasharray="4 6"/>';
+            h +=
+              '<line x1="' +
+              P.coord[0] +
+              '" y1="' +
+              P.coord[1] +
+              '" x2="' +
+              C.x +
+              '" y2="' +
+              C.y +
+              '" class="s-line" stroke-width="2"/>';
+            KIDS.forEach(function (c) {
+              h +=
+                '<line x1="' +
+                C.x +
+                '" y1="' +
+                C.y +
+                '" x2="' +
+                P[c][0] +
+                '" y2="' +
+                P[c][1] +
+                '" class="s-line" stroke-width="2"/>';
+            });
+            var node = function (k, w, label, cls) {
+              var n = pos(k);
+              return (
+                '<g class="node" data-k="' +
+                k +
+                '"><rect x="' +
+                (n.x - w / 2) +
+                '" y="' +
+                (n.y - 26) +
+                '" width="' +
+                w +
+                '" height="' +
+                L.nh +
+                '" rx="16" class="f-raised s-line nb" stroke-width="2"/><text x="' +
+                n.x +
+                '" y="' +
+                (n.y - 2) +
+                '" text-anchor="middle" font-size="' +
+                (cls === "disp" ? 14 : N ? 15 : 17) +
+                '" class="t-fg ' +
+                (cls === "disp" ? "disp-t" : "mono-t") +
+                ' nl">' +
+                label +
+                '</text><text x="' +
+                n.x +
+                '" y="' +
+                (n.y + 17) +
+                '" text-anchor="middle" font-size="12" class="t-muted mono-t ns">idle</text></g>'
+              );
+            };
+            h += node("you", N ? 140 : 120, "YOU", "disp");
+            h += node("coord", N ? 176 : 210, "COORDINATOR", "disp");
+            KIDS.forEach(function (c) {
+              h += node(c, L.nodeW, c.split("/").pop(), "mono");
+            });
+            h += '<circle cx="' + C.x + '" cy="' + C.y + '" r="' + C.r + '" class="f-card s-ink" stroke-width="3"/>';
+            h +=
+              '<text x="' +
+              C.x +
+              '" y="' +
+              (C.y - 22) +
+              '" text-anchor="middle" font-size="' +
+              (N ? 14 : 16) +
+              '" class="t-ink mono-t">' +
+              esc(REPO) +
+              "</text>";
+            h +=
+              '<text x="' +
+              C.x +
+              '" y="' +
+              (C.y - 6) +
+              '" text-anchor="middle" font-size="' +
+              (N ? 8 : 10) +
+              '" letter-spacing="' +
+              (N ? 0.5 : 1) +
+              '" class="disp-t" style="fill:#5F5754">REPO COORDINATOR</text>';
+            h +=
+              '<text id="hub-count" x="' +
+              C.x +
+              '" y="' +
+              (C.y + 20) +
+              '" text-anchor="middle" font-size="18" class="mono-t" style="fill:#1632E6">' +
+              KIDS.length +
+              " / " +
+              KIDS.length +
+              "</text>";
+            h +=
+              '<text x="' +
+              C.x +
+              '" y="' +
+              (C.y + 38) +
+              '" text-anchor="middle" font-size="12" class="disp-t" style="fill:#5F5754">MERGED</text>';
+            // Every instruction from the repo coordinator flies out; every report flies back.
+            var packets = [];
+            E.forEach(function (e) {
+              if (e.type === "spec.written") packets.push({ t: e.t, from: "coord", to: "you", cls: "fg" });
+              if (e.type === "spec.approved") packets.push({ t: e.t - 6, from: "you", to: "coord", cls: "fg" });
+              if (e.type === "message.sent" && e.actor === "coordinator")
+                packets.push({ t: e.t, from: "coord", to: "c", cls: "fg" });
+              if (e.type === "message.sent" && e.actor === RC && P[e.target])
+                packets.push({ t: e.t, from: "c", to: e.target, cls: "fg" });
+              if (e.type === "agent.stopped" && P[e.target] && e.actor.indexOf(e.target + "/") === 0)
+                packets.push({
+                  t: e.t,
+                  from: e.target,
+                  to: "c",
+                  cls: / red/.test(e.detail)
+                    ? "warn"
+                    : { planner: "cyan", implementer: "mag", tester: "yel" }[e.actor.split("/").pop()],
+                });
+              if (e.type === "child.merged") packets.push({ t: e.t, from: e.target, to: "c", cls: "card" });
+              if (e.type === "question.escalated") {
+                packets.push({ t: e.t, from: "c", to: "coord", cls: "warn" });
+                packets.push({ t: e.t + FLY, from: "coord", to: "you", cls: "warn" });
+              }
+              if (e.type === "question.answered") packets.push({ t: e.t - FLY, from: "you", to: "coord", cls: "fg" });
+              if (e.type === "agent.stopped" && e.actor === RC)
+                packets.push({ t: e.t, from: "c", to: "coord", cls: "card" });
+            });
+            packets.forEach(function (p, i) {
+              h +=
+                '<circle class="f-' +
+                p.cls +
+                ' s-ink pk" stroke-width="2" r="' +
+                (N ? 6 : 7) +
+                '" data-i="' +
+                i +
+                '" style="opacity:0"/>';
+            });
+            setBox(svg, L.w, L.h, L.minW);
+            svg.innerHTML = h;
+            var pk = [].slice.call(svg.querySelectorAll(".pk")),
+              nodes = [].slice.call(svg.querySelectorAll(".node")),
+              count = svg.querySelector("#hub-count");
+            var rcStart = E.find(function (e) {
+              return e.actor === RC && e.type === "agent.spawned";
+            }).t;
+            // the next agent for this child is a step on the laptop's model
+            var nextLocal = function (k, t) {
+              var next = RUNS.filter(function (r) {
+                return r.repo === k && r.s > t;
+              })[0];
+              return next && next.role === "implementer" && next.host === "ollama";
+            };
+            var mins = function (d) {
+              var m = Math.round(d / 60);
+              return m < 1 ? "<1m" : m + "m";
+            };
+            lastRep = undefined;
+            return function (t) {
+              packets.forEach(function (p, i) {
+                var k = (t - p.t) / FLY;
+                if (k < 0 || k > 1) {
+                  pk[i].style.opacity = 0;
+                  return;
+                }
+                var a = pos(p.from),
+                  b = pos(p.to),
+                  e = 1 - Math.pow(1 - k, 3);
+                // packets leave and land on the circle's edge, so the count stays readable
+                var edge = function (from, to) {
+                  var dx = to.x - from.x,
+                    dy = to.y - from.y,
+                    d = Math.sqrt(dx * dx + dy * dy) || 1;
+                  return { x: from.x + (dx / d) * (C.r + 4), y: from.y + (dy / d) * (C.r + 4) };
+                };
+                if (p.from === "c") a = edge(C, b);
+                if (p.to === "c") b = edge(C, a);
+                pk[i].setAttribute("cx", a.x + (b.x - a.x) * e);
+                pk[i].setAttribute("cy", a.y + (b.y - a.y) * e);
+                pk[i].style.opacity = 1;
+              });
+              var merged = 0;
+              nodes.forEach(function (g) {
+                var k = g.dataset.k,
+                  rect = g.querySelector(".nb"),
+                  lab = g.querySelector(".nl"),
+                  st = g.querySelector(".ns");
+                var setNode = function (r, l, s, text) {
+                  rect.setAttribute("class", r + " nb");
+                  lab.setAttribute("class", l + " nl");
+                  st.setAttribute("class", s + " ns");
+                  st.textContent = text;
+                };
+                if (k === "you") {
+                  var a1 = projT("→ awaiting-approval"),
+                    a2 = projT("→ running");
+                  var asked = (RUN.you || []).filter(function (y) {
+                    return t >= y[0] && t < y[1];
+                  })[0];
+                  var busy = (t >= a1 && t < a2) || !!asked;
+                  setNode(
+                    "f-raised " + (busy ? "s-fg" : "s-line") + " s-dash",
+                    "t-fg disp-t",
+                    (busy ? "t-fg" : "t-muted") + " mono-t",
+                    t < a1 ? "answering questions" : t < a2 ? "reviewing spec…" : asked ? "deciding…" : "approved",
+                  );
+                  return;
+                }
+                if (k === "coord") {
+                  var fin = projT("→ finalizing");
+                  var text =
+                    t < projT("→ awaiting-approval")
+                      ? "grilling you"
+                      : t < projT("→ running")
+                        ? "spec written"
+                        : t < rcStart
+                          ? "starting the repo"
+                          : t >= fin
+                            ? "finalizing · " + D.mode.split("· ").pop()
+                            : "waiting on " + REPO;
+                  setNode("f-raised s-fg", "t-fg disp-t", "t-fg mono-t", text);
+                  return;
+                }
+                var s2 = runAt(k, t);
+                if (doneAt(k) <= t) {
+                  merged++;
+                  setNode("f-card s-ink", "t-ink mono-t", "t-ink mono-t", "merged");
+                } else if (s2.run) {
+                  var cls = s2.run.failed ? "warn" : ROLE_CLS[s2.run.role];
+                  var red = s2.run.failed && t >= s2.run.f - (s2.run.f - s2.run.s) / 2;
+                  setNode(
+                    "f-raised s-" + cls,
+                    "t-fg mono-t",
+                    "t-" + (cls === "warn" ? "fg" : cls) + " mono-t",
+                    s2.run.role +
+                      (s2.run.step ? " " + s2.run.step : "") +
+                      " · " +
+                      (red ? "red check" : mins(t - s2.run.s)),
+                  );
+                } else {
+                  var w = (D.waits || {})[k];
+                  var waiting =
+                    w &&
+                    t > GATE_T &&
+                    w[0].some(function (d) {
+                      return !(doneAt(d) <= t);
+                    })
+                      ? w[1]
+                      : null;
+                  var gated =
+                    !s2.last || s2.last.role === "planner"
+                      ? t > GATE_T - 600 && t < GATE_T
+                        ? "waiting for the gate"
+                        : null
+                      : null;
+                  setNode(
+                    "f-raised s-line",
+                    "t-muted mono-t",
+                    "t-muted mono-t",
+                    waiting ||
+                      gated ||
+                      (s2.last
+                        ? s2.last.role === "planner" && t > GATE_T
+                          ? "queued"
+                          : nextLocal(k, t)
+                            ? "waits for the laptop"
+                            : "between agents"
+                        : "not started"),
+                  );
+                }
+              });
+              count.textContent = merged + " / " + KIDS.length;
+              var latest = null;
+              RUNS.concat([{ actor: RC, repo: REPO, role: "repo coordinator", f: RC_STOP[REPO] }]).forEach(
+                function (r) {
+                  if (r.f <= t && (!latest || r.f > latest.f)) latest = r;
+                },
+              );
+              var key = latest ? latest.actor + latest.f : null;
+              if (key !== lastRep) {
+                lastRep = key;
+                rep.innerHTML = latest
+                  ? '<div class="who">' +
+                    esc(latest.repo.toUpperCase() + " · " + latest.role.toUpperCase()) +
+                    " · OPENFLEET-REPORT <b>status: " +
+                    (latest.failed ? "failed" : "done") +
+                    "</b></div><p>" +
+                    esc(reportText(latest)) +
+                    "</p>"
+                  : '<div class="who">WAITING FOR THE FIRST REPORT <b>—</b></div><p>Reports appear here as each agent finishes.</p>';
+              }
+            };
+          }
+          var FLY = LONG ? END * 0.012 : 5;
+          responsive(SINGLE ? buildSingle : build, document.getElementById("fig-hub"), {
+            from: 0,
+            to: END,
+            ms: LONG ? 24000 : 16000,
+          });
         })();
 
         // ---------- 4. diff ----------
