@@ -6031,277 +6031,7 @@
 
         // ---------- 5. decisions ----------
         (function () {
-          if (RUN.id !== "account-id") {
-            flowDecisions();
-            return;
-          }
-          var svg = document.getElementById("fix");
-          var DEC = RUN.id === "account-id" ? accountDecisions() : dataDecisions(RUNDATA[RUN.id].decisions);
-          var STEPS = DEC.steps;
-          var stepsEl = document.getElementById("fixsteps"),
-            cap = document.getElementById("fixcap");
-          stepsEl.innerHTML = STEPS.map(function (s, i) {
-            return (
-              '<button class="btn ghost" type="button" data-step="' +
-              i +
-              '" aria-pressed="false" aria-label="Step ' +
-              (i + 1) +
-              ": " +
-              esc(s.title) +
-              '">' +
-              (i + 1) +
-              "</button>"
-            );
-          }).join("");
-          var btns = [].slice.call(stepsEl.querySelectorAll("button"));
-          var cur = STEPS.length - 1;
-          var NODES = DEC.nodes;
-          var nodeKey = function (n) {
-            return n.replace(/[^a-z0-9-]/gi, "_");
-          };
-          function layout() {
-            var N = isNarrow();
-            var pos = {};
-            if (!N) {
-              var per = NODES.length <= 6 ? NODES.length : Math.ceil(NODES.length / 2);
-              var gap = NODES.length <= 6 ? 160 : 190;
-              var w0 = NODES.length <= 6 ? 148 : 178;
-              var rowsN = Math.ceil(NODES.length / per);
-              var y0 = NODES.length <= 6 ? 250 : 222;
-              NODES.forEach(function (r, i) {
-                var row = Math.floor(i / per),
-                  inRow = Math.min(per, NODES.length - row * per);
-                var x0 = 24 + ((per - inRow) * gap) / 2;
-                pos[r] = { x: x0 + (i % per) * gap, y: y0 + row * 92, w: w0, h: 70 };
-              });
-              return {
-                w: 1000,
-                h: y0 + (rowsN - 1) * 92 + 110,
-                minW: 720,
-                c: { x: 330, y: 24, w: 340, h: 86 },
-                pos: pos,
-                N: false,
-              };
-            }
-            NODES.forEach(function (r, i) {
-              pos[r] = { x: 16 + (i % 2) * 190, y: 200 + Math.floor(i / 2) * 92, w: 178, h: 70 };
-            });
-            return {
-              w: 400,
-              h: 200 + Math.ceil(NODES.length / 2) * 92 + 4,
-              minW: 0,
-              c: { x: 40, y: 20, w: 320, h: 86 },
-              pos: pos,
-              N: true,
-            };
-          }
-          var L;
-          function build() {
-            L = layout();
-            var h = "";
-            var c = L.c;
-            NODES.forEach(function (r) {
-              var p = L.pos[r];
-              h +=
-                '<path class="fade link link-' +
-                nodeKey(r) +
-                '" d="M' +
-                (c.x + c.w / 2) +
-                " " +
-                (c.y + c.h) +
-                " C" +
-                (c.x + c.w / 2) +
-                " " +
-                (c.y + c.h + 60) +
-                " " +
-                (p.x + p.w / 2) +
-                " " +
-                (p.y - 60) +
-                " " +
-                (p.x + p.w / 2) +
-                " " +
-                p.y +
-                '" fill="none" stroke-width="2"/>';
-            });
-            h +=
-              '<rect x="' +
-              c.x +
-              '" y="' +
-              c.y +
-              '" width="' +
-              c.w +
-              '" height="' +
-              c.h +
-              '" rx="16" class="f-raised s-fg cbox" stroke-width="2"/>';
-            h +=
-              '<text x="' +
-              (c.x + 18) +
-              '" y="' +
-              (c.y + 30) +
-              '" font-size="14" class="t-fg mono-t">' +
-              esc(DEC.box[0]) +
-              "</text>";
-            h +=
-              '<text x="' +
-              (c.x + 18) +
-              '" y="' +
-              (c.y + 56) +
-              '" font-size="14" class="t-fg mono-t ctext">' +
-              esc(DEC.box[1]) +
-              "</text>";
-            h +=
-              '<text x="' +
-              (c.x + 18) +
-              '" y="' +
-              (c.y + 76) +
-              '" font-size="12" class="t-muted mono-t fade cdep">' +
-              esc(DEC.box[2]) +
-              "</text>";
-            NODES.forEach(function (r) {
-              var p = L.pos[r];
-              h +=
-                '<g class="chipbox" data-r="' +
-                nodeKey(r) +
-                '"><rect x="' +
-                p.x +
-                '" y="' +
-                p.y +
-                '" width="' +
-                p.w +
-                '" height="' +
-                p.h +
-                '" rx="14" class="f-raised s-line cb" stroke-width="2"/>';
-              h +=
-                '<text x="' +
-                (p.x + 14) +
-                '" y="' +
-                (p.y + 28) +
-                '" font-size="15" class="t-fg mono-t cn-' +
-                nodeKey(r) +
-                '">' +
-                esc(DEC.label ? DEC.label(r) : r) +
-                (DEC.suffix && DEC.suffix(r)
-                  ? '<tspan font-size="12" class="t-muted">' + DEC.suffix(r) + "</tspan>"
-                  : "") +
-                "</text>";
-              h +=
-                '<text x="' +
-                (p.x + 14) +
-                '" y="' +
-                (p.y + 52) +
-                '" font-size="12" class="t-muted mono-t cs cs-' +
-                nodeKey(r) +
-                '"></text></g>';
-            });
-            if (DEC.ord) {
-              var sj = L.pos[DEC.ord[0]],
-                mb = L.pos[DEC.ord[1]];
-              var ord = L.N
-                ? "M" +
-                  (sj.x + sj.w / 2) +
-                  " " +
-                  (sj.y + sj.h) +
-                  " C" +
-                  (sj.x + sj.w / 2) +
-                  " " +
-                  (sj.y + sj.h + 120) +
-                  " " +
-                  (mb.x + mb.w / 2) +
-                  " " +
-                  (mb.y - 120) +
-                  " " +
-                  (mb.x + mb.w / 2) +
-                  " " +
-                  mb.y
-                : "M" +
-                  (sj.x + sj.w / 2) +
-                  " " +
-                  (sj.y + sj.h) +
-                  " C" +
-                  (sj.x + sj.w / 2) +
-                  " " +
-                  (sj.y + sj.h + 40) +
-                  " " +
-                  (mb.x + mb.w / 2) +
-                  " " +
-                  (mb.y + mb.h + 40) +
-                  " " +
-                  (mb.x + mb.w / 2) +
-                  " " +
-                  (mb.y + mb.h);
-              h +=
-                '<path class="fade ord" d="' +
-                ord +
-                '" fill="none" stroke="#A8A6AF" stroke-width="2" stroke-dasharray="6 6" style="opacity:0"/>';
-            }
-            setBox(svg, L.w, L.h, L.minW);
-            svg.innerHTML = h;
-            show(cur);
-          }
-          function show(i) {
-            cur = i;
-            btns.forEach(function (b, k) {
-              b.setAttribute("aria-pressed", k === i ? "true" : "false");
-            });
-            cap.innerHTML =
-              "<h3>" + (i + 1) + " · " + esc(STEPS[i].title.toUpperCase()) + "</h3><p>" + esc(STEPS[i].text) + "</p>";
-            var q = function (s) {
-              return svg.querySelector(s);
-            };
-            NODES.forEach(function (r) {
-              var k = nodeKey(r);
-              var st = DEC.state(i, r);
-              var link = q(".link-" + k);
-              link.setAttribute("stroke", st.hi ? "#F4F4F6" : "#45434C");
-              link.style.opacity = st.lit ? 1 : 0.4;
-              var box = svg.querySelector('.chipbox[data-r="' + k + '"] .cb');
-              var cs = q(".cs-" + k);
-              var cls = st.cls || "f-raised s-line cb";
-              box.setAttribute("class", cls);
-              cs.textContent = st.status || "";
-              var ink = cls.indexOf("f-warn") === 0 || cls.indexOf("f-card") === 0;
-              q(".cn-" + k).setAttribute("class", "mono-t cn-" + k + (ink ? " t-ink" : " t-fg"));
-              cs.setAttribute(
-                "class",
-                "mono-t cs cs-" + k + (ink ? " t-ink" : cls.indexOf("s-dash") > 0 ? " t-fg" : " t-muted"),
-              );
-            });
-            q(".cdep").style.opacity = DEC.dep(i) ? 1 : 0;
-            if (DEC.ord) q(".ord").style.opacity = DEC.ordOn(i) ? 1 : 0;
-          }
-          btns.forEach(function (b, i) {
-            b.addEventListener("click", function () {
-              stopAuto();
-              show(i);
-            });
-          });
-          var timer = 0;
-          var playBtn = document.getElementById("fixplay");
-          function stopAuto() {
-            clearInterval(timer);
-            timer = 0;
-            playBtn.textContent = "▶ PLAY";
-          }
-          playBtn.addEventListener("click", function () {
-            if (timer) {
-              stopAuto();
-              return;
-            }
-            show(0);
-            playBtn.textContent = "❚❚ PAUSE";
-            timer = setInterval(
-              function () {
-                if (cur + 1 >= STEPS.length) {
-                  stopAuto();
-                  return;
-                }
-                show(cur + 1);
-              },
-              reduce ? 4500 : 3000,
-            );
-          });
-          build();
-          onMode(build);
+          flowDecisions();
         })();
 
         // Decisions written as data: each step marks some nodes and lights some links.
@@ -6345,7 +6075,7 @@
         function flowDecisions() {
           var svg = document.getElementById("fix");
           svg.classList.add("flowfig");
-          var D = RUNDATA[RUN.id].decisions;
+          var D = RUN.id === "account-id" ? accountDecisions() : RUNDATA[RUN.id].decisions;
           var DEC = dataDecisions(D);
           var STEPS = D.steps;
           var stepsEl = document.getElementById("fixsteps"),
@@ -6384,7 +6114,7 @@
                 GX = 12,
                 GY = 12,
                 CG = 52,
-                MAXR = 5;
+                MAXR = D.maxRows || 5;
               var cols = D.columns.map(function (c) {
                 var sc = Math.ceil(c.length / MAXR);
                 return { nodes: c, sc: sc, rows: Math.ceil(c.length / sc) };
@@ -6431,6 +6161,12 @@
                 });
                 x += w + CG;
               });
+              // a repo that waits on one other sits level with it, so the arrow between them runs straight
+              if (D.ord) {
+                var dst = pos[D.ord[1]];
+                dst.y = pos[D.ord[0]].y;
+                wires[D.ord[1]][wires[D.ord[1]].length - 1][1] = dst.y;
+              }
               return {
                 w: 1000,
                 h: top + maxH + 28,
@@ -6502,8 +6238,43 @@
                   L.pos[n].y +
                   '" class="s-line" stroke-width="2" opacity="0.55"/>';
               });
-              // build order: an arrow from each column to the next
-              for (var g = 0; g + 1 < L.groups.length; g++) {
+              // build order: an arrow from each column to the next, or from the one repo another waits on
+              if (D.ord) {
+                var fa = L.pos[D.ord[0]],
+                  fb = L.pos[D.ord[1]];
+                var ax = fa.x + fa.w + 6,
+                  ay0 = fa.y + fa.h / 2,
+                  bx2 = fb.x - 10,
+                  by2 = fb.y + fb.h / 2,
+                  mx = (ax + bx2) / 2;
+                h +=
+                  '<path d="M' +
+                  ax +
+                  " " +
+                  ay0 +
+                  " H" +
+                  mx +
+                  " V" +
+                  by2 +
+                  " H" +
+                  bx2 +
+                  '" class="s-muted" stroke-width="2" fill="none" stroke-dasharray="4 4"/>';
+                h +=
+                  '<path d="M' +
+                  (fb.x - 16) +
+                  " " +
+                  (by2 - 5) +
+                  " L" +
+                  (fb.x - 8) +
+                  " " +
+                  by2 +
+                  " L" +
+                  (fb.x - 16) +
+                  " " +
+                  (by2 + 5) +
+                  '" class="s-muted" stroke-width="2" fill="none"/>';
+              }
+              for (var g = 0; !D.ord && g + 1 < L.groups.length; g++) {
                 var a = L.groups[g],
                   c = L.groups[g + 1];
                 var ay = Math.max(a.y, c.y) + Math.min(a.h, c.h) / 2;
@@ -6611,6 +6382,7 @@
                 (L.N ? 13 : 14) +
                 '" class="t-fg mono-t cn">' +
                 esc(n) +
+                (D.notes && D.notes[n] ? '<tspan class="t-muted" font-size="11">' + esc(D.notes[n]) + "</tspan>" : "") +
                 '</text><text x="' +
                 (p.x + 12) +
                 '" y="' +
@@ -6773,91 +6545,63 @@
           }
         }
 
-        // The six-repo run's decisions: six steps over the six repos.
+        // The six-repo run's decisions: six steps over the six repos. Everything starts together
+        // except mobile, which waits for sdk-js.
         function accountDecisions() {
-          var CONSUMERS = ["sdk-js", "sdk-python", "web", "mobile"];
           return {
-            nodes: REPOS,
-            box: ["contracts/account.json", '{ "account_id": 42, … }', "user_id: deprecated"],
-            suffix: function (r) {
-              return r === "web" ? " · 3 children" : "";
-            },
+            nodes: ["api", "sdk-js", "sdk-python", "billing", "web", "mobile"],
+            // two columns of three; sdk-js last in the first, so its arrow to mobile crosses the empty slot
+            columns: [["api", "sdk-python", "sdk-js", "billing", "web"], ["mobile"]],
+            maxRows: 3,
             ord: ["sdk-js", "mobile"],
-            dep: function (i) {
-              return i >= 2;
-            },
-            ordOn: function (i) {
-              return i === 0 || i === 5;
-            },
-            state: function (i, r) {
-              var consumer = CONSUMERS.indexOf(r) >= 0;
-              var lit = i === 0 || i === 1 || (i === 2 && consumer);
-              var o = {
-                hi: (i === 2 && consumer) || i === 1,
-                lit: lit || i >= 3,
-                cls: "f-raised s-line cb",
-                status: "",
-              };
-              if (i === 0 && r === "mobile") o.status = "after sdk-js";
-              if (i === 0 && r === "web") o.status = "setup · app · ui";
-              if (i === 1) {
-                o.cls = "f-raised s-fg cb";
-                o.status = r === "web" ? "3 plans agree" : "plan agrees";
-              }
-              if (i === 2 && consumer) {
-                o.cls = "f-raised s-fg cb";
-                o.status = "contract updated";
-              }
-              if (i === 2 && r === "api") {
-                o.cls = "f-raised s-mag cb";
-                o.status = "asked a question";
-              }
-              if (i === 3 && r === "sdk-python") {
-                o.cls = "f-warn s-warn cb";
-                o.status = "baseline test failed";
-              }
-              if (i === 4 && r === "sdk-python") {
-                o.cls = "f-raised s-fg s-dash cb";
-                o.status = "assumption";
-              }
-              if (i === 5 && r === "sdk-js") {
-                o.cls = "f-card s-ink cb";
-                o.status = "done";
-              }
-              if (i === 5 && r === "mobile") {
-                o.cls = "f-raised s-fg cb";
-                o.status = "after sdk-js";
-              }
-              if (i === 5 && r === "web") {
-                o.cls = "f-card s-ink cb";
-                o.status = "3 merged · 1 PR";
-              }
-              return o;
-            },
+            notes: { web: " · 3 children" },
+            box: ["contracts/account.json", '{ "account_id": 42, … }', "user_id: deprecated"],
             steps: [
               {
                 title: "The spec pins a contract and a shared approach",
                 text: "During the grill you agreed on contracts/account.json, with account_id instead of user_id, and on one shared approach for every repo. The coordinator split web into three path-scoped children (setup, app and ui) under a repo coordinator, and ordered mobile after sdk-js.",
+                nodes: { web: ["line", "setup · app · ui"], mobile: ["line", "after sdk-js"] },
               },
               {
                 title: "Every plan agrees before any code",
                 text: "Every planner ran first. web’s repo coordinator checked its three plans against each other; then the coordinator checked all eight against the shared approach. At 1:49 they agreed, and the plans-ready gate opened.",
+                all: ["fg", "plan agrees"],
+                nodes: { web: ["fg", "3 plans agree"] },
+                hi: "all",
               },
               {
                 title: "A question becomes a contract change",
                 text: "The api implementer asked whether user_id should be marked deprecated. The spec already said so, so the coordinator answered, updated account.json and broadcast the change to the four repos that consume it.",
+                nodes: {
+                  api: ["mag", "asked a question"],
+                  "sdk-js": ["fg", "contract updated"],
+                  "sdk-python": ["fg", "contract updated"],
+                  web: ["fg", "contract updated"],
+                  mobile: ["fg", "contract updated"],
+                },
+                hi: ["sdk-js", "sdk-python", "web", "mobile"],
+                dep: true,
               },
               {
                 title: "A baseline test catches a break",
                 text: "Before sdk-python changed anything, a baseline tester wrote three tests for today’s behaviour, passed them on the unchanged code and protected them. The first tester run broke one: existing callers read .user_id. sdk-python went back to implementing, retry 1 of 3, with the findings.",
+                nodes: { "sdk-python": ["warn", "baseline test failed"] },
+                hi: ["sdk-python"],
+                dep: true,
               },
               {
                 title: "The coordinator decides, and logs it",
                 text: "The spec said old callers must keep working, but not how. The coordinator decided: keep user_id as a read-only alias that warns. It logged that as an assumption, which the final summary lists for you to review.",
+                nodes: { "sdk-python": ["you", "assumption"] },
+                hi: ["sdk-python"],
+                dep: true,
               },
               {
                 title: "Ordering holds, web merges into one branch",
                 text: "mobile waited for sdk-js to be done before implementing. In web, setup went first; app and ui started from it, and each merged into openfleet/account-id as it finished. The repo coordinator ran the full build and tests there: one PR for web.",
+                nodes: { "sdk-js": ["done", "done"], mobile: ["fg", "after sdk-js"], web: ["done", "3 merged · 1 PR"] },
+                hi: ["mobile", "web"],
+                dep: true,
               },
             ],
           };
