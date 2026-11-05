@@ -3902,6 +3902,39 @@
           });
         });
 
+        // The rows and the events box keep the height of their tallest step, so the page below never moves.
+        function holdSteps() {
+          rows.style.removeProperty("min-height");
+          events.style.removeProperty("min-height");
+          // show() on the last step ends the replay; measuring must not
+          var was = playing;
+          var hr = 0,
+            he = 0;
+          for (var k = 0; k < STEPS.length; k++) {
+            show(k);
+            hr = Math.max(hr, rows.offsetHeight);
+            he = Math.max(he, events.offsetHeight);
+          }
+          // important: the phone layout's own min-height on the events box is !important too
+          rows.style.setProperty("min-height", hr + "px", "important");
+          events.style.setProperty("min-height", he + "px", "important");
+          playing = was;
+        }
+        holdSteps();
+        // Text wraps differently once the web fonts arrive: measure again then.
+        if (document.fonts && document.fonts.ready)
+          document.fonts.ready.then(function () {
+            holdSteps();
+            show(cursor);
+          });
+        var stepsW = window.innerWidth;
+        window.addEventListener("resize", function () {
+          if (window.innerWidth === stepsW) return;
+          stepsW = window.innerWidth;
+          holdSteps();
+          show(cursor);
+        });
+
         root.classList.add("of-motion");
         var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         if (!reduce && window.scrollY < window.innerHeight) {
@@ -4437,13 +4470,41 @@
           label();
         });
 
+        // The event list keeps the height of its longest moment, so the page below never moves.
+        function holdLog() {
+          logEl.style.minHeight = "";
+          var m = 0;
+          [0]
+            .concat(
+              EVENTS.map(function (e) {
+                return e.t;
+              }),
+            )
+            .forEach(function (s) {
+              lastShown = -1;
+              frame(s);
+              m = Math.max(m, logEl.offsetHeight);
+            });
+          logEl.style.minHeight = m + "px";
+          lastShown = -1;
+          frame(t);
+        }
         build();
         set(END);
         label();
+        holdLog();
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(holdLog);
+        var logW = window.innerWidth;
+        window.addEventListener("resize", function () {
+          if (window.innerWidth === logW) return;
+          logW = window.innerWidth;
+          holdLog();
+        });
         var onChange = function () {
           build();
           lastShown = -1;
           frame(t);
+          holdLog();
         };
         if (narrowMq.addEventListener) narrowMq.addEventListener("change", onChange);
         if ("IntersectionObserver" in window) {

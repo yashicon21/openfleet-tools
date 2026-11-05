@@ -5448,7 +5448,8 @@
           else if (MQ.addListener) MQ.addListener(fn);
         };
         var announcer = document.getElementById("sr-announce");
-        var SWIM = null;
+        var SWIM = null,
+          HUB = null;
         var announce = function (msg) {
           announcer.textContent = "";
           setTimeout(function () {
@@ -6938,7 +6939,7 @@
             };
           }
           var FLY = LONG ? END * 0.012 : 5;
-          responsive(RUN.id !== "account-id" ? buildSingle : build, document.getElementById("fig-hub"), {
+          HUB = responsive(RUN.id !== "account-id" ? buildSingle : build, document.getElementById("fig-hub"), {
             from: 0,
             to: END,
             ms: LONG ? 24000 : 16000,
@@ -7901,6 +7902,54 @@
             announce("Running " + TOTAL_TESTS + " tests across 8 children.");
           });
         })();
+        // A box whose text changes as a figure plays keeps the height of its tallest state,
+        // so nothing below it moves. Measured again when the width changes.
+        var HOLDS = [];
+        function holdMax(el, measure) {
+          if (!el || !measure) return;
+          var hold = function () {
+            el.style.minHeight = "";
+            var max = 0;
+            measure(function () {
+              max = Math.max(max, el.offsetHeight);
+            });
+            el.style.minHeight = max + "px";
+          };
+          HOLDS.push(hold);
+          hold();
+        }
+        var rehold = function () {
+          HOLDS.forEach(function (f) {
+            f();
+          });
+        };
+        // Text wraps differently once the web fonts arrive: measure again then.
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(rehold);
+        var holdW = window.innerWidth,
+          holdTimer = 0;
+        window.addEventListener("resize", function () {
+          if (window.innerWidth === holdW) return;
+          holdW = window.innerWidth;
+          clearTimeout(holdTimer);
+          holdTimer = setTimeout(rehold, 200);
+        });
+        // every moment a replay can stop on, sampled across the run
+        var sampleRun = function (p, from, to) {
+          return function (take) {
+            for (var i = 0; i <= 120; i++) {
+              p.seek(from + ((to - from) * i) / 120);
+              take();
+            }
+            E.forEach(function (e) {
+              p.seek(e.t);
+              take();
+            });
+            p.seek(to);
+          };
+        };
+        holdMax(document.getElementById("log"), SWIM && sampleRun(SWIM, 0, END));
+        holdMax(document.getElementById("report"), HUB && sampleRun(HUB, 0, END));
+
         // ---------- 6b. the banner: this run's numbers, worked out from the log ----------
         (function () {
           var c = document.querySelector(".marquee .band.c span"),
@@ -8586,6 +8635,12 @@
             btn.textContent = "↺ REPLAY";
           }
           btn.addEventListener("click", play);
+          holdMax(cap, function (take) {
+            for (var k = 0; k < STAGES.length; k++) {
+              show(k);
+              take();
+            }
+          });
           show(3);
           if ("IntersectionObserver" in window && !reduce) {
             var io = new IntersectionObserver(
