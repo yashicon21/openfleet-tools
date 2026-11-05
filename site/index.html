@@ -2107,7 +2107,7 @@
                   id="rp-swim"
                   viewBox="0 0 1000 420"
                   role="img"
-                  aria-label="Swimlane of the example run: the project bar on top, then one lane per child showing plan, implement and test. No code starts until the plans-ready gate. sdk-python, billing, web/app and mobile write baseline tests first; sdk-python breaks one once and retries. web's three children merge into one branch. mobile waits for sdk-js."
+                  aria-label="Swimlane of the example run: the project bar on top, the coordinator's grill with you, then one lane per child showing plan, implement and test. No code starts until the plans-ready gate. sdk-python, billing, web/app and mobile write baseline tests first; sdk-python breaks one once and retries. web's three children merge into one branch. mobile waits for sdk-js."
                 ></svg>
               </div>
               <p class="rp-hint" aria-hidden="true">Swipe sideways to see the whole run →</p>
@@ -3923,8 +3923,11 @@
         var NS = "http://www.w3.org/2000/svg";
 
         // Example timings, in seconds. p = plan, b = baseline, i = implement, t = test, f = failed test,
-        // w = waiting on another child, k = merged into web's integration branch, m = web's full build and tests.
+        // w = waiting on another child, k = merged into web's integration branch, m = web's full build and tests,
+        // g = the grill.
         var LANES = [
+          // the grill: the coordinator talking with you, before any other agent exists
+          { name: "coordinator", segs: [["g", 0, 39]] },
           {
             name: "api",
             segs: [
@@ -4020,7 +4023,7 @@
           { t: 196, label: "assumption", color: "#F4F4F6" },
         ];
         var END = 268;
-        var COLORS = { p: "#48A6EE", b: "none", i: "#EE5AD6", t: "#EDEB3C", f: "#FFF1CC", m: "none" };
+        var COLORS = { p: "#48A6EE", b: "none", i: "#EE5AD6", t: "#EDEB3C", f: "#FFF1CC", m: "none", g: "#3A3940" };
         var ROLE = { p: "planner", b: "baseline", i: "implementer", t: "tester", f: "tester" };
 
         var EVENTS = [
@@ -4050,6 +4053,7 @@
               EVENTS.push({ t: s[2], type: "test.run", text: "web · full build + tests pass" });
               return;
             }
+            if (s[0] === "g") return;
             EVENTS.push({ t: s[1], type: "agent.spawned", text: lane.name + "/" + ROLE[s[0]] });
             if (s[0] === "t") EVENTS.push({ t: s[2], type: "test.run", text: lane.name + " · pass" });
             if (s[0] === "f") EVENTS.push({ t: s[2], type: "test.run", text: lane.name + " · fail, retry 1/3" });
@@ -4148,7 +4152,7 @@
                   "text-anchor": "middle",
                   style: "font-family: 'Russo One', sans-serif",
                 },
-                "YOU",
+                "YOU APPROVE",
               );
           });
           LANES.forEach(function (lane, i) {
@@ -4236,6 +4240,12 @@
                 attrs.stroke = "#8A5300";
                 attrs["stroke-width"] = 2;
               }
+              if (s[0] === "g") {
+                attrs.stroke = "#F4F4F6";
+                attrs["stroke-width"] = 2;
+                attrs.y = barY + 1;
+                attrs.height = barH - 2;
+              }
               if (s[0] === "b" || s[0] === "m") {
                 attrs.stroke = s[0] === "b" ? "#EDEB3C" : "#F4F4F6";
                 attrs["stroke-width"] = 2;
@@ -4244,6 +4254,21 @@
               }
               var r = el("rect", attrs);
               bars.push({ kind: "bar", node: r, a: s[1], b: s[2], x: x });
+              if (s[0] === "g") {
+                var gl = el(
+                  "text",
+                  {
+                    x: x(s[1]) + 8,
+                    y: barY + barH / 2 + 4,
+                    "font-size": 11,
+                    "letter-spacing": 1,
+                    fill: "#F4F4F6",
+                    style: "font-family: 'Russo One', sans-serif",
+                  },
+                  "GRILL",
+                );
+                bars.push({ kind: "label", node: gl, a: s[1] });
+              }
               if (s[0] === "f") {
                 var fl = el(
                   "text",
