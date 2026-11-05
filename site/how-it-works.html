@@ -343,12 +343,12 @@
       .col {
         width: 100%;
         max-width: 720px;
-        margin-left: max(0px, calc((100% - 1120px) / 2));
+        margin-left: max(0px, calc((100% - 1440px) / 2));
         margin-right: auto;
       }
       .wide {
         width: 100%;
-        max-width: 1120px;
+        max-width: 1440px;
         margin-inline: auto;
       }
 
@@ -2153,8 +2153,18 @@
       /* when something goes wrong */
       .incidents {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 16px;
+      }
+      @media (max-width: 1000px) {
+        .incidents {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 640px) {
+        .incidents {
+          grid-template-columns: minmax(0, 1fr);
+        }
       }
       .inc {
         background: var(--ground);
@@ -2569,7 +2579,7 @@
       <nav
         aria-label="Main"
         style="
-          max-width: 1168px;
+          max-width: 1488px;
           margin: 0 auto;
           padding: 8px 8px 8px 20px;
           box-sizing: border-box;
@@ -3397,7 +3407,7 @@
       </div>
       <div
         style="
-          max-width: 1200px;
+          max-width: 1488px;
           margin: 0 auto;
           padding: 32px 24px 40px;
           box-sizing: border-box;
