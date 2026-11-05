@@ -2931,8 +2931,9 @@
           </p>
           <p class="inrun" data-slot="r2">
             <b>IN THIS RUN</b> <code>web</code> is split into three children, run by their own
-            <strong>repo coordinator</strong>. The plans-ready gate opens at 1:49; <code>mobile</code> then waits for
-            <code>sdk-js</code>, because the spec ordered it that way.
+            <strong>repo coordinator</strong>. The plans-ready gate opens at 1:49. Four children run a baseline before
+            any code changes (the outlined bars), and <code>mobile</code> waits for <code>sdk-js</code>, because the
+            spec ordered it that way.
           </p>
         </section>
         <figure class="fig wide" id="fig-swim">
@@ -2961,11 +2962,12 @@
           <div class="chips" id="swim-chips" role="group" aria-label="Jump to a moment in the run"></div>
           <p class="sr-only" id="swim-sum" data-slot="f1sum">
             Finished run, 4:28 in total. The grill and spec took 39 seconds and your approval 8 seconds. From about
-            0:50, all eight children planned. At 1:49 every plan agreed and the plans-ready gate opened. sdk-python
-            first ran a baseline tester; its first tester then broke a baseline test at 3:15, a new implementer fixed it
-            and the retry passed at 4:00. web’s repo coordinator merged setup, ui and app into one integration branch;
-            its full build and tests passed there at 4:00, and web was done at 4:05. mobile waited for sdk-js, started
-            implementing at 3:13 and was done at 4:16. All six repos finished, then the coordinator finalized the run.
+            0:50, all eight children planned. At 1:49 every plan agreed and the plans-ready gate opened. sdk-python and
+            billing ran a baseline tester first, then web/app once web/setup was merged, and mobile once sdk-js was
+            done. sdk-python’s first tester broke a baseline test at 3:15; a new implementer fixed it and the retry
+            passed at 4:00. web’s repo coordinator merged setup, ui and app into one integration branch; its full build
+            and tests passed there at 4:00, and web was done at 4:05. mobile started implementing at 3:27 and was done
+            at 4:16. All six repos finished, then the coordinator finalized the run.
           </p>
           <div class="split">
             <div class="scroll-x" tabindex="0" role="region" aria-label="Run timeline, scrolls sideways">
@@ -3126,8 +3128,8 @@
             ></svg>
           </div>
           <p class="sr-only" id="hub-sum" data-slot="f3sum">
-            Finished run: the coordinator sent 19 instructions, 18 to the agents of the five single-child repos and one
-            to web’s repo coordinator, which sent 9 more to the web children’s agents. You answered the grill and
+            Finished run: the coordinator sent every instruction to the agents of the five single-child repos and one to
+            web’s repo coordinator, which instructed the web children’s agents itself. You answered the grill and
             approved the spec at the start. All six repos are done.
           </p>
           <div class="report" id="report"></div>
@@ -3202,9 +3204,11 @@
             findings, up to three times, and the tester runs again.
           </p>
           <p class="inrun" data-slot="r6">
-            <b>IN THIS RUN</b> 188 tests. Contract tests check every consuming repo against the same rows in
-            <code>account.json</code>, and hatched cells are <code>sdk-python</code>’s baseline: one broke, and the
-            retry passed. Then web’s repo coordinator ran all 46 web tests again on the merged branch.
+            <b>IN THIS RUN</b> 193 tests. Contract tests check every consuming repo against the same rows in
+            <code>account.json</code>. Hatched cells are baselines, tests for today’s behaviour in four repos: old
+            callers in <code>sdk-python</code>, invoice totals in <code>billing</code>, the account page in
+            <code>web/app</code> and the offline cache in <code>mobile</code>. One broke in <code>sdk-python</code>, and
+            the retry passed. Then web’s repo coordinator ran all 47 web tests again on the merged branch.
           </p>
         </section>
         <figure class="fig wide" id="fig-play">
@@ -3214,7 +3218,7 @@
             >
             <div class="controls">
               <button class="btn ghost" type="button" id="runall">▶ RUN ALL TESTS</button
-              ><span class="clock" id="tests-total">188/188</span>
+              ><span class="clock" id="tests-total">193/193</span>
             </div>
           </div>
           <p class="key" data-slot="f6key">
@@ -3274,7 +3278,7 @@
             uncommitted in each worktree. Nothing merges until you do.
           </p>
           <p class="inrun" data-slot="r8">
-            <b>IN THIS RUN</b> 339 lines across 26 files, and six draft PRs: web’s three children arrive as one PR from
+            <b>IN THIS RUN</b> 427 lines across 29 files, and six draft PRs: web’s three children arrive as one PR from
             their integration branch. The run summary lists one assumption for you to confirm.
           </p>
         </section>
@@ -3293,9 +3297,9 @@
             </div>
           </div>
           <div class="totals">
-            <div><b style="color: var(--fg)" id="tot-add">+339</b><span>LINES ADDED</span></div>
+            <div><b style="color: var(--fg)" id="tot-add">+427</b><span>LINES ADDED</span></div>
             <div><b style="color: var(--muted)" id="tot-rem">−109</b><span>LINES REMOVED</span></div>
-            <div><b id="tot-files">26</b><span>FILES TOUCHED</span></div>
+            <div><b id="tot-files">29</b><span>FILES TOUCHED</span></div>
             <div class="legend">
               <span><i style="background: var(--fg)"></i>added</span
               ><span><i style="box-shadow: inset 0 0 0 2px var(--muted)"></i>removed</span
@@ -3498,8 +3502,9 @@
         ],
         billing: [
           ["p", 50.8, 86],
-          ["i", 112.6, 170],
-          ["t", 172, 196],
+          ["b", 112.6, 128],
+          ["i", 129.5, 175],
+          ["t", 177, 196],
         ],
         "web/setup": [
           ["p", 51.6, 78],
@@ -3508,8 +3513,9 @@
         ],
         "web/app": [
           ["p", 79.5, 104],
-          ["i", 157, 200],
-          ["t", 202, 222],
+          ["b", 157, 170],
+          ["i", 171.5, 205],
+          ["t", 207, 222],
         ],
         "web/ui": [
           ["p", 81.5, 106],
@@ -3518,8 +3524,9 @@
         ],
         mobile: [
           ["p", 51.8, 80],
-          ["i", 194, 235],
-          ["t", 237, 255],
+          ["b", 192.5, 206],
+          ["i", 207.5, 238],
+          ["t", 240, 255],
         ],
       };
       var GATE = 109; // plans.consistent: every plan agrees, the plans-ready gate opens
@@ -3548,13 +3555,16 @@
         ["sdk-python", "tests/test_models.py", 31, 3, false],
         ["sdk-python", "CHANGELOG.md", 5, 0, false],
         ["billing", "invoice/invoice.go", 9, 9, false],
+        ["billing", "invoice/invoice_baseline_test.go", 28, 0, true],
         ["billing", "invoice/invoice_test.go", 14, 6, false],
         ["web/setup", "src/api/account.ts", 4, 4, false],
         ["web/setup", "src/types/account.ts", 3, 3, false],
+        ["web/app", "e2e/account.baseline.spec.ts", 34, 0, true],
         ["web/app", "src/pages/Account.tsx", 6, 6, false],
         ["web/app", "src/pages/Account.test.tsx", 12, 5, false],
         ["web/ui", "src/components/AccountBadge.tsx", 3, 3, false],
         ["web/ui", "src/components/AccountBadge.test.tsx", 8, 2, false],
+        ["mobile", "test/baseline/offline_account_test.dart", 26, 0, true],
         ["mobile", "lib/models/account.dart", 7, 7, false],
         ["mobile", "lib/account_repository.dart", 5, 5, false],
         ["mobile", "test/account_test.dart", 10, 4, false],
@@ -3564,11 +3574,11 @@
         api: [43, 5, 0],
         "sdk-js": [26, 5, 0],
         "sdk-python": [19, 5, 3],
-        billing: [17, 0, 0],
+        billing: [17, 0, 2],
         "web/setup": [8, 0, 0],
-        "web/app": [21, 5, 0],
+        "web/app": [21, 5, 1],
         "web/ui": [12, 0, 0],
-        mobile: [14, 5, 0],
+        mobile: [14, 5, 2],
       };
       var testsOf = function (c) {
         return TESTS[c][0] + TESTS[c][1] + TESTS[c][2];
@@ -3586,14 +3596,23 @@
           "Plan: rename the field in types.ts and the client mapper, update tests, note the breaking change in the changelog.",
         "sdk-python/planner":
           "Plan: rename the model field, update the client, tests and changelog. The baseline protects callers that read .user_id today.",
-        "billing/planner": "Plan: invoices read account_id from the API response; update the struct tag and tests.",
+        "billing/planner":
+          "Plan: invoices read account_id from the API response; update the struct tag and tests. The baseline pins today’s invoice totals.",
         "web/setup/planner":
           "Plan: rename the field in the shared API helper and the Account type. Nothing outside src/api and src/types.",
-        "web/app/planner": "Plan: the account page reads accountId from the shared helper. Only files under src/pages.",
+        "web/app/planner":
+          "Plan: the account page reads accountId from the shared helper. Only files under src/pages. The baseline covers the account page end to end.",
         "web/ui/planner": "Plan: AccountBadge takes accountId instead of userId. Only files under src/components.",
-        "mobile/planner": "Plan: rename the model field and repository mapping, after sdk-js as the spec orders.",
+        "mobile/planner":
+          "Plan: rename the model field and repository mapping, after sdk-js as the spec orders. The baseline makes sure accounts cached by today’s app still load.",
         "sdk-python/baseline":
           "Baseline: 3 tests for today’s behaviour, including test_user_id_read. All pass on the unchanged code and are now protected.",
+        "billing/baseline":
+          "Baseline: 2 tests pin today’s invoice totals for three fixture accounts. Both pass on the unchanged code and are now protected.",
+        "web/app/baseline":
+          "Baseline: 1 Playwright test signs in and checks the account page shows the name and id. It passes on the unchanged code and is now protected.",
+        "mobile/baseline":
+          "Baseline: 2 tests load an account saved by today’s app from the offline cache. Both pass on the unchanged code and are now protected.",
         "api/implementer":
           "Migration and route updated; contract tests pass against the updated account.json. Asked whether user_id should be marked deprecated.",
         "sdk-js/implementer": "Client and types renamed; 31 tests pass locally. Changelog notes the breaking change.",
@@ -3603,21 +3622,30 @@
         "web/setup/implementer": "Shared helper and Account type renamed. No deviations.",
         "web/app/implementer": "Account page uses accountId from the shared helper. Diff stays inside src/pages.",
         "web/ui/implementer": "AccountBadge prop renamed; snapshot updated. Diff stays inside src/components.",
-        "mobile/implementer": "Model and repository renamed against the finished sdk-js types. No deviations.",
+        "mobile/implementer":
+          "Model and repository renamed against the finished sdk-js types; the offline cache still reads accounts saved with user_id. No deviations.",
         "api/tester": "48/48 pass, including 5 contract rows. All acceptance criteria met.",
         "sdk-js/tester": "31/31 pass, including contract rows. All acceptance criteria met.",
         "sdk-python/tester": "28/28 pass on the retry, including the 3 baseline tests. All acceptance criteria met.",
-        "billing/tester": "17/17 pass. All acceptance criteria met.",
+        "billing/tester":
+          "19/19 pass, including the 2 baseline tests: invoice totals unchanged. All acceptance criteria met.",
         "web/setup/tester": "8/8 pass. Scope check: only shared files changed.",
-        "web/app/tester": "26/26 pass, including contract rows. Scope check passed.",
+        "web/app/tester": "27/27 pass, including contract rows and the baseline. Scope check passed.",
         "web/ui/tester": "12/12 pass. Scope check passed.",
-        "mobile/tester": "19/19 pass, including contract rows. All acceptance criteria met.",
+        "mobile/tester":
+          "21/21 pass, including contract rows and the 2 baseline tests: accounts cached before the rename still load. All acceptance criteria met.",
         "web/repo-coordinator":
           "web: 3 children merged into openfleet/account-id. Full build and " +
           WEB_TESTS +
           "/" +
           WEB_TESTS +
           " tests pass there. One PR.",
+      };
+      var BASE = {
+        "sdk-python": ["tests/test_baseline_user_id.py", 22, "pytest tests/test_baseline_user_id.py"],
+        billing: ["invoice/invoice_baseline_test.go", 28, "go test ./invoice -run Baseline"],
+        "web/app": ["e2e/account.baseline.spec.ts", 34, "npx playwright test e2e/account.baseline.spec.ts"],
+        mobile: ["test/baseline/offline_account_test.dart", 26, "flutter test test/baseline"],
       };
       var CMD = {
         api: "npm test",
@@ -3703,8 +3731,8 @@
             add(a, c + "/" + role, "agent.spawned", c, "openfleet-" + role);
             var span = b - a;
             if (kind === "b") {
-              add(a + span * 0.6, c + "/baseline", "file.added", c, "tests/test_baseline_user_id.py +22");
-              add(b - 1.5, c + "/baseline", "test.run", c, "pytest tests/test_baseline_user_id.py 3/3");
+              add(a + span * 0.6, c + "/baseline", "file.added", c, BASE[c][0] + " +" + BASE[c][1]);
+              add(b - 1.5, c + "/baseline", "test.run", c, BASE[c][2] + " " + TESTS[c][2] + "/" + TESTS[c][2]);
             }
             if (kind === "i") {
               if (retried) {
@@ -3746,7 +3774,14 @@
               // The gate: no child leaves plan-review until every plan agrees.
               cut("planned", GATE + 0.2 + CHILDREN.indexOf(c) * 0.02);
             }
-            if (kind === "b") add(b + 0.3, c + "/baseline", "baseline.passed", c, "3 tests protected");
+            if (kind === "b")
+              add(
+                b + 0.3,
+                c + "/baseline",
+                "baseline.passed",
+                c,
+                TESTS[c][2] + (TESTS[c][2] === 1 ? " test" : " tests") + " protected",
+              );
             if (kind === "t") {
               cut("post-test", b + 1.0);
               cut("done", b + 1.5);
@@ -4369,7 +4404,7 @@
               "One cell per check, in the order it ran; hover a cell for the command and its result. The integration row is two testers: the second ran with the new coverage tests.",
             cmds: '<div class="cmd"><b>1</b><div><h3>REVIEW THE DRAFT PRS</h3><div class="cmd-chip"><code>gh pr list --author @me --draft</code><button class="cmd-copy" type="button" data-copy="gh pr list --author @me --draft" aria-label="Copy: gh pr list --author @me --draft">COPY</button></div></div></div><div class="cmd"><b>2</b><div><h3>MERGE, THEN CLEAN UP</h3><div class="cmd-chip"><code>npx openfleet clean ui-migration --branches</code><button class="cmd-copy" type="button" data-copy="npx openfleet clean ui-migration --branches" aria-label="Copy: npx openfleet clean ui-migration --branches">COPY</button></div></div></div><div class="cmd"><b>3</b><div><h3>FOUND A PROBLEM? PICK THE RUN BACK UP</h3><div class="cmd-chip"><code>npx openfleet resume ui-migration</code><button class="cmd-copy" type="button" data-copy="npx openfleet resume ui-migration" aria-label="Copy: npx openfleet resume ui-migration">COPY</button></div></div></div>',
             r2: "<b>IN THIS RUN</b> Every child is its own repo. The plans-ready gate opens at 0:15; <code>ui-kit</code> then rebuilds the shared components alone for half an hour, the nine page repos start together once it is done, and <code>integration</code> waits for all of them. Four hours nobody was at the keyboard are left out.",
-            r3: "<b>IN THIS RUN</b> <code>team-details</code>’ plan was sent back for calling the toast library directly instead of the shared wrapper. Once every plan agreed, the nine pages waited over half an hour in planned for <code>ui-kit</code>, because they build on what it makes.",
+            r3: "<b>IN THIS RUN</b> <code>team-details</code>’ plan was sent back for calling the toast library directly instead of the shared wrapper. Once every plan agreed, the nine pages waited over half an hour in planned for <code>ui-kit</code>, because they build on what it makes. No child had a baseline in this run, so the phase table leaves that column out.",
             r4: "<b>IN THIS RUN</b> With every child its own repo, the coordinator runs all eleven itself, and the coverage question goes from it straight to you.",
             r5: '<b>IN THIS RUN</b> Every role ran on Claude Code. Switch to <a href="how-it-works.html?run=photo-app" data-run-link="photo-app">the photo app</a> to see three providers and a model on the laptop.',
             r6: "<b>IN THIS RUN</b> 88 checks, 72 passed first time. The 16 red ones were three kinds, none a defect in code a child wrote: an expected type error in a file another repo owned (9), the scope guard catching a file <code>next build</code> rewrites (3), and a flaky test that also fails on the base branch (4).",
@@ -4854,7 +4889,7 @@
               "One cell per check, in the order it ran; hover a cell for the command. A retry’s checks follow the red ones in the same row; system’s last cells are the whole stack, tested together.",
             cmds: '<div class="cmd"><b>1</b><div><h3>REVIEW THE DRAFT PRS</h3><div class="cmd-chip"><code>gh pr list --author @me --draft</code><button class="cmd-copy" type="button" data-copy="gh pr list --author @me --draft" aria-label="Copy: gh pr list --author @me --draft">COPY</button></div></div></div><div class="cmd"><b>2</b><div><h3>MERGE, THEN CLEAN UP</h3><div class="cmd-chip"><code>npx openfleet clean glimpse --branches</code><button class="cmd-copy" type="button" data-copy="npx openfleet clean glimpse --branches" aria-label="Copy: npx openfleet clean glimpse --branches">COPY</button></div></div></div><div class="cmd"><b>3</b><div><h3>BUILD THE NEXT SLICE</h3><div class="cmd-chip"><code>npx openfleet continue glimpse</code><button class="cmd-copy" type="button" data-copy="npx openfleet continue glimpse" aria-label="Copy: npx openfleet continue glimpse">COPY</button></div></div></div>',
             r2: "<b>IN THIS RUN</b> No repo fits, so the grill proposes nine and OpenFleet creates them. The plans-ready gate opens at 0:24. Each bar carries the mark of the provider it ran on; the dotted line is a 52-minute pause, left out.",
-            r3: "<b>IN THIS RUN</b> The grill cut the request to a first slice, and <code>notifications</code>’ plan was sent back for adding web push, a follow-up. A new system is built in a fixed order: <code>platform</code>, then <code>contracts</code>, then the five services and <code>web</code> side by side, then <code>system</code>.",
+            r3: "<b>IN THIS RUN</b> The grill cut the request to a first slice, and <code>notifications</code>’ plan was sent back for adding web push, a follow-up. A new system is built in a fixed order: <code>platform</code>, then <code>contracts</code>, then the five services and <code>web</code> side by side, then <code>system</code>. New repos have no behaviour to protect yet, so no child runs a baseline.",
             r4: "<b>IN THIS RUN</b> The coordinator runs all nine repos itself. Every agent it starts is its own session, on the host its role is set to.",
             r5: "<b>IN THIS RUN</b> Planners on Claude Code with Opus, implementer steps on Claude Code pointed at Ollama on the laptop, testers on Copilot CLI with GPT-5. Five of the 60 steps were too much for the laptop, and Opus finished them.",
             r6: "<b>IN THIS RUN</b> 72 checks, 68 passed first time, including contract tests over the shared fixtures. The four red ones were real: a contract mismatch in <code>posts</code>, an image library missing from <code>media</code>’s Docker image (2) and a race in the end-to-end flow. A retry fixed each.",
@@ -6088,6 +6123,19 @@
             "post-test",
             "done",
           ];
+          // A run with no baselines leaves the column out instead of showing it empty.
+          if (
+            !E.some(function (e) {
+              return e.type === "phase.changed" && /→ baseline/.test(e.detail);
+            })
+          ) {
+            CP = CP.filter(function (p) {
+              return p !== "baseline";
+            });
+            [].slice.call(document.querySelectorAll(".phases thead th")).forEach(function (th) {
+              if (th.textContent.trim() === "baseline") th.remove();
+            });
+          }
           var tbody = document.getElementById("phase-rows");
           var trans = {};
           CHILDREN_.forEach(function (r) {
