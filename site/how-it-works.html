@@ -2570,6 +2570,42 @@
           transition: none;
         }
       }
+
+      /* Wide screens: each section's "In this run" sits beside its explanation,
+         and the contents run across the page, so the text fills the width. */
+      @media (min-width: 1100px) {
+        article section.prose:has(.inrun) {
+          max-width: 1440px;
+          margin-inline: auto;
+          display: grid;
+          grid-template-columns: minmax(0, 720px) minmax(0, 1fr);
+          column-gap: 56px;
+          row-gap: 20px;
+          align-items: start;
+        }
+        article section.prose:has(.inrun) > h2 {
+          grid-column: 1;
+        }
+        article section.prose:has(.inrun) > p:not(.inrun) {
+          grid-column: 1;
+        }
+        article section.prose:has(.inrun) > .inrun {
+          grid-column: 2;
+          grid-row: 2 / span 3;
+          margin: 0;
+          padding: 16px 20px;
+          border-left: 4px solid var(--magenta);
+          border-radius: 0 16px 16px 0;
+          background: var(--raised);
+        }
+        nav.toc {
+          max-width: 1440px;
+          margin-inline: auto;
+        }
+        .toc ol {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
     </style>
   </head>
   <body>
