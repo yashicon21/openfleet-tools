@@ -2830,9 +2830,9 @@
         <p class="byline" data-slot="byline">project account-id · 0:00 → 4:28</p>
       </div>
       <div class="wide stats" id="stats" role="group" aria-label="The run at a glance">
-        <div class="stat"><b>4:28</b><span>START TO DONE</span></div>
-        <div class="stat"><b>0:47</b><span>YOUR TIME</span></div>
-        <div class="stat"><b>28</b><span>AGENTS</span></div>
+        <div class="stat"><b>4m 28s</b><span>START TO DONE</span></div>
+        <div class="stat"><b>46s</b><span>YOUR TIME</span></div>
+        <div class="stat"><b>27</b><span>AGENTS</span></div>
         <div class="stat"><b>6</b><span>REPOS</span></div>
         <div class="stat"><b>0</b><span>PRS MERGED WITHOUT YOU</span></div>
       </div>
@@ -7861,15 +7861,11 @@
         };
         var PEAK = 0;
         for (var pi = 0; pi <= 400; pi++) PEAK = Math.max(PEAK, running((pi / 400) * END));
-        var clockT = function (s) {
-          s = Math.max(0, Math.round(s));
-          var h = Math.floor(s / 3600),
-            m = Math.floor((s % 3600) / 60),
-            ss = s % 60;
-          return (h ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" + (ss < 10 ? "0" : "") + ss;
-        };
+        // Durations people compare side by side always carry their units: 47s, 12m 04s, 2h 05m.
         var hoursT = function (s) {
-          if (s < 3600) return clockT(s);
+          s = Math.max(0, Math.round(s));
+          if (s < 60) return s + "s";
+          if (s < 3600) return Math.floor(s / 60) + "m " + (s % 60 < 10 ? "0" : "") + (s % 60) + "s";
           var m = Math.round(s / 60);
           return Math.floor(m / 60) + "h " + (m % 60 < 10 ? "0" : "") + (m % 60) + "m";
         };
@@ -7882,15 +7878,15 @@
             return '<div class="stat"><b>' + b + "</b><span>" + s + "</span></div>";
           };
           st.innerHTML =
-            stat(fmtS(END), "START TO DONE") +
-            stat(clockT(YOU_T), "YOUR TIME") +
+            stat(hoursT(END), "START TO DONE") +
+            stat(hoursT(YOU_T), "YOUR TIME") +
             stat(String(RUNS.length), "AGENTS") +
             stat(String(REPOS_.length), "REPOS") +
             stat("0", "PRS MERGED WITHOUT YOU");
           var asks = YOU_SPANS.length - 1;
           document.querySelector('[data-slot="r1"]').innerHTML =
             "<b>IN THIS RUN</b> You spent " +
-            clockT(YOU_T) +
+            hoursT(YOU_T) +
             ": the grill, approving the spec" +
             (asks ? ", and " + (asks === 1 ? "one question" : asks + " questions") + " only you could answer" : "") +
             ". " +
@@ -8022,8 +8018,8 @@
               clip.setAttribute("width", String(x(t)));
               head.setAttribute("x1", String(x(t)));
               head.setAttribute("x2", String(x(t)));
-              bYou.textContent = clockT(spanSum(YOU_SPANS, t));
-              bWall.textContent = fmtS(t);
+              bYou.textContent = hoursT(spanSum(YOU_SPANS, t));
+              bWall.textContent = hoursT(t);
               bAgent.textContent = hoursT(spanSum(AGENT_SPANS, t));
               bNow.textContent = String(running(t));
             };
