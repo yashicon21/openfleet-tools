@@ -84,6 +84,8 @@ const OPTIONAL_KEYS = ["pricing", "greenfield", "budget", "models", "endpoints",
 /** Settings set one key at a time with `config set <group>.<key>`. */
 const GROUP_KEYS = ["greenfield", "budget", "models", "endpoints", "roleHosts", "split"];
 
+const DOCS = "https://github.com/yashicon21/openfleet-tools/blob/main/docs";
+
 /** Keys under `models.<host>`: the agent roles, `extensions` (extension agents) and `default` (everything else). */
 export const MODEL_KEYS = [
   "default",
@@ -460,8 +462,8 @@ export function setConfig(ws: Workspace, key: string, value: string): WorkspaceC
         : key === "budget"
           ? `Set one budget limit at a time: npx openfleet config set budget.<${BUDGET_KEYS.join("|")}> <n>`
           : GROUP_KEYS.includes(key)
-            ? `Set one ${key} entry at a time: npx openfleet config set ${key}.<…> <value> (see the CLI README).`
-            : `Set "${key}" by editing ${configFile(ws)} (see the CLI README).`,
+            ? `Set one ${key} entry at a time: npx openfleet config set ${key}.<…> <value> (see ${DOCS}/commands.md).`
+            : `Set "${key}" by editing ${configFile(ws)} (see ${DOCS}/workspace.md).`,
     );
   }
   if (!(KEYS as string[]).includes(key)) {
