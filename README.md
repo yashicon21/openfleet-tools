@@ -5,15 +5,34 @@
   </picture>
 </h1>
 
+[![npm](https://img.shields.io/npm/v/@openfleet-tools/cli?label=npm&color=48A6EE)](https://www.npmjs.com/package/@openfleet-tools/cli)
+[![CI](https://github.com/yashicon21/openfleet-tools/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yashicon21/openfleet-tools/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-EE5AD6)](LICENSE)
+
 Coordinate **one change across many repos**, or build **a new system from scratch**, with [GitHub Copilot CLI](https://github.com/github/copilot-cli) or [Claude Code](https://code.claude.com).
 
 Website: [openfleet.tools](https://openfleet.tools) · Repository: [github.com/yashicon21/openfleet-tools](https://github.com/yashicon21/openfleet-tools)
+
+<p align="center">
+  <img src="docs/brand/demo-fan-out.gif" alt="One prompt fans out to eight repos. Each repo is planned, built and tested in parallel, and each ends with a draft PR." width="560" />
+</p>
 
 You describe the change once. A **coordinator** agent turns it into a spec with you, then runs a **planner → implementer → tester** pipeline for each repo, monorepo package or path-scoped unit (such as one page of an app), in parallel, each in its own git worktree. A repo with several children gets its own **repo coordinator**, which merges them into one integration branch and one PR. Every agent action is recorded in an append-only event log.
 
 No repos yet? Describe the system instead: OpenFleet proposes the services, contracts and stack, creates the repos and builds an MVP slice that one end-to-end test proves (see [Greenfield projects](#greenfield-projects)).
 
 OpenFleet is built from the host's own primitives (custom agents, subagents, hooks, skills). It is not a new agent runtime.
+
+## Try it in 2 minutes
+
+You need Node.js 22+, pnpm, git and a signed-in [Copilot CLI](https://github.com/github/copilot-cli) or [Claude Code](https://code.claude.com). The demo creates two toy repos and a workspace in a temporary folder, so none of your own repos are touched.
+
+```sh
+git clone https://github.com/yashicon21/openfleet-tools && cd openfleet-tools
+pnpm install && pnpm demo        # add --host claude to use Claude Code
+```
+
+It prints the commands that start a run. See [examples/demo](examples/demo/README.md) for what it sets up.
 
 ## Workflow at a glance
 
