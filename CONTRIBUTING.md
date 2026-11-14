@@ -64,4 +64,8 @@ Keep both hosts' wording equivalent. Agents never ask the user anything after th
 
 ## Releases
 
-Maintainers release with [changesets](https://github.com/changesets/changesets): merging the "Version Packages" PR publishes both packages to npm with provenance. See "Releasing" in the [README](README.md#releasing).
+Maintainers release with [changesets](https://github.com/changesets/changesets): merging the "Version Packages" PR publishes both packages to npm with provenance. See [docs/releasing.md](docs/releasing.md).
+
+## Website
+
+The website ([openfleet.tools](https://openfleet.tools)) is static HTML in `site/`, with no build step. Pushes to `main` that touch `site/` deploy it to GitHub Pages through [`pages.yml`](.github/workflows/pages.yml).
