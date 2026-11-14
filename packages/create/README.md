@@ -1,6 +1,6 @@
 # @openfleet-tools/create
 
-Set up an [OpenFleet](https://openfleet.tools) workspace. OpenFleet coordinates one change across many repos with [GitHub Copilot CLI](https://github.com/github/copilot-cli) or [Claude Code](https://code.claude.com).
+Set up an [OpenFleet](https://openfleet.tools) workspace. OpenFleet splits one big change across a fleet of agents, over many repos or the packages and pages of one, with [GitHub Copilot CLI](https://github.com/github/copilot-cli) or [Claude Code](https://code.claude.com).
 
 ## Usage
 

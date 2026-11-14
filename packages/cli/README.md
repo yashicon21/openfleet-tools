@@ -2,9 +2,11 @@
 
 <img src="https://raw.githubusercontent.com/yashicon21/openfleet-tools/main/docs/brand/logo-horizontal-light.png" alt="OpenFleet" height="48" />
 
-Coordinate **one change across many repos**, or build **a new system from scratch**, with [GitHub Copilot CLI](https://github.com/github/copilot-cli) or [Claude Code](https://code.claude.com).
+Coordinate **one big change across many repos, or many parts of one repo**, or build **a new system from scratch**, with [GitHub Copilot CLI](https://github.com/github/copilot-cli) or [Claude Code](https://code.claude.com).
 
 You describe the change once. A **coordinator** agent turns it into a spec with you, then runs a **planner → implementer → tester** pipeline for each repo, monorepo package or path-scoped unit (such as one page of an app), in parallel, each in its own git worktree. A repo with several children gets its own **repo coordinator**, which merges them into one integration branch and one PR. Every agent action is recorded in an append-only event log.
+
+**One repo works too.** OpenFleet can split a single app into one child per package, page or module. They run in parallel and merge back into one branch and one PR. A small change that cannot be split is better left to one agent.
 
 No repos yet? Describe the system instead: OpenFleet proposes the services, contracts and stack, creates the repos and builds an MVP slice that one end-to-end test proves (see [Greenfield projects](#greenfield-projects)).
 

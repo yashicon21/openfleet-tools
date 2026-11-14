@@ -1,7 +1,7 @@
 {
   "name": "@openfleet-tools/cli",
   "version": "1.2.0",
-  "description": "Coordinate one change across many repos with GitHub Copilot CLI or Claude Code agents.",
+  "description": "Split one big change across a fleet of agents, over many repos or the packages and pages of one, with GitHub Copilot CLI or Claude Code.",
   "license": "MIT",
   "homepage": "https://openfleet.tools",
   "repository": {
