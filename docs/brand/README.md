@@ -10,6 +10,7 @@ The logo is **Formation**: three chevrons flying together in cyan, magenta and y
 | `logo-horizontal-dark.png`               | Mark and cyan wordmark, for dark backgrounds                            |
 | `logo-horizontal-light.png`              | Icon and ink wordmark, for light backgrounds                            |
 | `social-preview.png`                     | GitHub social preview (1280×640)                                        |
+| `demo-fan-out.gif`                       | README animation: one prompt fanning out to eight repos (640×640)       |
 
 The site uses `site/logo.svg`, `site/favicon.svg`, `site/apple-touch-icon.png` and `site/og.png` (1200×630 link preview).
 
