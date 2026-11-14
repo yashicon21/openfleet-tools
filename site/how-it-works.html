@@ -25,7 +25,7 @@
     <meta property="og:image:height" content="630" />
     <meta
       property="og:image:alt"
-      content="OpenFleet: one change, every repo. Agents that plan, build and test one change across many repos, or a new system from scratch."
+      content="OpenFleet: one change, every part. Agents that plan, build and test one big change across many repos or many parts of one repo, or a new system from scratch."
     />
     <meta name="twitter:image" content="https://openfleet.tools/og.png" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -2907,7 +2907,7 @@
                 <a href="#plan-h"><span>03</span>Every plan agrees before any code</a>
               </li>
               <li>
-                <a href="#messages-h"><span>04</span>One coordinator, many repos</a>
+                <a href="#messages-h"><span>04</span>One coordinator, many parts</a>
               </li>
               <li>
                 <a href="#fleet-h"><span>05</span>The right model for each role</a>
@@ -2972,9 +2972,10 @@
           <h2 id="whole-h"><small>02 · THE WHOLE RUN</small>One conversation, then hands-off</h2>
           <p>
             OpenFleet writes every step to <code>events.jsonl</code>: who did what, to which repo, and when. Each unit
-            of work is a <strong>child</strong>, usually one repo, with its own git worktree and its own agents in turn:
-            a <strong>planner</strong>, an optional <strong>baseline</strong> tester, an
-            <strong>implementer</strong> and a <strong>tester</strong>. Press replay, or jump straight to a moment.
+            of work is a <strong>child</strong>: a repo, a monorepo package or one part of an app, with its own git
+            worktree and its own agents in turn: a <strong>planner</strong>, an optional
+            <strong>baseline</strong> tester, an <strong>implementer</strong> and a <strong>tester</strong>. Press
+            replay, or jump straight to a moment.
           </p>
           <p class="inrun" data-slot="r2">
             <b>IN THIS RUN</b> <code>web</code> is split into three children, run by their own
@@ -3131,7 +3132,7 @@
         </figure>
 
         <section class="col prose" aria-labelledby="messages-h">
-          <h2 id="messages-h"><small>04 · ONE COORDINATOR</small>One coordinator, many repos</h2>
+          <h2 id="messages-h"><small>04 · ONE COORDINATOR</small>One coordinator, many parts</h2>
           <p>
             Agents never talk to each other. Each gets a single instruction from the coordinator, does its job in its
             child’s worktree, and ends with a structured <code>openfleet-report</code>: a status, a summary and, if it
@@ -3417,7 +3418,7 @@
           <h2 id="closer-h">Run it on your own repos</h2>
           <p>
             Three commands set up a workspace and open the grill for your change. You answer the questions once, then
-            come back to tested work in every repo.
+            come back to tested work in every repo and every part.
           </p>
           <div class="closer-cmd">
             <span aria-hidden="true">$</span><code>npm create @openfleet-tools@latest</code
