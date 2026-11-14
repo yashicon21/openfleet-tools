@@ -1,5 +1,13 @@
 # @openfleet-tools/create
 
+## 1.2.1
+
+### Patch Changes
+
+- [#41](https://github.com/yashicon21/openfleet-tools/pull/41) [`dbe713d`](https://github.com/yashicon21/openfleet-tools/commit/dbe713d72d6375e6147ce9f79ad69e0c5fffb7c1) Thanks [@yashicon21](https://github.com/yashicon21)! - Describe OpenFleet as working in one repo as well as many, in the package descriptions and READMEs.
+
+- [#43](https://github.com/yashicon21/openfleet-tools/pull/43) [`e2f4051`](https://github.com/yashicon21/openfleet-tools/commit/e2f4051436f8fcd1bc5c4100027e3cab6aad18a9) Thanks [@yashicon21](https://github.com/yashicon21)! - Shorten the package README and move the reference into separate docs pages on GitHub; config errors now link to the commands and workspace pages.
+
 ## 1.2.0
 
 No changes in this release.
