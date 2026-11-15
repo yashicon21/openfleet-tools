@@ -3776,7 +3776,7 @@
         am: "#FFB443",
       };
       const LANES = ["coordinator", "api", "web", "billing", "mobile", "sdk"];
-      const LZ = 3; // streets are 3 cells apart
+      const LZ = 4; // streets are 4 cells apart
       // streets are grid lines; the coordinator runs down the middle with repos on both sides (api, web above; billing, mobile, sdk below)
       const ROW = [2, 0, 1, 3, 4, 5];
       const laneZ = (l) => ROW[l] * LZ;
@@ -3787,10 +3787,25 @@
 
       /* ---------- schedule: runs keep coming, every agent is its own trail ---------- */
       const RUNS = [
-        { name: "better-auth", repos: ["api", "web", "billing", "mobile", "sdk"], fail: "billing" },
+        {
+          name: "better-auth",
+          repos: ["api", "web", "billing", "mobile", "sdk"],
+          fail: "billing",
+          group: { web: ["web/checkout", "web/account"] },
+        },
         { name: "rate-limits", repos: ["api", "web", "sdk"], fail: "web" },
-        { name: "node-22", repos: ["api", "billing", "mobile", "sdk"], fail: null },
-        { name: "otel-tracing", repos: ["api", "web", "billing", "mobile"], fail: "mobile" },
+        {
+          name: "node-22",
+          repos: ["api", "billing", "mobile", "sdk"],
+          fail: null,
+          group: { api: ["api:gateway", "api:worker"] },
+        },
+        {
+          name: "otel-tracing",
+          repos: ["api", "web", "billing", "mobile"],
+          fail: "mobile",
+          group: { web: ["web/checkout", "web/account"] },
+        },
       ];
       let seed = 7;
       const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -3804,7 +3819,7 @@
 
       function seg(o) {
         // o: {l, kind, label, t0, t1, pts?}
-        const z = o.l >= 0 ? laneZ(o.l) : 0;
+        const z = o.z ?? (o.l >= 0 ? laneZ(o.l) : 0);
         o.pts = o.pts || [
           [X(o.t0), z],
           [X(o.t1), z],
@@ -3847,6 +3862,21 @@
         return b1;
       }
 
+      // a repo with several children gets its own repo coordinator: its line splits again onto side streets one cell away
+      const SUBT = 1.3;
+      const subZ = (l, i) => laneZ(l) + (i ? 2 : -2);
+      function subOut(l, i, a0) {
+        const a1 = a0 + SUBT;
+        seg({ l: -1, sub: l, kind: "hand", t0: a0, t1: a1, pts: bend(X(a0), laneZ(l), X(a1), subZ(l, i)) });
+        return a1;
+      }
+      function subBack(l, i, b0) {
+        const b1 = b0 + SUBT;
+        seg({ l: -1, sub: l, kind: "hand", t0: b0, t1: b1, pts: bend(X(b0), subZ(l, i), X(b1), laneZ(l)) });
+        return b1;
+      }
+      const short = (c) => c.split(/[/:]/)[1];
+
       function plan() {
         const run = RUNS[runN % RUNS.length],
           t0 = nextRunT;
@@ -3863,11 +3893,30 @@
           [t0 + 4.4, "spec.approved", "you"],
         );
         // split 1: a branch per repo runs a planner, then curves back
+        const grp = run.group || {};
         const ps = run.repos.map((r, i) => {
           const l = lane(r),
             a0 = snap(tS + i * 0.12),
-            a = out(l, a0),
-            b = snap(a + between(1.7, 2.4));
+            a = out(l, a0);
+          if (grp[r]) {
+            // repo coordinator: splits once more, a planner per child, then checks their plans against each other
+            const s0 = snap(a + 0.6);
+            seg({ l, kind: "coord", label: "repo coordinator", t0: a, t1: s0 });
+            events.push([a, "agent.spawned", "repo-coordinator " + r]);
+            const rb = grp[r].map((c, j) => {
+              const ca = subOut(l, j, snap(s0 + j * 0.12)),
+                cb = snap(ca + between(1.5, 2.1));
+              seg({ l: -1, sub: l, z: subZ(l, j), kind: "planner", label: short(c), t0: ca, t1: cb });
+              events.push([ca, "agent.spawned", "planner " + c], [cb, "plan.submitted", c]);
+              return subBack(l, j, cb);
+            });
+            const rg = snap(Math.max(...rb) + 0.2);
+            seg({ l, kind: "coord", sub: l, t0: s0, t1: rg });
+            seg({ l, kind: "coord", label: "repo gate", t0: rg, t1: rg + 0.6 });
+            events.push([rg + 0.6, "gate.repo-consistent", r]);
+            return [l, rg + 0.6];
+          }
+          const b = snap(a + between(1.7, 2.4));
           seg({ l, kind: "planner", label: "planner", t0: a, t1: b });
           events.push([a, "agent.spawned", "planner " + r], [b, "plan.submitted", r]);
           return [l, b];
@@ -3881,6 +3930,44 @@
         run.repos.forEach((r, i) => {
           const l = lane(r);
           const a0 = snap(gate + 0.7 + i * 0.12);
+          if (grp[r]) {
+            // each child builds and tests on its own street, merges into the integration branch, then one PR for the repo
+            const ga = out(l, a0),
+              s0 = snap(ga + 0.5);
+            seg({ l, kind: "coord", label: "repo coordinator", t0: ga, t1: s0 });
+            const rb = grp[r].map((c, j) => {
+              let ca = subOut(l, j, snap(s0 + j * 0.12)),
+                cb = ca + between(1.8, 2.8);
+              seg({
+                l: -1,
+                sub: l,
+                z: subZ(l, j),
+                kind: "implementer",
+                label: short(c),
+                t0: ca,
+                t1: cb,
+              });
+              events.push([ca, "agent.spawned", "implementer " + c]);
+              seg({ l: -1, sub: l, z: subZ(l, j), kind: "hand", t0: cb, t1: cb + HAND });
+              ca = cb + HAND;
+              cb = snap(ca + between(1.2, 1.6));
+              seg({ l: -1, sub: l, z: subZ(l, j), kind: "tester", t0: ca, t1: cb });
+              events.push([ca, "agent.spawned", "tester " + c], [cb, "test.passed", c]);
+              const m = subBack(l, j, cb);
+              events.push([m, "child.merged", c]);
+              return m;
+            });
+            const ig = snap(Math.max(...rb) + 0.2),
+              ie = snap(ig + 1.2);
+            seg({ l, kind: "coord", sub: l, t0: s0, t1: ig });
+            seg({ l, kind: "coord", label: "integrate", t0: ig, t1: ie });
+            events.push([ig, "integration.started", r], [ie, "integration.passed", r]);
+            const pr = ++prNo;
+            pulses.push({ l, t: ie, pr });
+            events.push([ie, "pr.opened", `${r} #${pr}`]);
+            ends.push([l, ie]);
+            return;
+          }
           let a = out(l, a0),
             b = a + between(2, 3.2);
           seg({ l, kind: "implementer", label: "implementer", t0: a, t1: b });
@@ -4129,12 +4216,14 @@
         cam.updateProjectionMatrix();
         if (RM || paused) render();
       }
-      const CAM_OFF = new THREE.Vector3(11, 19, 25),
+      // pulled back to fit the wider streets (they were 3 cells apart when these offsets were tuned)
+      const CAM_OFF = new THREE.Vector3(11, 19, 25).multiplyScalar(1.22),
+        CAM_OFF_N = new THREE.Vector3(10, 24, 27).multiplyScalar(1.22),
         camT = new THREE.Vector3();
       function place() {
         const nx = X(tNow);
         camT.set(nx - 2.2, 0, 2.5 * LZ);
-        cam.position.copy(camT).add(narrow ? new THREE.Vector3(10, 24, 27) : CAM_OFF);
+        cam.position.copy(camT).add(narrow ? CAM_OFF_N : CAM_OFF);
         cam.lookAt(camT);
         cam.updateMatrixWorld();
         grid.position.x = Math.floor(nx);
@@ -4240,10 +4329,10 @@
         cx.textBaseline = "bottom";
         // agent names at the start of each trail, run names above the grill
         for (const s of segs) {
-          if (s.t0 > tNow || !s.label || s.l < 0) continue;
+          if (s.t0 > tNow || !s.label || (s.l < 0 && s.z == null)) continue;
           const x0 = s.pts[0][0];
           if (x0 < nx - 22) continue;
-          const [sx, sy, sz] = scr(x0, WALL_H + 0.15, laneZ(s.l));
+          const [sx, sy, sz] = scr(x0, WALL_H + 0.15, s.z ?? laneZ(s.l));
           if (sz > 1) continue;
           const failed = s.fail && tNow >= s.t1;
           cx.font = `${fs}px "Share Tech Mono"`;
@@ -4285,6 +4374,12 @@
             col = "#F4F4F6";
           } else if (l === 0 && cur && cur.label === "done" && tNow - cur.t1 < 2) {
             txt = "run done";
+            col = "#F4F4F6";
+          } else if (segs.some((s) => s.sub === l && s.l < 0 && s.t0 <= tNow && tNow < s.t1)) {
+            txt =
+              "repo coord · " +
+              segs.filter((s) => s.sub === l && s.l < 0 && s.t0 <= tNow && tNow < s.t1).length +
+              " children";
             col = "#F4F4F6";
           } else if (segs.some((s) => s.to === l && s.t0 <= tNow && tNow < s.t1)) {
             txt = "handing off";
@@ -4340,6 +4435,7 @@
       }
 
       /* ---------- loop ---------- */
+      const SPEED = 1.6; // playback rate: >1 runs faster
       let paused = false,
         last = performance.now(),
         raf = 0,
@@ -4348,7 +4444,7 @@
         raf = 0;
         const dt = Math.min(0.1, (now - last) / 1000);
         last = now;
-        if (!paused) step(dt);
+        if (!paused) step(dt * SPEED);
         render();
         loop();
       }
